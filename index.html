@@ -1134,7 +1134,7 @@
       /* Smooth gradient — flat hold covers full app-bar overlap zone, then a very wide
          fade across the remaining 40% of height. No sharp transitions visible. */
       const slideBg = (s) => {
-        return `linear-gradient(to bottom, #FFFFFF 0%, #FFFFFF 2%, ${s[0]} 45%, ${s[1]} 80%, ${s[2]} 100%)`;
+        return `linear-gradient(to bottom, #FFFFFF 0%, #FFFFFF 25%, ${s[0]} 55%, ${s[1]} 85%, ${s[2]} 100%)`;
       };
 
       const [ref, idx, , progress] = useFYCarousel(FY_SLIDES.length, SLIDE_PCT);
@@ -1212,7 +1212,7 @@
       const MIN_H = 280;
       const SLIDE_PCT = 100;
       const slideBg = (s) => {
-        return `linear-gradient(to bottom, #FFFFFF 0%, #FFFFFF 2%, ${s[0]} 45%, ${s[1]} 80%, ${s[2]} 100%)`;
+        return `linear-gradient(to bottom, #FFFFFF 0%, #FFFFFF 25%, ${s[0]} 55%, ${s[1]} 85%, ${s[2]} 100%)`;
       };
 
       const [ref, idx, , progress] = useFYCarousel(FY_SLIDES.length, SLIDE_PCT);
