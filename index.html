@@ -312,6 +312,53 @@
       padding: 32px;
       flex-wrap: wrap;
       background: linear-gradient(135deg, #F6F9FC 0%, #EAEBED 100%);
+      --bar-overlap: 118px;
+    }
+
+    /* App-bar fill — scroll-driven for transparent variants, instant solid for the rest.
+       Animation runs on compositor thread, so fast flicks never expose content under the bar. */
+    .bar-fill {
+      position: absolute;
+      inset: 0;
+      background: #FFFFFF;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .bar-fill-solid { opacity: 1; }
+    .bar-fill-scroll {
+      opacity: 0;
+      animation: bar-fade linear both;
+      animation-timeline: scroll(nearest);
+      animation-range: 0px 4px;
+    }
+    @keyframes bar-fade {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @supports not (animation-timeline: scroll()) {
+      .bar-fill-scroll { opacity: 1; }
+    }
+
+    .app-bar-l0 {
+      animation: bar-shadow linear both;
+      animation-timeline: scroll(nearest);
+      animation-range: 0px 4px;
+    }
+    @keyframes bar-shadow {
+      0% { box-shadow: 0 6px 8px 0 rgba(0,0,0,0); }
+      100% { box-shadow: 0 6px 8px 0 rgba(0,0,0,0.05); }
+    }
+
+    /* When a section's variant is changed, a single subtle pulse draws the eye and settles. */
+    .section-block {
+      position: relative;
+    }
+    .section-block.active {
+      animation: section-pulse 700ms ease both;
+    }
+    @keyframes section-pulse {
+      0%, 100% { filter: drop-shadow(0 0 0 transparent); }
+      50%      { filter: drop-shadow(0 6px 16px rgba(211, 10, 215, 0.12)); }
     }
 
     .debug-drawer-tab,
@@ -327,6 +374,7 @@
         min-height: 100dvh;
         align-items: stretch;
         justify-content: stretch;
+        --bar-overlap: calc(env(safe-area-inset-top, 0px) + 64px);
       }
 
       .phone-frame {
@@ -368,54 +416,160 @@
       }
 
       .screen-scroll {
-        padding-top: calc(env(safe-area-inset-top, 0px) + 64px + 8px) !important;
-        padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)) !important;
+        padding-bottom: calc(120px + var(--sheet-pad, 0px) + env(safe-area-inset-bottom, 0px)) !important;
       }
 
-      /* Drawer + pull-tab */
+      /* Floating "edit" pill — bottom-left, sitting over the bottom nav image */
       .debug-drawer-tab {
-        display: flex;
+        display: inline-flex;
         position: fixed;
-        right: 0;
-        top: 50%;
-        transform: translateY(-50%);
+        left: 16px;
+        right: auto;
+        bottom: calc(20px + env(safe-area-inset-bottom, 0px));
         z-index: 60;
-        width: 28px;
-        height: 64px;
+        height: 40px;
+        padding: 0 16px;
         background: #FFFFFF;
         border: 1px solid rgba(0, 0, 0, 0.08);
-        border-right: none;
-        border-radius: 12px 0 0 12px;
+        border-radius: 100px;
         align-items: center;
         justify-content: center;
+        gap: 6px;
         cursor: pointer;
-        box-shadow: -2px 4px 16px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
         font-family: 'Rubik';
         font-size: 14px;
         font-weight: 500;
         color: #D30AD7;
+        transition: opacity 160ms, transform 160ms;
       }
 
+      .debug-drawer-tab.hidden {
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(8px);
+      }
+
+      /* Edit popup — full-width sheet pinned to the bottom edge, ~40% of viewport height. */
       .debug-drawer {
         position: fixed !important;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        width: min(360px, 88vw);
-        height: 100dvh;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        top: auto !important;
+        width: 100vw !important;
+        max-width: 100vw !important;
+        height: 40dvh;
+        max-height: 40dvh;
         z-index: 70;
-        border-radius: 16px 0 0 16px !important;
-        transform: translateX(100%);
+        border-radius: 20px 20px 0 0 !important;
+        transform: translateY(100%);
         transition: transform 280ms cubic-bezier(0.32, 0.72, 0, 1);
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
-        padding-top: max(24px, calc(env(safe-area-inset-top, 0px) + 16px)) !important;
-        padding-bottom: max(24px, calc(env(safe-area-inset-bottom, 0px) + 16px)) !important;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        padding: 8px 0 max(20px, calc(env(safe-area-inset-bottom, 0px) + 12px)) !important;
+        box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.08);
+        background: #FFFFFF;
+      }
+      .debug-drawer::-webkit-scrollbar { display: none; }
+
+      /* Force the inner panel to fill the sheet edge-to-edge */
+      .debug-drawer .debug-panel {
+        width: 100% !important;
+        max-width: 100% !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        padding: 8px 16px !important;
+      }
+
+      /* Compact controls inside the bottom sheet */
+      .debug-drawer .var-row {
+        padding: 6px 0 !important;
+      }
+      .debug-drawer .var-btn {
+        width: 24px !important;
+        height: 24px !important;
+        font-size: 11px !important;
+        border-radius: 6px !important;
+      }
+      .debug-drawer .var-pick {
+        gap: 3px !important;
+      }
+      .debug-drawer .seg-pick {
+        padding: 3px !important;
+        gap: 3px !important;
+      }
+      .debug-drawer .seg-btn {
+        padding: 5px 8px !important;
+        font-size: 11px !important;
+      }
+      /* Tighten margins on the inline labels + segmented controls */
+      .debug-drawer .debug-panel > div[style*="margin-bottom: 16px"] {
+        margin-bottom: 8px !important;
+      }
+      .debug-drawer .debug-panel > div[style*="margin-bottom: 8px"] {
+        margin-bottom: 4px !important;
+      }
+      /* Hide the "Page composition" header — sheet context makes it redundant */
+      .debug-drawer .debug-panel > div:first-child {
+        display: none !important;
+      }
+      /* Shrink the variant-row label text */
+      .debug-drawer .var-row > div:first-child {
+        font-size: 12px !important;
+        line-height: 16px !important;
+      }
+      /* Tighten the highlight-spacing toggle block */
+      .debug-drawer .debug-panel > div[style*="border-top"] {
+        margin-top: 8px !important;
+        padding-top: 8px !important;
+      }
+
+      /* No dimming backdrop on mobile — the phone stays bright so the section being
+         edited remains visible and "pops" rather than sitting behind a dark overlay. */
+      .debug-backdrop {
+        display: none !important;
       }
 
       .debug-drawer.open {
-        transform: translateX(0);
+        transform: translateY(0);
       }
+
+      /* Grab-handle indicator at the top of the popup */
+      .debug-drawer::before {
+        content: '';
+        display: block;
+        width: 40px;
+        height: 4px;
+        border-radius: 100px;
+        background: rgba(0, 0, 0, 0.15);
+        margin: 0 auto 12px;
+      }
+
+      /* Close (×) button — top-right of the sheet, dismisses without applying further changes */
+      .drawer-close {
+        position: absolute;
+        top: 12px;
+        right: 16px;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 100px;
+        cursor: pointer;
+        font-size: 18px;
+        line-height: 1;
+        color: rgba(0, 0, 0, 0.7);
+        z-index: 2;
+      }
+      .drawer-close:active { background: rgba(0, 0, 0, 0.1); }
 
       .debug-backdrop {
         display: block;
@@ -513,18 +667,19 @@
     /* App bar — transparent at scrollTop=0 when `transparent` prop is set (e.g. FY_A active),
        so the carousel's gradient shows through (including the next-card peek colour on the right).
        Snaps to opaque white + Below shadow as soon as the user scrolls, so content can't bleed past it. */
-    const AppBarL0 = ({ scrolled, transparent }) => (
+    /* Sticky inside the scroll container so the white fill can be driven by a scroll-timeline
+       CSS animation — opacity is bound to compositor-thread scroll, no JS lag, no bleed. */
+    const AppBarL0 = ({ transparent }) => (
       <div className="app-bar-l0" style={{
-        position: 'absolute', top: 0, left: 0, right: 0, zIndex: 30,
+        position: 'sticky', top: 0, zIndex: 30,
         paddingTop: 54, height: 54 + 64,
         paddingLeft: 24, paddingRight: 20,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        background: (transparent && !scrolled) ? 'transparent' : '#FFFFFF',
-        boxShadow: scrolled ? '0px 6px 8px 0px rgba(0,0,0,0.05)' : 'none',
-        transition: 'background 160ms ease, box-shadow 160ms ease',
+        background: 'transparent',
       }}>
-        <h1 style={T.h2}>Explore</h1>
-        <div style={{ width: 48, height: 48, display: 'grid', placeItems: 'center' }}>
+        <div className={'bar-fill ' + (transparent ? 'bar-fill-scroll' : 'bar-fill-solid')} />
+        <h1 style={{ ...T.h2, position: 'relative', zIndex: 1 }}>Explore</h1>
+        <div style={{ width: 48, height: 48, display: 'grid', placeItems: 'center', position: 'relative', zIndex: 1 }}>
           <img src="./assets/avatar_only.png" width={40} height={40} alt=""
             style={{ borderRadius: 100, display: 'block', border: '1px solid rgba(0,0,0,0.05)' }} />
         </div>
@@ -534,7 +689,6 @@
     const BottomNavGradient = () => (
       <div style={{
         position: 'absolute', left: 0, right: 0, bottom: 0,
-        paddingBottom: 12,
         background: 'linear-gradient(to bottom, transparent 0%, #FFFFFF 34%)',
         zIndex: 5, pointerEvents: 'none',
       }}>
@@ -542,25 +696,20 @@
       </div>
     );
 
-    const ScreenShell = ({ children, transparentAppBar }) => {
-      const [scrolled, setScrolled] = useState(false);
-      /* Threshold > 0 (any scroll) flips app bar to opaque immediately, minimising fast-scroll bleed. */
-      return (
-        <div className="absolute inset-0 bg-white">
-          <StatusBar />
-          <AppBarL0 scrolled={scrolled} transparent={transparentAppBar} />
-          <div onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 0)}
-            style={{
-              position: 'absolute', inset: 0,
-              paddingTop: 126, paddingBottom: 200,
-              overflowY: 'auto'
-            }} className="scrollbar-hide screen-scroll">
-            {children}
-          </div>
-          <BottomNavGradient />
+    const ScreenShell = ({ children, transparentAppBar }) => (
+      <div className="absolute inset-0 bg-white">
+        <StatusBar />
+        <div className="scrollbar-hide screen-scroll" style={{
+          position: 'absolute', inset: 0,
+          paddingBottom: 200,
+          overflowY: 'auto'
+        }}>
+          <AppBarL0 transparent={transparentAppBar} />
+          {children}
         </div>
-      );
-    };
+        <BottomNavGradient />
+      </div>
+    );
 
     /* ============= DLS PRIMITIVES ============= */
 
@@ -1126,15 +1275,14 @@
 
     /* For You A — standard large carousel pulling up under the app bar (always Bleed). */
     const FY_A = () => {
-      const OVERLAP = 126;
-      const TEXT_TOP = 144;
-      const MIN_H = 280;
+      const TEXT_TOP_CSS = 'calc(var(--bar-overlap, 118px) + 32px)';
+      const MIN_H = 220;
       const SLIDE_PCT = 100;
-      const TEXT_BOTTOM = 64;
+      const TEXT_BOTTOM = 40;
       /* Smooth gradient — flat hold covers full app-bar overlap zone, then a very wide
          fade across the remaining 40% of height. No sharp transitions visible. */
       const slideBg = (s) => {
-        return `linear-gradient(to bottom, #FFFFFF 0%, #FFFFFF 25%, ${s[0]} 55%, ${s[1]} 85%, ${s[2]} 100%)`;
+        return `linear-gradient(to bottom, #FFFFFF 0%, #FFFFFF 3%, ${s[0]} 46%, ${s[1]} 76%, ${s[2]} 100%)`;
       };
 
       const [ref, idx, , progress] = useFYCarousel(FY_SLIDES.length, SLIDE_PCT);
@@ -1147,7 +1295,7 @@
 
       return (
         <>
-          <div style={{ position: 'relative', marginTop: -OVERLAP, overflow: 'hidden' }}>
+          <div style={{ position: 'relative', marginTop: 'calc(-1 * var(--bar-overlap, 118px))', overflow: 'hidden' }}>
             <div style={{
               position: 'absolute', inset: 0, background: slideBg(scheme),
               pointerEvents: 'none', zIndex: 0,
@@ -1164,7 +1312,7 @@
                   background: 'transparent',
                 }}>
                   <div style={{
-                    position: 'absolute', right: 20, top: TEXT_TOP, bottom: TEXT_BOTTOM,
+                    position: 'absolute', right: 20, top: TEXT_TOP_CSS, bottom: TEXT_BOTTOM,
                     width: 96, display: 'flex', alignItems: 'center', justifyContent: 'center',
                     pointerEvents: 'none',
                   }}>
@@ -1175,7 +1323,7 @@
                   </div>
                   <div style={{
                     position: 'relative', width: '100%',
-                    padding: `${TEXT_TOP}px 120px ${TEXT_BOTTOM}px 24px`,
+                    paddingTop: TEXT_TOP_CSS, paddingRight: 120, paddingBottom: TEXT_BOTTOM, paddingLeft: 24,
                     display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
                     minHeight: MIN_H, boxSizing: 'border-box', zIndex: 1,
                   }}>
@@ -1207,12 +1355,11 @@
     /* For You F — centered layout carousel. Text + CTA centred within slide,
        illustration above text. Uses generated illustrations at 80px. always Bleed. */
     const FY_F = () => {
-      const OVERLAP = 126;
-      const PAD_TOP = 120;
-      const MIN_H = 280;
+      const PAD_TOP_CSS = 'calc(var(--bar-overlap, 118px) + 32px)';
+      const MIN_H = 220;
       const SLIDE_PCT = 100;
       const slideBg = (s) => {
-        return `linear-gradient(to bottom, #FFFFFF 0%, #FFFFFF 25%, ${s[0]} 55%, ${s[1]} 85%, ${s[2]} 100%)`;
+        return `linear-gradient(to bottom, #FFFFFF 0%, #FFFFFF 3%, ${s[0]} 46%, ${s[1]} 76%, ${s[2]} 100%)`;
       };
 
       const [ref, idx, , progress] = useFYCarousel(FY_SLIDES.length, SLIDE_PCT);
@@ -1225,7 +1372,7 @@
 
       return (
         <>
-          <div style={{ position: 'relative', marginTop: -OVERLAP, overflow: 'hidden' }}>
+          <div style={{ position: 'relative', marginTop: 'calc(-1 * var(--bar-overlap, 118px))', overflow: 'hidden' }}>
             <div style={{
               position: 'absolute', inset: 0, background: slideBg(scheme),
               pointerEvents: 'none', zIndex: 0,
@@ -1241,18 +1388,18 @@
                   position: 'relative', minHeight: MIN_H, overflow: 'hidden',
                   background: 'transparent',
                   display: 'flex', flexDirection: 'column', alignItems: 'center',
-                  justifyContent: 'center', textAlign: 'center',
-                  padding: `${PAD_TOP}px 32px 44px`,
+                  textAlign: 'center',
+                  paddingTop: PAD_TOP_CSS, paddingRight: 32, paddingBottom: 44, paddingLeft: 32,
                   boxSizing: 'border-box',
                 }}>
                   <img src={`./assets/${s.centeredImg}`} alt="" style={{
-                    width: 80, height: 80, objectFit: 'contain',
-                    display: 'block', marginBottom: 16, borderRadius: 16,
+                    width: 64, height: 64, objectFit: 'contain',
+                    display: 'block', marginBottom: 12, borderRadius: 16,
                   }} />
                   <div style={{ ...T.h4, lineHeight: '20px' }}>{s.title}</div>
                   <div style={{ ...T.caption, color: 'rgba(0,0,0,0.7)', marginTop: 4 }}>{s.sub}</div>
                   <button className="tap" style={{
-                    marginTop: 16,
+                    marginTop: 12,
                     padding: '6px 14px', background: '#000', border: 'none', borderRadius: 100,
                     ...T.btnSm, color: 'white', cursor: 'pointer', whiteSpace: 'nowrap',
                   }}>{s.cta}</button>
@@ -1273,7 +1420,7 @@
 
     /* FY_B — HScroll layout with coloured banners matching FY_A design */
     const FY_B = () => (
-      <div style={{ paddingBottom: 8 }}>
+      <div style={{ paddingTop: 8, paddingBottom: 8 }}>
         <HScroll gap={12}>
         {FY_SLIDES.map((s, i) => (
           <button className="tap" key={i} style={{
@@ -1432,7 +1579,7 @@
       const schemeBg = lerpHex(bgColors[lo], bgColors[hi], t);
 
       return (
-        <div style={{ position: 'relative', marginTop: -OVERLAP, marginBottom: 24, background: schemeBg }}>
+        <div style={{ position: 'relative', marginTop: 'calc(-1 * var(--bar-overlap, 118px))', marginBottom: 24, background: schemeBg }}>
           <div ref={ref} style={{
             display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
             overscrollBehavior: 'none',
@@ -2183,30 +2330,64 @@
 
     /* ============= EXPLORE PAGE ============= */
 
-    const ExplorePage = ({ sections, headerStyle }) => {
+    /* Zero-height marker before each section — used as the scroll target when the picker
+       changes that section's variant, so the user lands on the thing they just edited. */
+    const SectionAnchor = ({ id }) => <div data-section={id} style={{ height: 0 }} />;
+
+    /* Wraps a section so it can be lifted (z-index + glow) when it's the one being edited.
+       Result: while the user explores variants the affected section visually pops above the rest. */
+    const SectionBlock = ({ id, active, children }) => (
+      <div className={'section-block' + (active ? ' active' : '')}
+        data-section-block={id}>
+        {children}
+      </div>
+    );
+
+    const ExplorePage = ({ sections, headerStyle, activeSection }) => {
       const isInCard = headerStyle === 'None';
+      const isActive = (k) => activeSection === k;
       return (
         <ScreenShell transparentAppBar={(sections.forYou === 'A' || sections.forYou === 'F' || sections.forYou === 'Z')}>
-          <SectionWrap title="For you" headerStyle="None" isFirst>
-            <ForYouSection variant={sections.forYou} />
-          </SectionWrap>
-          {sections.aiBanker !== 'None' && (
-            <SectionWrap title="AI banker" headerStyle="None">
-              <AiBankerSection variant={sections.aiBanker} />
+          <SectionAnchor id="forYou" />
+          <SectionBlock id="forYou" active={isActive('forYou')}>
+            <SectionWrap title="For you" headerStyle="None" isFirst>
+              <ForYouSection variant={sections.forYou} />
             </SectionWrap>
+          </SectionBlock>
+          {sections.aiBanker !== 'None' && (
+            <>
+              <SectionAnchor id="aiBanker" />
+              <SectionBlock id="aiBanker" active={isActive('aiBanker')}>
+                <SectionWrap title="AI banker" headerStyle="None">
+                  <AiBankerSection variant={sections.aiBanker} />
+                </SectionWrap>
+              </SectionBlock>
+            </>
           )}
-          <SectionWrap title="Bills & Recharges" headerStyle={headerStyle}>
-            <BillsSection variant={sections.bills} isInCard={isInCard} />
-          </SectionWrap>
-          <SectionWrap title="Rewards & benefits" headerStyle={headerStyle}>
-            <RewardsSection variant={sections.rewards} isInCard={isInCard} />
-          </SectionWrap>
-          <SectionWrap title="Statistics" headerStyle={headerStyle}>
-            <StatsSection variant={sections.stats} isInCard={isInCard} />
-          </SectionWrap>
-          <SectionWrap title="More" headerStyle={headerStyle}>
-            <MoreSection variant={sections.more} isInCard={isInCard} />
-          </SectionWrap>
+          <SectionAnchor id="bills" />
+          <SectionBlock id="bills" active={isActive('bills')}>
+            <SectionWrap title="Bills & Recharges" headerStyle={headerStyle}>
+              <BillsSection variant={sections.bills} isInCard={isInCard} />
+            </SectionWrap>
+          </SectionBlock>
+          <SectionAnchor id="rewards" />
+          <SectionBlock id="rewards" active={isActive('rewards')}>
+            <SectionWrap title="Rewards & benefits" headerStyle={headerStyle}>
+              <RewardsSection variant={sections.rewards} isInCard={isInCard} />
+            </SectionWrap>
+          </SectionBlock>
+          <SectionAnchor id="stats" />
+          <SectionBlock id="stats" active={isActive('stats')}>
+            <SectionWrap title="Statistics" headerStyle={headerStyle}>
+              <StatsSection variant={sections.stats} isInCard={isInCard} />
+            </SectionWrap>
+          </SectionBlock>
+          <SectionAnchor id="more" />
+          <SectionBlock id="more" active={isActive('more')}>
+            <SectionWrap title="More" headerStyle={headerStyle}>
+              <MoreSection variant={sections.more} isInCard={isInCard} />
+            </SectionWrap>
+          </SectionBlock>
         </ScreenShell>
       );
     };
@@ -2391,6 +2572,23 @@
       return isMobile;
     };
 
+    /* After a section's variant changes, scroll the phone to that section so the user
+       can immediately see what changed. Works on both mobile (background of the bottom sheet)
+       and desktop (the embedded phone column). */
+    const scrollToSection = (key) => {
+      requestAnimationFrame(() => {
+        const scroll = document.querySelector('.screen-scroll');
+        const target = document.querySelector(`[data-section="${key}"]`);
+        if (!scroll || !target) return;
+        const scrollRect = scroll.getBoundingClientRect();
+        const targetRect = target.getBoundingClientRect();
+        const bar = scroll.querySelector('.app-bar-l0');
+        const barH = bar ? bar.offsetHeight : 0;
+        const top = scroll.scrollTop + (targetRect.top - scrollRect.top) - barH;
+        scroll.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      });
+    };
+
     const App = () => {
       const [useOriginal, setUseOriginal] = useState(false);
       const [sections, setSections] = useState(PRESETS.V1.sections);
@@ -2398,9 +2596,23 @@
       const [spacing, setSpacing] = useState({ gapNone: 24, gapHeaderAbove: 32, gapHeaderBelow: 16 });
       const [highlight, setHighlight] = useState(false);
       const [drawerOpen, setDrawerOpen] = useState(false);
+      const [activeSection, setActiveSection] = useState(null);
       const isMobile = useIsMobile();
 
-      const updateSection = (key, v) => { setUseOriginal(false); setSections(prev => ({ ...prev, [key]: v })); };
+      const pulseTimer = React.useRef(null);
+      const updateSection = (key, v) => {
+        setUseOriginal(false);
+        setSections(prev => ({ ...prev, [key]: v }));
+        /* Clear-then-set so the CSS animation restarts even when the user re-pulses
+           the same section. Timer clears the active class after the pulse completes. */
+        setActiveSection(null);
+        if (pulseTimer.current) clearTimeout(pulseTimer.current);
+        requestAnimationFrame(() => {
+          setActiveSection(key);
+          pulseTimer.current = setTimeout(() => setActiveSection(null), 700);
+        });
+        scrollToSection(key);
+      };
       const updateHeader = (s) => { setUseOriginal(false); setHeaderStyle(s); };
       const updateSpacing = (key, v) => setSpacing(prev => ({ ...prev, [key]: v }));
 
@@ -2438,7 +2650,7 @@
                     <div className="dynamic-island" />
                     {useOriginal
                       ? <OriginalExplore />
-                      : <ExplorePage sections={sections} headerStyle={headerStyle} />}
+                      : <ExplorePage sections={sections} headerStyle={headerStyle} activeSection={activeSection} />}
                   </div>
                 </div>
               </div>
@@ -2450,16 +2662,14 @@
                   className={'debug-backdrop' + (drawerOpen ? ' open' : '')}
                   onClick={() => setDrawerOpen(false)} />
                 <div className={'debug-drawer' + (drawerOpen ? ' open' : '')}>
-                  <button className="drawer-close" onClick={() => setDrawerOpen(false)} aria-label="Close">×</button>
+                  <button className="drawer-close" onClick={() => setDrawerOpen(false)} aria-label="Close edit sheet">×</button>
                   {debugPanel}
                 </div>
                 <button
                   className="debug-drawer-tab"
-                  onClick={() => setDrawerOpen(true)}
-                  aria-label="Open debug panel">
-                  <span style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', letterSpacing: '1px' }}>
-                    edit
-                  </span>
+                  onClick={() => setDrawerOpen(o => !o)}
+                  aria-label="Toggle edit sheet">
+                  edit
                 </button>
               </React.Fragment>
             ) : debugPanel}
