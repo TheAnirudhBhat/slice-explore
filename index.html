@@ -534,10 +534,11 @@
     const BottomNavGradient = () => (
       <div style={{
         position: 'absolute', left: 0, right: 0, bottom: 0,
+        paddingBottom: 12,
         background: 'linear-gradient(to bottom, transparent 0%, #FFFFFF 34%)',
         zIndex: 5, pointerEvents: 'none',
       }}>
-        <img src="./assets/bottom_nav.png" alt="" style={{ width: '100%', display: 'block' }} />
+        <img src="./assets/bottom_nav_v2.png" alt="" style={{ width: '100%', display: 'block' }} />
       </div>
     );
 
@@ -1133,7 +1134,7 @@
       /* Smooth gradient — flat hold covers full app-bar overlap zone, then a very wide
          fade across the remaining 40% of height. No sharp transitions visible. */
       const slideBg = (s) => {
-        return `linear-gradient(to bottom, ${s[0]} 0%, ${s[0]} 50%, ${s[1]} 80%, ${s[2]} 100%)`;
+        return `linear-gradient(to bottom, #FFFFFF 0%, #FFFFFF 2%, ${s[0]} 45%, ${s[1]} 80%, ${s[2]} 100%)`;
       };
 
       const [ref, idx, , progress] = useFYCarousel(FY_SLIDES.length, SLIDE_PCT);
@@ -1211,7 +1212,7 @@
       const MIN_H = 280;
       const SLIDE_PCT = 100;
       const slideBg = (s) => {
-        return `linear-gradient(to bottom, ${s[0]} 0%, ${s[0]} 50%, ${s[1]} 80%, ${s[2]} 100%)`;
+        return `linear-gradient(to bottom, #FFFFFF 0%, #FFFFFF 2%, ${s[0]} 45%, ${s[1]} 80%, ${s[2]} 100%)`;
       };
 
       const [ref, idx, , progress] = useFYCarousel(FY_SLIDES.length, SLIDE_PCT);
