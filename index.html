@@ -2293,15 +2293,32 @@
        Future products (insurance, gift cards) launch here before graduating
        into their own section. ----- */
 
+    /* A — Two small cards side-by-side, mirrors the small-card pattern from Stats
+       (where CIBIL + AutoPay used to live). Keeps visual continuity now that those
+       two items have moved into More. */
     const MR_A = () => (
-      <>
-        <ListItemAvatar bg="#E6EDF9" glyph={<GlyphBolt color="#2B6ACF" />}
-          title="AutoPay" subtitle="1 mandate active" />
-        <DividerInset />
-        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphChart color="#00A63E" />}
-          title="CIBIL score" subtitle="Updated 5 May"
-          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>785</div>} />
-      </>
+      <PagePad>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 16 }}>
+            <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>CIBIL score</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
+              <span style={T.h2}>785</span>
+              <span style={{ ...T.btnSm, color: '#00A63E' }}>+12</span>
+            </div>
+            <div style={{ height: 4, background: '#EAEBED', borderRadius: 2, marginTop: 12, overflow: 'hidden' }}>
+              <div style={{ width: '70%', height: '100%', background: '#00A63E', borderRadius: 2 }} />
+            </div>
+            <div style={{ ...T.caption, marginTop: 8 }}>On track for 800+</div>
+          </div>
+          <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 16 }}>
+            <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>AutoPay</div>
+            <div style={{ ...T.h2, marginTop: 4 }}>1 active</div>
+            <div style={{ ...T.caption, marginTop: 12, lineHeight: '18px' }}>
+              Next: ₹239<br />on 8 May
+            </div>
+          </div>
+        </div>
+      </PagePad>
     );
 
     const MR_B = () => (
