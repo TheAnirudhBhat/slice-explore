@@ -2164,60 +2164,52 @@
       </>
     );
 
-    /* D — Carousel. Tighter 168-wide cards with consistent internal rhythm:
-       icon top-left, value as the headline, label below, and a status chip pinned
-       to the bottom edge so all three cards read on the same horizontal lines. */
+    /* D — Carousel. 168-wide cards with text top-left + illustration bottom-right.
+       Same layout pattern as For-You vertical cards: label + value at top,
+       supporting line, and a decorative avatar/illustration tucked to the bottom-right. */
     const RW_D = () => {
       const cardBase = {
         width: 168, height: 152, padding: 14, borderRadius: 16,
-        border: 'none', boxShadow: CARD_SHADOW,
-        display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+        border: 'none', boxShadow: CARD_SHADOW, overflow: 'hidden',
         textAlign: 'left', cursor: 'pointer', scrollSnapAlign: 'start',
+        position: 'relative',
       };
-      const RewardCard = ({ icon, value, label, valueColor = 'rgba(0,0,0,0.9)', labelColor = 'rgba(0,0,0,0.5)', chip, bg = '#FFFFFF', chipBg = '#F6F9FC', chipColor = 'rgba(0,0,0,0.7)' }) => (
+      const RewardCard = ({ illo, value, label, sub, bg = '#FFFFFF', valueColor = 'rgba(0,0,0,0.9)', labelColor = 'rgba(0,0,0,0.5)', subColor = 'rgba(0,0,0,0.7)' }) => (
         <button className="tap" style={{ ...cardBase, background: bg, flex: '0 0 168px' }}>
-          {icon}
-          <div>
-            <div style={{ ...T.h3, color: valueColor, fontSize: 22, lineHeight: '26px' }}>{value}</div>
-            <div style={{ ...T.caption, color: labelColor, marginTop: 2 }}>{label}</div>
+          <div style={{ position: 'relative', zIndex: 1, paddingRight: 36 }}>
+            <div style={{ ...T.caption, color: labelColor }}>{label}</div>
+            <div style={{ ...T.h3, color: valueColor, fontSize: 22, lineHeight: '26px', marginTop: 4 }}>{value}</div>
+            {sub && <div style={{ ...T.caption, color: subColor, marginTop: 6 }}>{sub}</div>}
           </div>
-          {chip && (
-            <div style={{
-              alignSelf: 'flex-start', padding: '3px 8px', borderRadius: 100,
-              background: chipBg, color: chipColor, ...T.meta,
-            }}>{chip}</div>
-          )}
+          <div style={{ position: 'absolute', right: 12, bottom: 12, zIndex: 0 }}>
+            {illo}
+          </div>
         </button>
       );
       return (
         <HScroll gap={12}>
-          {/* Spark — brand-gradient hero, same footprint as the others */}
+          {/* Spark — brand-gradient hero */}
           <RewardCard
             bg="linear-gradient(135deg, #D30AD7 0%, #2B6ACF 100%)"
-            icon={<Avatar size={36} bg="rgba(255,255,255,0.18)" glyph={<GlyphSpark color="#FFFFFF" />} />}
-            value="12 offers"
             label="Spark · weekly drop"
+            value="12 offers"
+            sub="Expires in 2 days"
             valueColor="#FFFFFF"
             labelColor="rgba(255,255,255,0.75)"
-            chip="EXPIRES IN 2D"
-            chipBg="rgba(255,255,255,0.18)"
-            chipColor="#FFFFFF"
+            subColor="rgba(255,255,255,0.85)"
+            illo={<Avatar size={48} bg="rgba(255,255,255,0.2)" glyph={<GlyphSpark color="#FFFFFF" />} />}
           />
           <RewardCard
-            icon={<img src="./assets/fire_sparkle.png" width={36} height={36} alt="" />}
-            value="5 fires"
             label="Fire games"
-            chip="SPIN TO CLAIM"
-            chipBg="#FAE2FA"
-            chipColor="#A008A3"
+            value="5 fires"
+            sub="Spin to claim 2x"
+            illo={<img src="./assets/fire_sparkle.png" width={56} height={56} alt="" style={{ display: 'block' }} />}
           />
           <RewardCard
-            icon={<Avatar size={36} bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />} />}
-            value="₹240"
             label="Monies"
-            chip="EARN 1% ON CC"
-            chipBg="#E0F4E8"
-            chipColor="#0E7E33"
+            value="₹240"
+            sub="Earn 1% on CC bills"
+            illo={<Avatar size={48} bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />} />}
           />
         </HScroll>
       );
