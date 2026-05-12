@@ -183,6 +183,18 @@
       opacity: 0.9;
     }
 
+    .ryan-caret {
+      display: inline-block;
+      margin-left: 1px;
+      color: #D30AD7;
+      font-weight: 500;
+      animation: ryan-blink 1s steps(2, end) infinite;
+    }
+    @keyframes ryan-blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+
     .debug-panel {
       width: 360px;
       flex-shrink: 0;
@@ -1770,7 +1782,7 @@
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
             </svg>
           </div>
-          <span style={{ ...T.bodySm, color: 'rgba(0,0,0,0.5)', flex: 1 }}>Ask AI banker…</span>
+          <span style={{ ...T.bodySm, color: 'rgba(0,0,0,0.5)', flex: 1 }}>Ask Ryan…</span>
           <span style={{
             ...T.meta, fontWeight: 500,
             background: '#FAE2FA', color: '#A008A3',
@@ -1790,13 +1802,13 @@
           cursor: 'pointer', textAlign: 'left',
         }}>
           <GlyphAi />
-          <span style={{ ...T.body, color: 'rgba(0,0,0,0.5)', flex: 1 }}>Ask AI banker anything…</span>
+          <span style={{ ...T.body, color: 'rgba(0,0,0,0.5)', flex: 1 }}>Ask Ryan anything…</span>
           <Chevron color="#D30AD7" />
         </button>
         <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-          <TagSubtle intent="neutral">Bills due?</TagSubtle>
-          <TagSubtle intent="neutral">May spends?</TagSubtle>
-          <TagSubtle intent="neutral">Best FD rate?</TagSubtle>
+          <TagSubtle intent="neutral">Why is my CC bill ₹4,200?</TagSubtle>
+          <TagSubtle intent="neutral">How do I redeem monies?</TagSubtle>
+          <TagSubtle intent="neutral">What's a pot?</TagSubtle>
         </div>
       </PagePad>
     );
@@ -1828,23 +1840,61 @@
           padding: '8px 0', display: 'flex', alignItems: 'center', gap: 8,
         }}>
           <GlyphAi />
-          <span style={{ ...T.btnSm, color: '#D30AD7' }}>Ask AI banker</span>
+          <span style={{ ...T.btnSm, color: '#D30AD7' }}>Ask Ryan</span>
           <GlyphArrow color="#D30AD7" />
         </button>
       </PagePad>
     );
 
+    /* AI Banker E — typewriter cycle. Types out a suggested query character-by-character,
+       holds, then backspaces. Tick-driven state machine so timings don't drift across
+       phase changes. Cursor blinks via CSS. */
     const AB_E = () => {
       const examples = [
-        'How much did I spend on food last month?',
-        'When is my next bill due?',
-        'Should I increase my FD?',
+        "Why is my CC bill ₹4,200 this month?",
+        "How do I redeem my monies?",
+        "What's a pot?",
       ];
-      const [idx, setIdx] = React.useState(0);
+      const [text, setText] = React.useState('');
+      const stateRef = React.useRef({ phase: 'typing', i: 0, n: 0 });
+      const TYPE_MS = 55;
+      const ERASE_MS = 30;
+      const HOLD_MS = 1400;
+      const PAUSE_MS = 350;
+
       React.useEffect(() => {
-        const t = setInterval(() => setIdx(prev => (prev + 1) % examples.length), 2500);
-        return () => clearInterval(t);
+        let timer;
+        const tick = () => {
+          const s = stateRef.current;
+          const target = examples[s.i];
+          if (s.phase === 'typing') {
+            if (s.n < target.length) {
+              s.n += 1;
+              setText(target.slice(0, s.n));
+              timer = setTimeout(tick, TYPE_MS);
+            } else {
+              s.phase = 'holding';
+              timer = setTimeout(tick, HOLD_MS);
+            }
+          } else if (s.phase === 'holding') {
+            s.phase = 'erasing';
+            timer = setTimeout(tick, ERASE_MS);
+          } else if (s.phase === 'erasing') {
+            if (s.n > 0) {
+              s.n -= 1;
+              setText(target.slice(0, s.n));
+              timer = setTimeout(tick, ERASE_MS);
+            } else {
+              s.i = (s.i + 1) % examples.length;
+              s.phase = 'typing';
+              timer = setTimeout(tick, PAUSE_MS);
+            }
+          }
+        };
+        tick();
+        return () => clearTimeout(timer);
       }, []);
+
       return (
         <PagePad>
           <button className="tap" style={{
@@ -1857,9 +1907,10 @@
             <GlyphAi />
             <span style={{
               ...T.bodySm, color: 'rgba(0,0,0,0.5)', flex: 1,
-              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'clip',
             }}>
-              {examples[idx]}
+              {text}
+              <span className="ryan-caret">|</span>
             </span>
             <Chevron color="#D30AD7" />
           </button>
@@ -2496,7 +2547,7 @@
             <>
               <SectionAnchor id="aiBanker" />
               <SectionBlock id="aiBanker" active={isActive('aiBanker')}>
-                <SectionWrap title="AI banker" headerStyle="None">
+                <SectionWrap title="Ryan" headerStyle="None">
                   <AiBankerSection variant={sections.aiBanker} />
                 </SectionWrap>
               </SectionBlock>
@@ -2540,14 +2591,13 @@
         }
       },
       {
-        key: 'aiBanker', label: 'AI Banker', variants: {
-          A: 'Pill + BETA tag', C: 'Avatar + chat bar', E: 'Pill + rotating examples', None: 'X'
+        key: 'aiBanker', label: 'Ryan', variants: {
+          A: 'Pill + BETA tag', C: 'Avatar + chat bar', E: 'Pill + typing examples', None: 'X'
         }
       },
       {
         key: 'bills', label: 'Bills & Recharges', variants: {
-          F: 'In-card Header (Premium)', A: 'Grid + 2 transactions', B: 'Composite + 1 txn',
-          D: 'Composite + 3 txns + view all',
+          A: 'Grid', B: 'Grid in card', D: 'Two-row grid',
         }
       },
       {
