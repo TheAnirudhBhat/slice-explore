@@ -796,7 +796,7 @@
           <h1 style={{ ...T.h2, position: 'relative', zIndex: 1 }}>Explore</h1>
           <div style={{ width: 48, height: 48, display: 'grid', placeItems: 'center', position: 'relative', zIndex: 1 }}>
             <img src="./assets/avatar_only.png" width={40} height={40} alt=""
-              style={{ borderRadius: 100, display: 'block', border: '1px solid rgba(0,0,0,0.05)' }} />
+              style={{ display: 'block' }} />
           </div>
         </div>
       );
@@ -1624,16 +1624,16 @@
       return [ref, idx, setIdx, progress];
     };
 
-    /* Dot indicators reused across carousel variants */
+    /* Dot indicators — quiet pill: thinner inactive dots, slate-toned active. */
     const CarouselDots = ({ count, activeIdx, bottom = 14 }) => (
       <div style={{
         position: 'absolute', bottom, left: 0, right: 0,
-        display: 'flex', justifyContent: 'center', gap: 6, pointerEvents: 'none', zIndex: 2,
+        display: 'flex', justifyContent: 'center', gap: 4, pointerEvents: 'none', zIndex: 2,
       }}>
         {Array.from({ length: count }, (_, i) => (
           <div key={i} style={{
-            width: i === activeIdx ? 18 : 5, height: 5, borderRadius: 3,
-            background: i === activeIdx ? '#000' : 'rgba(0,0,0,0.15)',
+            width: i === activeIdx ? 14 : 4, height: 4, borderRadius: 2,
+            background: i === activeIdx ? 'rgba(0,0,0,0.45)' : 'rgba(0,0,0,0.12)',
             transition: 'width 200ms, background 200ms',
           }} />
         ))}
@@ -1646,7 +1646,7 @@
       const TEXT_TOP_CSS = 'calc(var(--bar-overlap, 118px) + 24px)';
       const MIN_H = 220;
       const SLIDE_PCT = 100;
-      const TEXT_BOTTOM = 45;
+      const TEXT_BOTTOM = 52;
       const slideBg = (s) => {
         return `linear-gradient(to bottom, #FFFFFF 0%, #FFFFFF 3%, ${s[0]} 46%, ${s[1]} 76%, ${s[2]} 100%)`;
       };
@@ -1720,7 +1720,7 @@
     /* For You F — centered layout carousel. Text + CTA centred within slide,
        illustration above text. Infinite scroll via cloned edge slides. */
     const FY_F = () => {
-      const PAD_TOP_CSS = 'calc(var(--bar-overlap, 118px) + 8px)';
+      const PAD_TOP_CSS = 'calc(var(--bar-overlap, 118px) + 4px)';
       const MIN_H = 200;
       const SLIDE_PCT = 100;
       const slideBg = (s) => {
@@ -1752,12 +1752,12 @@
                   background: 'transparent',
                   display: 'flex', flexDirection: 'column', alignItems: 'center',
                   textAlign: 'center',
-                  paddingTop: PAD_TOP_CSS, paddingRight: 36, paddingBottom: 44, paddingLeft: 36,
+                  paddingTop: PAD_TOP_CSS, paddingRight: 36, paddingBottom: 53, paddingLeft: 36,
                   boxSizing: 'border-box',
                 }}>
-                  <img src={`./assets/${s.centeredImg}`} alt="" style={{
-                    width: 64, height: 64, objectFit: 'contain',
-                    display: 'block', marginBottom: 12, borderRadius: 16,
+                  <img src={`./assets/${s.heroImg}`} alt="" style={{
+                    width: 96, height: 96, objectFit: 'contain',
+                    display: 'block', marginBottom: 16, borderRadius: 20,
                   }} />
                   <div style={{ ...T.h4, lineHeight: '20px' }}>{s.title}</div>
                   <div style={{ ...T.caption, color: 'rgba(0,0,0,0.7)', marginTop: 4 }}>{s.sub}</div>
@@ -2085,32 +2085,30 @@
 
     /* ----- AI Banker — all 5 are inline-input variants (extends previous E) ----- */
 
-    /* Ryan A — clean rounded input pill with a soft brand-tinted glow ring + gradient
-       avatar. No BETA tag, no trailing button: just the avatar + prompt + a small
-       chevron hint so it reads as a tap-to-talk surface. */
+    /* Shared placeholder questions for the rolling search bars across A, C, E. */
+    const AB_QUESTIONS = [
+      'Why is my CC bill ₹4,200?',
+      'Redeem my monies',
+      "What's a pot?",
+    ];
+
+    /* AI banker A — single-line search bar with rolling questions, AI symbol left,
+       same height as variants C and E. */
     const AB_A = () => (
       <PagePad>
         <button className="tap" style={{
-          width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-          padding: '14px 18px',
+          width: '100%', height: 48, padding: '0 16px', boxSizing: 'border-box',
+          display: 'flex', alignItems: 'center', gap: 12,
           background: 'white', border: '1px solid rgba(211,10,215,0.18)', borderRadius: 100,
           boxShadow: '0 4px 16px rgba(211,10,215,0.08), 0 1px 2px rgba(0,0,0,0.04)',
           cursor: 'pointer', textAlign: 'left',
         }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: 100, flexShrink: 0,
-            background: 'linear-gradient(135deg, #D30AD7 0%, #2B6ACF 100%)',
-            display: 'grid', placeItems: 'center',
-            boxShadow: '0 2px 8px rgba(211,10,215,0.32)',
+          <img src="./assets/ai_icon.png" width={28} height={28} alt="" style={{ display: 'block', flexShrink: 0 }} />
+          <span style={{
+            ...T.bodySm, color: 'rgba(0,0,0,0.5)', flex: 1, minWidth: 0,
           }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-            </svg>
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ ...T.bodySm, color: 'rgba(0,0,0,0.9)', fontWeight: 500, lineHeight: '18px' }}>Ask Ryan</div>
-            <div style={{ ...T.caption, color: 'rgba(0,0,0,0.5)', marginTop: 2 }}>Your AI banker · always on</div>
-          </div>
+            <RollingText items={AB_QUESTIONS} />
+          </span>
         </button>
       </PagePad>
     );
@@ -2124,8 +2122,8 @@
           display: 'flex', alignItems: 'center', gap: 12,
           cursor: 'pointer', textAlign: 'left',
         }}>
-          <GlyphAi />
-          <span style={{ ...T.body, color: 'rgba(0,0,0,0.5)', flex: 1 }}>Ask Ryan anything…</span>
+          <img src="./assets/ai_icon.png" width={28} height={28} alt="" style={{ display: 'block', flexShrink: 0 }} />
+          <span style={{ ...T.body, color: 'rgba(0,0,0,0.5)', flex: 1 }}>Ask AI banker anything…</span>
           <Chevron color="#D30AD7" />
         </button>
         <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
@@ -2136,44 +2134,40 @@
       </PagePad>
     );
 
-    /* AI banker C — text input (the "talk to AI" entry surface) + horizontal-scroll
-       suggestion pills underneath. Section heading lives in the heading system
-       above; this variant carries only the input + suggestions. */
+    /* AI banker C — same compact search bar as A + E (rolling questions),
+       with a horizontal-scroll row of suggestion pills beneath it. */
     const AB_C = () => {
-      const questions = ['My CC bill?', 'Redeem monies', "What's a pot?", 'Best FD rate?', 'Track spends'];
+      const pills = ['My CC bill?', 'Redeem monies', "What's a pot?", 'Best FD rate?', 'Track spends'];
       return (
         <div>
           <PagePad>
             <button className="tap" style={{
-              width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-              padding: '14px 18px',
-              background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 100,
+              width: '100%', height: 48, padding: '0 16px', boxSizing: 'border-box',
+              display: 'flex', alignItems: 'center', gap: 12,
+              background: '#FFFFFF',
+              border: '1px solid rgba(211,10,215,0.18)',
+              borderRadius: 100,
+              boxShadow: '0 4px 16px rgba(211,10,215,0.08), 0 1px 2px rgba(0,0,0,0.04)',
               cursor: 'text', textAlign: 'left',
             }}>
-              <div style={{
-                width: 24, height: 24, borderRadius: 100, flexShrink: 0,
-                background: 'linear-gradient(135deg, #D30AD7 0%, #2B6ACF 100%)',
-                display: 'grid', placeItems: 'center',
-              }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                </svg>
-              </div>
+              <img src="./assets/ai_icon.png" width={28} height={28} alt="" style={{ display: 'block', flexShrink: 0 }} />
               <span style={{ ...T.bodySm, color: 'rgba(0,0,0,0.5)', flex: 1 }}>Ask anything…</span>
             </button>
           </PagePad>
-          <Spacer h={12} />
+          <Spacer h={16} />
           <div style={{
             overflowX: 'auto', paddingLeft: 24, paddingRight: 0,
             scrollSnapType: 'x proximity', scrollPaddingLeft: 24,
           }} className="scrollbar-hide">
-            <div style={{ display: 'flex', gap: 8 }}>
-              {questions.map((q, i) => (
+            <div style={{ display: 'flex', gap: 6 }}>
+              {pills.map((q, i) => (
                 <button key={i} className="tap" style={{
                   flexShrink: 0, scrollSnapAlign: 'start',
-                  ...T.bodySm, color: 'rgba(0,0,0,0.9)',
-                  background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)',
-                  padding: '8px 14px', borderRadius: 100, whiteSpace: 'nowrap',
+                  ...T.caption, color: 'rgba(0,0,0,0.7)',
+                  background: '#FFFFFF',
+                  border: '1px solid rgba(0,0,0,0.05)',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+                  padding: '5px 10px', borderRadius: 100, whiteSpace: 'nowrap',
                   cursor: 'pointer',
                 }}>{q}</button>
               ))}
@@ -2190,8 +2184,8 @@
           background: 'transparent', border: 'none', cursor: 'pointer',
           padding: '8px 0', display: 'flex', alignItems: 'center', gap: 8,
         }}>
-          <GlyphAi />
-          <span style={{ ...T.btnSm, color: '#D30AD7' }}>Ask Ryan</span>
+          <img src="./assets/ai_icon.png" width={23} height={23} alt="" style={{ display: 'block' }} />
+          <span style={{ ...T.btnSm, color: '#D30AD7' }}>Ask AI banker</span>
           <GlyphArrow color="#D30AD7" />
         </button>
       </PagePad>
@@ -2215,13 +2209,13 @@
       return (
         <PagePad>
           <button className="tap" style={{
-            width: '100%', padding: '14px 16px',
+            width: '100%', height: 48, padding: '0 16px', boxSizing: 'border-box',
             background: 'white', border: '1px solid #D30AD7', borderRadius: 100,
             boxShadow: '0 0 0 4px rgba(211,10,215,0.06)',
             display: 'flex', alignItems: 'center', gap: 12,
             cursor: 'pointer', textAlign: 'left',
           }}>
-            <GlyphAi />
+            <img src="./assets/ai_icon.png" width={28} height={28} alt="" style={{ display: 'block', flexShrink: 0 }} />
             <div style={{
               flex: 1, height: LINE_H, overflow: 'hidden', position: 'relative',
             }}>
@@ -2275,13 +2269,17 @@
     );
 
     /* B — Grid in a card. When In-card header style is active the card carries
-       its own "Bills & Recharges" heading (since the outer section header is
-       suppressed). Looser column gap (20px) so the 4 shortcut items feel spaced
-       out inside the card padding. */
+       its own "Bills & Recharges" heading (matched to the Rewards G hero: 20px
+       padding, H4 title via InCardHeader). */
     const BL_B = ({ isInCard }) => (
       <PagePad>
-        <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 24 }}>
-          {isInCard && <InCardHeader title="Bills & Recharges" />}
+        <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 20 }}>
+          {isInCard && (
+            <>
+              <InCardHeader title="Bills & Recharges" />
+              <Spacer h={4} />
+            </>
+          )}
           <BillsShortcutGrid columnGap={20} />
         </div>
       </PagePad>
@@ -2525,7 +2523,7 @@
        Hero matches Figma 9792:10201: two-row layout — header (title + leaderboard +
        trailing chevron) on top, dashed separator, then fire-stack illustration on
        the left + outline "Play Now" CTA on the right. */
-    const RW_G = () => (
+    const RW_G = ({ isInCard }) => (
       <>
         <PagePad>
           <button className="tap" style={{
@@ -2570,7 +2568,7 @@
             </div>
           </button>
         </PagePad>
-        <Spacer h={16} />
+        <Spacer h={isInCard ? 20 : 16} />
         <PagePad>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <ExploreMedium
@@ -2843,14 +2841,29 @@
       </PagePad>
     );
 
+    /* MR_B — flat list with the figma 3D icons, no chevrons, condensed copy. */
+    const MR_B_ROW = ({ icon, title, subtitle, trailing }) => (
+      <div className="tap" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 24px' }}>
+        {icon}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={T.body}>{title}</div>
+          <div style={{ ...T.caption, marginTop: 2 }}>{subtitle}</div>
+        </div>
+        {trailing}
+      </div>
+    );
     const MR_B = () => (
       <>
-        <ListItemAvatar bg="#E6EDF9" glyph={<GlyphBolt color="#2B6ACF" />}
-          title="AutoPay" subtitle="1 mandate active · next ₹239 on 8 May" />
+        <MR_B_ROW
+          icon={<img src="./assets/autopay_icon.png" width={44} height={44} alt="" style={{ display: 'block' }} />}
+          title="Autopay"
+          subtitle="3 active" />
         <DividerInset />
-        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphChart color="#00A63E" />}
-          title="CIBIL score" subtitle="+12 this month · on track for 800+"
-          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>785</div>} />
+        <MR_B_ROW
+          icon={<img src="./assets/credit_score_icon.png" width={44} height={44} alt="" style={{ display: 'block' }} />}
+          title="Credit score"
+          subtitle="Updated 5 May"
+          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>778</div>} />
       </>
     );
 
@@ -3003,7 +3016,7 @@
       </div>
     );
 
-    const ExplorePage = ({ sections, headerStyle, activeSection }) => {
+    const ExplorePage = ({ sections, headerStyle, activeSection, separateMore }) => {
       const isInCard = headerStyle === 'None';
       const isActive = (k) => activeSection === k;
       return (
@@ -3018,7 +3031,10 @@
             <>
               <SectionAnchor id="aiBanker" />
               <SectionBlock id="aiBanker" active={isActive('aiBanker')}>
-                <SectionWrap title="AI banker" headerStyle="None">
+                {/* Fixed 16px on top of the carousel's 16px dots padding → total
+                    32px from the dots' bottom edge to the AI banker top. */}
+                <Spacer h={16} />
+                <SectionWrap title="AI banker" headerStyle="None" isFirst>
                   <AiBankerSection variant={sections.aiBanker} />
                 </SectionWrap>
               </SectionBlock>
@@ -3041,14 +3057,24 @@
           <SectionBlock id="stats" active={isActive('stats')}>
             <SectionWrap title="Statistics" headerStyle={headerStyle}>
               <StatsSection variant={sections.stats} isInCard={isInCard} />
+              {!separateMore && (
+                <>
+                  <Spacer h={isInCard ? 20 : 16} />
+                  <MoreSection variant={sections.more} isInCard={isInCard} />
+                </>
+              )}
             </SectionWrap>
           </SectionBlock>
-          <SectionAnchor id="more" />
-          <SectionBlock id="more" active={isActive('more')}>
-            <SectionWrap title="More" headerStyle={headerStyle}>
-              <MoreSection variant={sections.more} isInCard={isInCard} />
-            </SectionWrap>
-          </SectionBlock>
+          {separateMore && (
+            <>
+              <SectionAnchor id="more" />
+              <SectionBlock id="more" active={isActive('more')}>
+                <SectionWrap title="More" headerStyle={headerStyle}>
+                  <MoreSection variant={sections.more} isInCard={isInCard} />
+                </SectionWrap>
+              </SectionBlock>
+            </>
+          )}
           {sections.footer !== 'None' && (
             <>
               <SectionAnchor id="footer" />
@@ -3128,7 +3154,7 @@
       },
       {
         key: 'more', label: 'More', variants: {
-          A: 'List rows', B: 'List rows w/ subtitles', E: 'Condensed text-only',
+          A: 'List rows', E: 'Condensed text-only',
         }
       },
       {
@@ -3180,6 +3206,7 @@
       sections, headerStyle, useOriginal,
       onSectionChange, onHeaderChange, onPresetApply,
       spacing, highlight, onSpacingChange, onHighlightToggle,
+      separateMore, onSeparateMoreToggle,
     }) => {
       const activePreset = useOriginal
         ? 'V0'
@@ -3225,6 +3252,26 @@
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(0,0,0,0.05)',
+          }}>
+            <span style={{ ...T.meta }}>Separate More section</span>
+            <button
+              onClick={onSeparateMoreToggle}
+              style={{
+                width: 36, height: 20, borderRadius: 100, position: 'relative',
+                background: separateMore ? '#D30AD7' : 'rgba(0,0,0,0.15)',
+                border: 'none', cursor: 'pointer', transition: 'background 160ms',
+              }}>
+              <span style={{
+                position: 'absolute', top: 2, left: separateMore ? 18 : 2,
+                width: 16, height: 16, borderRadius: 100, background: 'white',
+                transition: 'left 160ms',
+              }} />
+            </button>
+          </div>
+
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            marginTop: 12,
             marginBottom: highlight ? 12 : 0,
           }}>
             <span style={{ ...T.meta }}>Highlight spacing</span>
@@ -3385,6 +3432,7 @@
       const [spacing, setSpacing] = useState({ gapNone: 24, gapHeaderAbove: 32, gapHeaderBelow: 16 });
       const [highlight, setHighlight] = useState(false);
       const [drawerOpen, setDrawerOpen] = useState(false);
+      const [separateMore, setSeparateMore] = useState(false);
       const [activeSection, setActiveSection] = useState(null);
       const isMobile = useIsMobile();
       useAppScale();
@@ -3435,7 +3483,9 @@
           onHeaderChange={updateHeader}
           onPresetApply={applyPreset}
           onSpacingChange={updateSpacing}
-          onHighlightToggle={() => setHighlight(h => !h)} />
+          onHighlightToggle={() => setHighlight(h => !h)}
+          separateMore={separateMore}
+          onSeparateMoreToggle={() => setSeparateMore(s => !s)} />
       );
 
       return (
@@ -3452,7 +3502,7 @@
                     <div className="dynamic-island" />
                     {useOriginal
                       ? <OriginalExplore />
-                      : <ExplorePage sections={sections} headerStyle={headerStyle} activeSection={activeSection} />}
+                      : <ExplorePage sections={sections} headerStyle={headerStyle} activeSection={activeSection} separateMore={separateMore} />}
                   </div>
                 </div>
               </div>
