@@ -1311,26 +1311,28 @@
       </div>
     );
 
-    /* Unified bill-icon avatar: 54×54 with a subtle slate-tinted background so
-       the circle reads against the white page without harsh contrast. */
-    const BillAvatar = ({ children }) => (
+    /* Unified bill-icon avatar: 54×54. Two variants —
+       'tinted'  → slate-10 bg, no stroke (default)
+       'outline' → white bg with a 1px #F2F2F2 stroke (DLS subtle outline) */
+    const BillAvatar = ({ children, variant = 'tinted' }) => (
       <div style={{
         width: 54, height: 54, borderRadius: 100,
-        background: '#F6F9FC', border: 'none',
+        background: variant === 'outline' ? '#FFFFFF' : '#F6F9FC',
+        border: variant === 'outline' ? '1px solid #F2F2F2' : 'none',
         display: 'grid', placeItems: 'center', flexShrink: 0,
       }}>
         {children}
       </div>
     );
 
-    const BillsShortcutGrid = ({ columnGap = 8 }) => (
+    const BillsShortcutGrid = ({ columnGap = 8, avatarVariant = 'tinted' }) => (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: columnGap }}>
         {BILL_ICONS.map((b, i) => (
           <button key={i} className="tap" style={{
             background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
             display: 'flex', flexDirection: 'column', alignItems: 'center',
           }}>
-            <BillAvatar>{b.glyph}</BillAvatar>
+            <BillAvatar variant={avatarVariant}>{b.glyph}</BillAvatar>
             <div style={{ ...T.caption, textAlign: 'center', marginTop: 8, whiteSpace: 'pre-line', color: 'rgba(0,0,0,0.7)' }}>
               {b.t}
             </div>
@@ -2176,6 +2178,13 @@
       </PagePad>
     );
 
+    /* C — Same layout as A but with white-bg avatars + 1px #F2F2F2 stroke */
+    const BL_C = () => (
+      <PagePad style={{ paddingTop: 8 }}>
+        <BillsShortcutGrid avatarVariant="outline" />
+      </PagePad>
+    );
+
     /* B — Grid in a card, no inner heading. Looser column gap (20px) so the
        4 shortcut items feel spaced out inside the card padding. */
     const BL_B = () => (
@@ -3000,7 +3009,7 @@
       },
       {
         key: 'bills', label: 'Bills & Recharges', variants: {
-          A: 'Grid', B: 'Grid in card',
+          A: 'Grid', C: 'Grid (outline avatars)', B: 'Grid in card',
         }
       },
       {
