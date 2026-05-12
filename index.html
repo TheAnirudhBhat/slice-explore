@@ -1166,7 +1166,7 @@
       return (
         <span style={{
           display: 'inline-block', height: lineHeight, overflow: 'hidden',
-          verticalAlign: 'bottom', whiteSpace: 'nowrap',
+          verticalAlign: 'middle', whiteSpace: 'nowrap',
         }}>
           <span style={{
             display: 'block',
@@ -2182,7 +2182,7 @@
 
     /* AI banker A — single-line search bar with rolling questions. White-on-white
        with the same subtle slate stroke + soft drop shadow used on the card
-       aesthetic (matches Bills C avatars / outline cards). */
+       aesthetic. Icon + text are left-aligned inside the bar. */
     const AB_A = () => (
       <PagePad>
         <button className="tap" style={{
@@ -2193,9 +2193,7 @@
           cursor: 'pointer', textAlign: 'left',
         }}>
           <img src="./assets/ai_icon.png" width={25} height={25} alt="" style={{ display: 'block', flexShrink: 0 }} />
-          <span style={{
-            ...T.bodySm, color: 'rgba(0,0,0,0.5)', flex: 1, minWidth: 0,
-          }}>
+          <span style={{ ...T.bodySm, color: 'rgba(0,0,0,0.5)', lineHeight: '20px', flex: 1, minWidth: 0 }}>
             <RollingText items={AB_QUESTIONS} />
           </span>
         </button>
@@ -3121,10 +3119,10 @@
               <SectionAnchor id="aiBanker" />
               <SectionBlock id="aiBanker" active={isActive('aiBanker')}>
                 {/* Carousels A and F have dots inside (16px internal padding below
-                    them); add another 16px so the dots-to-search-bar gap totals 32px.
+                    them); add another 12px so the dots-to-search-bar gap totals 28px.
                     B and V are card variants without dots — those already include their
-                    own 8px paddingBottom, so no extra spacer. */}
-                {(sections.forYou === 'A' || sections.forYou === 'F' || sections.forYou === 'Z') && <Spacer h={16} />}
+                    own paddingBottom, so no extra spacer. */}
+                {(sections.forYou === 'A' || sections.forYou === 'F' || sections.forYou === 'Z') && <Spacer h={12} />}
                 <SectionWrap title="AI banker" headerStyle="None" isFirst>
                   <AiBankerSection variant={sections.aiBanker} />
                 </SectionWrap>
@@ -3133,10 +3131,20 @@
           )}
           <SectionAnchor id="bills" />
           <SectionBlock id="bills" active={isActive('bills')}>
-            <SectionWrap title="Bills & Recharges" headerStyle={headerStyle}>
-              <BillsSection variant={sections.bills} isInCard={isInCard} />
-              {headerStyle === 'Bold' && <Spacer h={8} />}
-            </SectionWrap>
+            {sections.aiBanker === 'None' ? (
+              <>
+                <Spacer h={23} />
+                <SectionWrap title="Bills & Recharges" headerStyle={headerStyle} isFirst>
+                  <BillsSection variant={sections.bills} isInCard={isInCard} />
+                  {headerStyle === 'Bold' && <Spacer h={8} />}
+                </SectionWrap>
+              </>
+            ) : (
+              <SectionWrap title="Bills & Recharges" headerStyle={headerStyle}>
+                <BillsSection variant={sections.bills} isInCard={isInCard} />
+                {headerStyle === 'Bold' && <Spacer h={8} />}
+              </SectionWrap>
+            )}
           </SectionBlock>
           <SectionAnchor id="rewards" />
           <SectionBlock id="rewards" active={isActive('rewards')}>
