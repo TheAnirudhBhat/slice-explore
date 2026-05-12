@@ -1266,14 +1266,14 @@
     );
 
     /* Bills shortcut grid */
-    /* Bill tiles: PNG icons (polished Figma exports) rendered at 54×54 with a
-       subtle drop shadow. The circle + line glyph are baked into the export,
-       so visual size scales proportionally. */
+    /* Bill tiles: 54px white circle (BillAvatar) holding a 22px line glyph.
+       Separating the circle from the glyph lets us control icon size
+       independently of the circle. */
     const BILL_ICONS = [
-      { src: 'bill_credit', t: 'Credit\ncard' },
-      { src: 'bill_electric', t: 'Electricity\nbill' },
-      { src: 'bill_mobile', t: 'Mobile\nrecharge' },
-      { src: 'bill_more', t: 'View\nmore' },
+      { glyph: <GlyphCard color="rgba(0,0,0,0.9)" />, t: 'Credit\ncard' },
+      { glyph: <GlyphBolt color="rgba(0,0,0,0.9)" />, t: 'Electricity\nbill' },
+      { glyph: <GlyphMobile color="rgba(0,0,0,0.9)" />, t: 'Mobile\nrecharge' },
+      { glyph: <GlyphPlus color="rgba(0,0,0,0.9)" />, t: 'View\nmore' },
     ];
 
     const BillsCompositeCard = () => (
@@ -1285,7 +1285,7 @@
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginTop: 20 }}>
           {BILL_ICONS.map((b, i) => (
             <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <img src={`./assets/${b.src}.png`} width={54} height={54} alt="" style={{ display: 'block', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.06))' }} />
+              <BillAvatar>{b.glyph}</BillAvatar>
               <div style={{ ...T.caption, textAlign: 'center', marginTop: 8, whiteSpace: 'pre-line', color: 'rgba(0,0,0,0.7)' }}>
                 {b.t}
               </div>
@@ -1306,8 +1306,9 @@
     );
 
     /* Unified bill-icon avatar: 54×54 white circle with a subtle floating
-       drop shadow + a 24×24 line glyph centered. Clones the glyph element
-       to force a 24×24 render size regardless of the SVG's defaults. */
+       drop shadow + a 22px line glyph centered. The glyph is rendered at a
+       restrained 22px so it sits comfortably inside the circle without
+       crowding the edges. */
     const BillAvatar = ({ children }) => (
       <div style={{
         width: 54, height: 54, borderRadius: 100,
@@ -1316,7 +1317,7 @@
         boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
       }}>
         {React.isValidElement(children)
-          ? React.cloneElement(children, { width: 24, height: 24 })
+          ? React.cloneElement(children, { width: 22, height: 22 })
           : children}
       </div>
     );
@@ -1328,7 +1329,7 @@
             background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
             display: 'flex', flexDirection: 'column', alignItems: 'center',
           }}>
-            <img src={`./assets/${b.src}.png`} width={54} height={54} alt="" style={{ display: 'block', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.06))' }} />
+            <BillAvatar>{b.glyph}</BillAvatar>
             <div style={{ ...T.caption, textAlign: 'center', marginTop: 8, whiteSpace: 'pre-line', color: 'rgba(0,0,0,0.7)' }}>
               {b.t}
             </div>
@@ -2518,27 +2519,27 @@
       </PagePad>
     );
 
-    /* ST_G — Analytics-inspired spends widget, simplified.
-       Stays close to ST_D's quiet card feel but borrows the bigger amount + smooth
-       sparkline + "AVG" pill on a dashed line. No month chips, no insight row. */
+    /* ST_G — Functional 3-month spends chart.
+       Bigger surface than ST_D. Shows Mar/Apr/May with the current-month pulse
+       in the middle of the visual rhythm. Each point carries its amount label;
+       the delta vs last month sits in the header so the comparison is immediate. */
     const ST_G = () => {
-      const pts = [
-        { x: 22,  y: 78 },
-        { x: 67,  y: 56 },
-        { x: 112, y: 86 },
-        { x: 157, y: 32 },
-        { x: 202, y: 60 },
-        { x: 247, y: 70 },
-        { x: 292, y: 90 },
+      /* Plot 3 months evenly across the card with the current month (May) at the
+         visual midpoint of the curve. Adding a trailing faded extension keeps the
+         curve from looking truncated at the right edge. */
+      const VB_W = 312, VB_H = 140;
+      const months = [
+        { label: 'Mar', value: '₹14.2K', x: 40,  y: 92,  amount: 14200 },
+        { label: 'Apr', value: '₹22.0K', x: 156, y: 36,  amount: 22000 },
+        { label: 'May', value: '₹18.4K', x: 272, y: 64,  amount: 18400, current: true },
       ];
-      const activeIdx = 3;
-      const path = `M${pts[0].x} ${pts[0].y} ` + pts.slice(1).map((p, i) => {
-        const prev = pts[i];
-        const c1x = prev.x + 22, c1y = prev.y;
-        const c2x = p.x - 22, c2y = p.y;
+      const path = `M${months[0].x} ${months[0].y} ` + months.slice(1).map((p, i) => {
+        const prev = months[i];
+        const c1x = prev.x + 40, c1y = prev.y;
+        const c2x = p.x - 40, c2y = p.y;
         return `C${c1x} ${c1y} ${c2x} ${c2y} ${p.x} ${p.y}`;
       }).join(' ');
-      const AVG_Y = 70;
+      const current = months.find(m => m.current);
 
       return (
         <PagePad>
@@ -2550,18 +2551,50 @@
               </div>
               <TagSubtle intent="positive">↓ 16% vs Apr</TagSubtle>
             </div>
-            <div style={{ position: 'relative', marginTop: 16, height: 110 }}>
-              <svg width="100%" height="110" viewBox="0 0 312 110" fill="none" preserveAspectRatio="none">
-                <line x1="0" y1={AVG_Y} x2="312" y2={AVG_Y} stroke="rgba(0,0,0,0.15)" strokeWidth="1" strokeDasharray="3 4" />
-                <path d={path} stroke="#D30AD7" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                <circle cx={pts[activeIdx].x} cy={pts[activeIdx].y} r="5" fill="#D30AD7" />
-                <circle cx={pts[activeIdx].x} cy={pts[activeIdx].y} r="9" fill="rgba(211,10,215,0.18)" />
+            <div style={{ position: 'relative', marginTop: 20, height: VB_H }}>
+              <svg width="100%" height={VB_H} viewBox={`0 0 ${VB_W} ${VB_H}`} fill="none" preserveAspectRatio="none">
+                {/* Faint gradient fill under the line for body */}
+                <defs>
+                  <linearGradient id="st_g_fill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#D30AD7" stopOpacity="0.16" />
+                    <stop offset="100%" stopColor="#D30AD7" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <path d={`${path} L${months[months.length-1].x} ${VB_H} L${months[0].x} ${VB_H} Z`} fill="url(#st_g_fill)" />
+                {/* Curve */}
+                <path d={path} stroke="#D30AD7" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                {/* Past markers — small filled dots */}
+                {months.filter(m => !m.current).map((m, i) => (
+                  <circle key={i} cx={m.x} cy={m.y} r="4" fill="#FFFFFF" stroke="#D30AD7" strokeWidth="2" />
+                ))}
+                {/* Current-month pulse — larger ring + dot */}
+                <circle cx={current.x} cy={current.y} r="14" fill="rgba(211,10,215,0.16)" />
+                <circle cx={current.x} cy={current.y} r="6" fill="#D30AD7" />
               </svg>
-              <div style={{
-                position: 'absolute', left: 0, top: `calc(${AVG_Y / 110 * 100}% - 10px)`,
-                background: '#4E5866', color: '#FFFFFF',
-                ...T.meta, padding: '4px 8px', borderRadius: 100,
-              }}>AVG ₹15K</div>
+              {/* Per-point amount labels */}
+              {months.map((m, i) => (
+                <div key={i} style={{
+                  position: 'absolute',
+                  left: `${m.x / VB_W * 100}%`,
+                  top: `${m.y / VB_H * 100}%`,
+                  transform: 'translate(-50%, calc(-100% - 14px))',
+                  ...T.meta,
+                  color: m.current ? '#D30AD7' : 'rgba(0,0,0,0.5)',
+                  fontWeight: m.current ? 500 : 400,
+                  whiteSpace: 'nowrap',
+                  pointerEvents: 'none',
+                }}>{m.value}</div>
+              ))}
+            </div>
+            {/* Month labels — evenly spaced under the chart */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, padding: '0 8px' }}>
+              {months.map((m, i) => (
+                <div key={i} style={{
+                  ...T.caption,
+                  color: m.current ? '#D30AD7' : 'rgba(0,0,0,0.5)',
+                  fontWeight: m.current ? 500 : 400,
+                }}>{m.label}</div>
+              ))}
             </div>
           </div>
         </PagePad>
@@ -2914,7 +2947,7 @@
       V1: {
         label: 'Exploration',
         headerStyle: 'List',
-        sections: { forYou: 'A', aiBanker: 'E', bills: 'A', rewards: 'F', stats: 'A', more: 'A', footer: 'A' },
+        sections: { forYou: 'A', aiBanker: 'E', bills: 'A', rewards: 'F', stats: 'G', more: 'A', footer: 'A' },
       },
     };
 
