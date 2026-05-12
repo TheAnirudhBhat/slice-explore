@@ -1859,12 +1859,13 @@
     /* ----- Bills & Recharges — no nudges (urgency lives in For You). No inner heading
        (the section header above is the title). 5 ways to present the shortcut surface. ----- */
 
-    const InCardHeader = ({ title, cta, icon }) => (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 16, borderBottom: '1px solid rgba(0,0,0,0.05)', marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          {icon && <div style={{ display: 'flex', color: '#D30AD7' }}>{icon}</div>}
-          <span style={{ ...T.h4 }}>{title}</span>
-        </div>
+    /* DLS rule: in-card headers don't carry a leading icon and don't render a
+       divider below the title. The card itself provides containment; an extra
+       hairline would double the boundary. The `icon` prop is accepted but ignored
+       so existing call sites keep working. */
+    const InCardHeader = ({ title, cta }) => (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <span style={{ ...T.h4 }}>{title}</span>
         {cta && <button className="tap" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, ...T.btnSm, color: '#D30AD7' }}>{cta}</button>}
       </div>
     );
@@ -1956,7 +1957,7 @@
           {isInCard
             ? <InCardHeader title="Bills & Recharges" cta="History" />
             : (
-              <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 16, borderBottom: '1px solid rgba(0,0,0,0.05)', marginBottom: 20 }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
                 <button className="tap" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, ...T.btnSm, color: '#D30AD7' }}>History</button>
               </div>
             )}
@@ -2381,7 +2382,7 @@
             {isInCard
               ? <InCardHeader title="More" cta="Edit" />
               : (
-                <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 16, borderBottom: '1px solid rgba(0,0,0,0.05)', marginBottom: 4 }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
                   <button className="tap" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, ...T.btnSm, color: '#D30AD7' }}>Edit</button>
                 </div>
               )}
