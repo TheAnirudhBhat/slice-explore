@@ -1316,8 +1316,8 @@
       }}>{children}</div>
     );
 
-    const BillsShortcutGrid = () => (
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+    const BillsShortcutGrid = ({ columnGap = 8 }) => (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: columnGap }}>
         {BILL_ICONS.map((b, i) => (
           <button key={i} className="tap" style={{
             background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
@@ -2043,11 +2043,12 @@
       </PagePad>
     );
 
-    /* B — Grid in a card, no inner heading */
+    /* B — Grid in a card, no inner heading. Looser column gap (20px) so the
+       4 shortcut items feel spaced out inside the card padding. */
     const BL_B = () => (
       <PagePad>
         <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 24 }}>
-          <BillsShortcutGrid />
+          <BillsShortcutGrid columnGap={20} />
         </div>
       </PagePad>
     );
