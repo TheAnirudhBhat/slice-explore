@@ -2195,24 +2195,6 @@
       </PagePad>
     );
 
-    /* C — Card with grid + reward footer (no inner heading; reward kept as the persuasion layer) */
-    const BL_C = () => (
-      <PagePad>
-        <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 24 }}>
-          <BillsShortcutGrid />
-          <div style={{ borderTop: '1px solid rgba(0,0,0,0.05)', margin: '20px 0 16px' }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Avatar bg="#FAE2FA" glyph={<GlyphSpark color="#D30AD7" />} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.9)' }}>Get assured ₹10</div>
-              <div style={{ ...T.caption, marginTop: 2 }}>Reward on 1st bill payment</div>
-            </div>
-            <Chevron />
-          </div>
-        </div>
-      </PagePad>
-    );
-
     /* D — Two-row grid, 8 shortcuts inside a card */
     const BL_D = () => {
       const tiles = [
