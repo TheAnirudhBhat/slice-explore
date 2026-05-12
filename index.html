@@ -1394,6 +1394,98 @@
     };
     const lerpScheme = (a, b, t) => [lerpHex(a[0], b[0], t), lerpHex(a[1], b[1], t), lerpHex(a[2], b[2], t)];
 
+    /* Infinite carousel — pairs with a slide list rendered as
+       [cloneLast, ...slides, cloneFirst]. After the snap settles on either clone,
+       scrollLeft is reset (without animation) to the equivalent real slide so the
+       loop feels continuous in both directions. */
+    const useInfiniteCarousel = (slideCount) => {
+      const ref = React.useRef(null);
+      const [idx, setIdx] = useState(0);
+      const [progress, setProgress] = useState(0);
+      const paused = React.useRef(false);
+      const teleporting = React.useRef(false);
+
+      React.useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        /* Start on the first real slide (position 1; position 0 is cloneLast). */
+        const setInitial = () => {
+          const cw = el.offsetWidth;
+          if (cw === 0) { requestAnimationFrame(setInitial); return; }
+          el.scrollLeft = cw;
+        };
+        setInitial();
+      }, []);
+
+      React.useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        let settleTimer;
+        const onScroll = () => {
+          const cw = el.offsetWidth;
+          if (cw === 0) return;
+          const raw = el.scrollLeft / cw; /* 0..N+1 */
+          /* Logical position: raw=1 → real slide 0, raw=N → real slide N-1 */
+          const logical = raw - 1;
+          const wrapped = ((logical % slideCount) + slideCount) % slideCount;
+          setProgress(wrapped);
+          setIdx(Math.round(wrapped) % slideCount);
+
+          if (teleporting.current) return;
+          clearTimeout(settleTimer);
+          settleTimer = setTimeout(() => {
+            const pos = Math.round(raw);
+            if (pos <= 0) {
+              /* On cloneLast → jump to real last (position N) without animation */
+              teleporting.current = true;
+              const prev = el.style.scrollBehavior;
+              el.style.scrollBehavior = 'auto';
+              el.scrollLeft = cw * slideCount;
+              requestAnimationFrame(() => {
+                el.style.scrollBehavior = prev;
+                teleporting.current = false;
+              });
+            } else if (pos >= slideCount + 1) {
+              /* On cloneFirst → jump back to real first (position 1) */
+              teleporting.current = true;
+              const prev = el.style.scrollBehavior;
+              el.style.scrollBehavior = 'auto';
+              el.scrollLeft = cw;
+              requestAnimationFrame(() => {
+                el.style.scrollBehavior = prev;
+                teleporting.current = false;
+              });
+            }
+          }, 140);
+        };
+        el.addEventListener('scroll', onScroll, { passive: true });
+        const onDown = () => { paused.current = true; };
+        const onUp = () => { setTimeout(() => { paused.current = false; }, 3000); };
+        el.addEventListener('pointerdown', onDown);
+        el.addEventListener('pointerup', onUp);
+        return () => {
+          clearTimeout(settleTimer);
+          el.removeEventListener('scroll', onScroll);
+          el.removeEventListener('pointerdown', onDown);
+          el.removeEventListener('pointerup', onUp);
+        };
+      }, [slideCount]);
+
+      React.useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const t = setInterval(() => {
+          if (paused.current) return;
+          const cw = el.offsetWidth;
+          if (cw === 0) return;
+          el.scrollBy({ left: cw, behavior: 'smooth' });
+        }, 4000);
+        return () => clearInterval(t);
+      }, []);
+
+      return [ref, idx, progress];
+    };
+
     /* Shared autoscroll + index tracking hook for For You carousels.
        Returns [ref, idx, setIdx, progress]. Autoscrolls every 4s with smooth behaviour. */
     const useFYCarousel = (slideCount, slidePct = 100) => {
@@ -1459,25 +1551,23 @@
       </div>
     );
 
-    /* For You A — standard large carousel pulling up under the app bar (always Bleed). */
+    /* For You A — standard large carousel pulling up under the app bar (always Bleed).
+       Infinite scroll: slides wrap around in both directions via cloned edge slides. */
     const FY_A = () => {
       const TEXT_TOP_CSS = 'calc(var(--bar-overlap, 118px) + 32px)';
       const MIN_H = 220;
       const SLIDE_PCT = 100;
       const TEXT_BOTTOM = 40;
-      /* Smooth gradient — flat hold covers full app-bar overlap zone, then a very wide
-         fade across the remaining 40% of height. No sharp transitions visible. */
       const slideBg = (s) => {
         return `linear-gradient(to bottom, #FFFFFF 0%, #FFFFFF 3%, ${s[0]} 46%, ${s[1]} 76%, ${s[2]} 100%)`;
       };
-
-      const [ref, idx, , progress] = useFYCarousel(FY_SLIDES.length, SLIDE_PCT);
-
-      const p   = Math.max(0, Math.min(FY_SCHEMES.length - 1, progress));
-      const lo  = Math.floor(p);
-      const hi  = Math.min(FY_SCHEMES.length - 1, lo + 1);
-      const t   = p - lo;
+      const [ref, idx, progress] = useInfiniteCarousel(FY_SLIDES.length);
+      /* Wrapped progress → lo/hi schemes; hi wraps to 0 when crossing the last slide. */
+      const lo = Math.floor(progress) % FY_SCHEMES.length;
+      const hi = (lo + 1) % FY_SCHEMES.length;
+      const t = progress - Math.floor(progress);
       const scheme = lerpScheme(FY_SCHEMES[lo], FY_SCHEMES[hi], t);
+      const renderedSlides = [FY_SLIDES[FY_SLIDES.length - 1], ...FY_SLIDES, FY_SLIDES[0]];
 
       return (
         <>
@@ -1491,7 +1581,7 @@
               display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
               overscrollBehavior: 'none',
             }} className="scrollbar-hide">
-              {FY_SLIDES.map((s, i) => (
+              {renderedSlides.map((s, i) => (
                 <div key={i} style={{
                   flex: `0 0 ${SLIDE_PCT}%`, scrollSnapAlign: 'start',
                   position: 'relative', minHeight: MIN_H, overflow: 'hidden',
@@ -1539,7 +1629,7 @@
     };
 
     /* For You F — centered layout carousel. Text + CTA centred within slide,
-       illustration above text. Uses generated illustrations at 80px. always Bleed. */
+       illustration above text. Infinite scroll via cloned edge slides. */
     const FY_F = () => {
       const PAD_TOP_CSS = 'calc(var(--bar-overlap, 118px) + 8px)';
       const MIN_H = 200;
@@ -1547,14 +1637,12 @@
       const slideBg = (s) => {
         return `linear-gradient(to bottom, #FFFFFF 0%, #FFFFFF 3%, ${s[0]} 46%, ${s[1]} 76%, ${s[2]} 100%)`;
       };
-
-      const [ref, idx, , progress] = useFYCarousel(FY_SLIDES.length, SLIDE_PCT);
-
-      const p   = Math.max(0, Math.min(FY_SCHEMES.length - 1, progress));
-      const lo  = Math.floor(p);
-      const hi  = Math.min(FY_SCHEMES.length - 1, lo + 1);
-      const t   = p - lo;
+      const [ref, idx, progress] = useInfiniteCarousel(FY_SLIDES.length);
+      const lo = Math.floor(progress) % FY_SCHEMES.length;
+      const hi = (lo + 1) % FY_SCHEMES.length;
+      const t = progress - Math.floor(progress);
       const scheme = lerpScheme(FY_SCHEMES[lo], FY_SCHEMES[hi], t);
+      const renderedSlides = [FY_SLIDES[FY_SLIDES.length - 1], ...FY_SLIDES, FY_SLIDES[0]];
 
       return (
         <>
@@ -1568,7 +1656,7 @@
               display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
               overscrollBehavior: 'none',
             }} className="scrollbar-hide">
-              {FY_SLIDES.map((s, i) => (
+              {renderedSlides.map((s, i) => (
                 <div key={i} style={{
                   flex: `0 0 ${SLIDE_PCT}%`, scrollSnapAlign: 'start',
                   position: 'relative', minHeight: MIN_H, overflow: 'hidden',
@@ -1622,7 +1710,7 @@
         titleColor: 'rgba(0,0,0,0.9)', subColor: 'rgba(0,0,0,0.7)', ctaBg: '#171A1F', ctaColor: '#FFFFFF' },
     ];
     const FY_B = () => (
-      <div style={{ paddingTop: 8, paddingBottom: 8 }}>
+      <div style={{ paddingTop: 16, paddingBottom: 8 }}>
         <HScroll gap={16}>
         {FY_SLIDES.map((s, i) => {
           const th = FY_B_THEMES[i % FY_B_THEMES.length];
@@ -1825,7 +1913,7 @@
     ];
     const FY_V_SHADOW = '0 4px 24px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)';
     const FY_V = () => (
-      <div style={{ paddingTop: 8 }}>
+      <div style={{ paddingTop: 16 }}>
       <HScroll gap={16}>
         {FY_V_CARDS.map((c, i) => (
           <button key={i} className="tap" style={{
