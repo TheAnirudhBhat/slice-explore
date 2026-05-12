@@ -1147,6 +1147,84 @@
 
     /* ============= CARDS ============= */
 
+    /* Vertical-roll text — cycles through items every `intervalMs`. Inherits
+       font styling from its parent so it can drop into a caption slot. */
+    const RollingText = ({ items, intervalMs = 2500, lineHeight = 16 }) => {
+      const [idx, setIdx] = useState(0);
+      React.useEffect(() => {
+        if (items.length < 2) return;
+        const t = setInterval(() => setIdx(i => (i + 1) % items.length), intervalMs);
+        return () => clearInterval(t);
+      }, [items.length, intervalMs]);
+      return (
+        <span style={{
+          display: 'inline-block', height: lineHeight, overflow: 'hidden',
+          verticalAlign: 'bottom', whiteSpace: 'nowrap',
+        }}>
+          <span style={{
+            display: 'block',
+            transform: `translateY(${-idx * lineHeight}px)`,
+            transition: 'transform 500ms cubic-bezier(0.22, 0.61, 0.36, 1)',
+          }}>
+            {items.map((s, i) => (
+              <span key={i} style={{ display: 'block', height: lineHeight, lineHeight: `${lineHeight}px` }}>{s}</span>
+            ))}
+          </span>
+        </span>
+      );
+    };
+
+    /* Like RollingText but hosts arbitrary JSX nodes. Loops in one direction
+       only — when the last real item finishes, scroll snaps back to the start
+       without animation so the next cycle continues downward. Items are
+       right-aligned in the column so narrower items hug the right edge. */
+    const RollingStack = ({ items, intervalMs = 2500, height = 24, transitionMs = 800 }) => {
+      const [idx, setIdx] = useState(0);
+      const [animate, setAnimate] = useState(true);
+      React.useEffect(() => {
+        if (items.length < 2) return;
+        const t = setInterval(() => {
+          setAnimate(true);
+          setIdx(i => i + 1);
+        }, intervalMs);
+        return () => clearInterval(t);
+      }, [items.length, intervalMs]);
+      /* When we land on the cloned first item past the end, wait for the
+         transition to complete, then jump (no animation) back to index 0. */
+      React.useEffect(() => {
+        if (idx >= items.length) {
+          const t = setTimeout(() => {
+            setAnimate(false);
+            setIdx(0);
+          }, transitionMs);
+          return () => clearTimeout(t);
+        }
+      }, [idx, items.length, transitionMs]);
+      const rendered = items.concat([items[0]]);
+      const fade = 'linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%)';
+      return (
+        <span style={{
+          display: 'inline-block', height, overflow: 'hidden',
+          verticalAlign: 'bottom',
+          maskImage: fade,
+          WebkitMaskImage: fade,
+        }}>
+          <span style={{
+            display: 'block',
+            transform: `translateY(${-idx * height}px)`,
+            transition: animate ? `transform ${transitionMs}ms cubic-bezier(0.4, 0, 0.2, 1)` : 'none',
+          }}>
+            {rendered.map((item, i) => (
+              <span key={i} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+                height,
+              }}>{item}</span>
+            ))}
+          </span>
+        </span>
+      );
+    };
+
     const ExploreMedium = ({ subtext, title, icon }) => (
       <button className="tap bg-white relative overflow-hidden"
         style={{
@@ -1156,8 +1234,8 @@
           textAlign: 'left'
         }}>
         <div style={T.caption}>{subtext}</div>
-        <div style={{ ...T.h4, marginTop: 4 }}>{title}</div>
-        {icon && <div style={{ position: 'absolute', right: 18, bottom: 18 }}>{icon}</div>}
+        <div style={{ ...T.h3, marginTop: 4 }}>{title}</div>
+        {icon && <div style={{ position: 'absolute', right: 16, bottom: 16 }}>{icon}</div>}
       </button>
     );
     const ExploreSmall = ({ subtext, title, trailing }) => (
@@ -1313,12 +1391,14 @@
 
     /* Unified bill-icon avatar: 54×54. Two variants —
        'tinted'  → slate-10 bg, no stroke (default)
-       'outline' → white bg with a 1px #F2F2F2 stroke (DLS subtle outline) */
+       'outline' → white bg with a 1px #F2F2F2 stroke (DLS subtle outline) +
+                   a subtle drop shadow to lift the avatar off the page. */
     const BillAvatar = ({ children, variant = 'tinted' }) => (
       <div style={{
         width: 54, height: 54, borderRadius: 100,
         background: variant === 'outline' ? '#FFFFFF' : '#F6F9FC',
         border: variant === 'outline' ? '1px solid #F2F2F2' : 'none',
+        boxShadow: variant === 'outline' ? '0 2px 6px rgba(0,0,0,0.06)' : 'none',
         display: 'grid', placeItems: 'center', flexShrink: 0,
       }}>
         {children}
@@ -1563,10 +1643,10 @@
     /* For You A — standard large carousel pulling up under the app bar (always Bleed).
        Infinite scroll: slides wrap around in both directions via cloned edge slides. */
     const FY_A = () => {
-      const TEXT_TOP_CSS = 'calc(var(--bar-overlap, 118px) + 32px)';
+      const TEXT_TOP_CSS = 'calc(var(--bar-overlap, 118px) + 24px)';
       const MIN_H = 220;
       const SLIDE_PCT = 100;
-      const TEXT_BOTTOM = 40;
+      const TEXT_BOTTOM = 45;
       const slideBg = (s) => {
         return `linear-gradient(to bottom, #FFFFFF 0%, #FFFFFF 3%, ${s[0]} 46%, ${s[1]} 76%, ${s[2]} 100%)`;
       };
@@ -1608,7 +1688,7 @@
                   </div>
                   <div style={{
                     position: 'relative', width: '100%',
-                    paddingTop: TEXT_TOP_CSS, paddingRight: 120, paddingBottom: TEXT_BOTTOM, paddingLeft: 24,
+                    paddingTop: TEXT_TOP_CSS, paddingRight: 120, paddingBottom: TEXT_BOTTOM, paddingLeft: 28,
                     display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
                     minHeight: MIN_H, boxSizing: 'border-box', zIndex: 1,
                   }}>
@@ -1672,7 +1752,7 @@
                   background: 'transparent',
                   display: 'flex', flexDirection: 'column', alignItems: 'center',
                   textAlign: 'center',
-                  paddingTop: PAD_TOP_CSS, paddingRight: 32, paddingBottom: 44, paddingLeft: 32,
+                  paddingTop: PAD_TOP_CSS, paddingRight: 36, paddingBottom: 44, paddingLeft: 36,
                   boxSizing: 'border-box',
                 }}>
                   <img src={`./assets/${s.centeredImg}`} alt="" style={{
@@ -2056,44 +2136,53 @@
       </PagePad>
     );
 
-    /* Ryan C — chat-card style entry with avatar + prompt + brand-tinted "ask a
-       question" bubble below. No send button: tap surface opens the full Ryan flow. */
-    const AB_C = () => (
-      <PagePad>
-        <button className="tap" style={{
-          width: '100%', padding: 16,
-          background: 'white', border: 'none', borderRadius: 16,
-          boxShadow: '0 4px 20px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
-          display: 'flex', flexDirection: 'column', gap: 12,
-          textAlign: 'left', cursor: 'pointer',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: 100, flexShrink: 0,
-              background: 'linear-gradient(135deg, #D30AD7 0%, #2B6ACF 100%)',
-              display: 'grid', placeItems: 'center',
-              boxShadow: '0 2px 8px rgba(211,10,215,0.32)',
+    /* AI banker C — text input (the "talk to AI" entry surface) + horizontal-scroll
+       suggestion pills underneath. Section heading lives in the heading system
+       above; this variant carries only the input + suggestions. */
+    const AB_C = () => {
+      const questions = ['My CC bill?', 'Redeem monies', "What's a pot?", 'Best FD rate?', 'Track spends'];
+      return (
+        <div>
+          <PagePad>
+            <button className="tap" style={{
+              width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+              padding: '14px 18px',
+              background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)', borderRadius: 100,
+              cursor: 'text', textAlign: 'left',
             }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-              </svg>
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ ...T.bodySm, color: 'rgba(0,0,0,0.9)', fontWeight: 500 }}>Ryan</div>
-              <div style={{ ...T.caption, color: 'rgba(0,0,0,0.5)', marginTop: 2 }}>Your AI banker</div>
+              <div style={{
+                width: 24, height: 24, borderRadius: 100, flexShrink: 0,
+                background: 'linear-gradient(135deg, #D30AD7 0%, #2B6ACF 100%)',
+                display: 'grid', placeItems: 'center',
+              }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+              </div>
+              <span style={{ ...T.bodySm, color: 'rgba(0,0,0,0.5)', flex: 1 }}>Ask anything…</span>
+            </button>
+          </PagePad>
+          <Spacer h={12} />
+          <div style={{
+            overflowX: 'auto', paddingLeft: 24, paddingRight: 0,
+            scrollSnapType: 'x proximity', scrollPaddingLeft: 24,
+          }} className="scrollbar-hide">
+            <div style={{ display: 'flex', gap: 8 }}>
+              {questions.map((q, i) => (
+                <button key={i} className="tap" style={{
+                  flexShrink: 0, scrollSnapAlign: 'start',
+                  ...T.bodySm, color: 'rgba(0,0,0,0.9)',
+                  background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)',
+                  padding: '8px 14px', borderRadius: 100, whiteSpace: 'nowrap',
+                  cursor: 'pointer',
+                }}>{q}</button>
+              ))}
+              <div style={{ flex: '0 0 24px' }} aria-hidden="true" />
             </div>
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {['My CC bill?', 'Redeem monies', "What's a pot?"].map((q, i) => (
-              <span key={i} style={{
-                ...T.caption, color: '#A008A3', background: '#FAE2FA',
-                padding: '6px 10px', borderRadius: 100, whiteSpace: 'nowrap',
-              }}>{q}</span>
-            ))}
-          </div>
-        </button>
-      </PagePad>
-    );
+        </div>
+      );
+    };
 
     const AB_D = () => (
       <PagePad>
@@ -2185,11 +2274,14 @@
       </PagePad>
     );
 
-    /* B — Grid in a card, no inner heading. Looser column gap (20px) so the
-       4 shortcut items feel spaced out inside the card padding. */
-    const BL_B = () => (
+    /* B — Grid in a card. When In-card header style is active the card carries
+       its own "Bills & Recharges" heading (since the outer section header is
+       suppressed). Looser column gap (20px) so the 4 shortcut items feel spaced
+       out inside the card padding. */
+    const BL_B = ({ isInCard }) => (
       <PagePad>
         <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 24 }}>
+          {isInCard && <InCardHeader title="Bills & Recharges" />}
           <BillsShortcutGrid columnGap={20} />
         </div>
       </PagePad>
@@ -2264,7 +2356,7 @@
       <HScroll gap={12}>
         <div style={{ flex: '0 0 200px' }}>
           <ExploreMedium subtext="Spark · 12 live" title="Expires in 2d"
-            icon={<img src="./assets/spark_icon.png" width={64} height={64} alt="" style={{ display: 'block' }} />} />
+            icon={<img src="./assets/spark_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
         </div>
         <div style={{ flex: '0 0 200px' }}>
           <ExploreMedium subtext="Fire games" title="5 fires"
@@ -2272,7 +2364,7 @@
         </div>
         <div style={{ flex: '0 0 200px' }}>
           <ExploreMedium subtext="Monies" title="₹240"
-            icon={<img src="./assets/monies_icon.png" width={64} height={64} alt="" style={{ display: 'block' }} />} />
+            icon={<img src="./assets/monies_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
         </div>
       </HScroll>
     );
@@ -2314,11 +2406,11 @@
         </button>
         <div style={{ flex: '0 0 200px', scrollSnapAlign: 'start' }}>
           <ExploreMedium subtext="Fire games" title="5 fires"
-            icon={<img src="./assets/fire_sparkle.png" width={64} height={64} alt="" style={{ display: 'block' }} />} />
+            icon={<img src="./assets/fire_sparkle.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
         </div>
         <div style={{ flex: '0 0 200px', scrollSnapAlign: 'start' }}>
           <ExploreMedium subtext="Monies" title="₹240"
-            icon={<img src="./assets/monies_icon.png" width={64} height={64} alt="" style={{ display: 'block' }} />} />
+            icon={<img src="./assets/monies_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
         </div>
       </HScroll>
     );
@@ -2344,11 +2436,11 @@
         <HScroll gap={12}>
           <div style={{ flex: '0 0 200px' }}>
             <ExploreMedium subtext="Spark · 12 live" title="Expires 2d"
-              icon={<img src="./assets/spark_icon.png" width={64} height={64} alt="" style={{ display: 'block' }} />} />
+              icon={<img src="./assets/spark_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
           </div>
           <div style={{ flex: '0 0 200px' }}>
             <ExploreMedium subtext="Monies" title="₹240"
-              icon={<img src="./assets/monies_icon.png" width={64} height={64} alt="" style={{ display: 'block' }} />} />
+              icon={<img src="./assets/monies_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
           </div>
         </HScroll>
       </>
@@ -2418,7 +2510,7 @@
           <ExploreMedium subtext="Fire games" title="5 fires"
             icon={<img src="./assets/fire_sparkle.png" width={54} height={54} alt="" />} />
           <ExploreMedium subtext="Monies" title="₹240"
-            icon={<img src="./assets/monies_icon.png" width={64} height={64} alt="" style={{ display: 'block' }} />} />
+            icon={<img src="./assets/monies_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
         </div>
       );
       return (
@@ -2481,10 +2573,15 @@
         <Spacer h={16} />
         <PagePad>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <ExploreMedium subtext="Spark · 12 live" title="2d to claim"
-              icon={<img src="./assets/spark_icon.png" width={64} height={64} alt="" style={{ display: 'block' }} />} />
+            <ExploreMedium
+              subtext="Spark"
+              title="5 live"
+              icon={<RollingStack height={48} items={[
+                <img src="./assets/spark_icon.png" width={48} height={48} alt="" style={{ display: 'block' }} />,
+                <img src="./assets/spark_brands.png" alt="" style={{ height: 32, width: 'auto', display: 'block' }} />,
+              ]} />} />
             <ExploreMedium subtext="Monies" title="₹240"
-              icon={<img src="./assets/monies_icon.png" width={64} height={64} alt="" style={{ display: 'block' }} />} />
+              icon={<img src="./assets/monies_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
           </div>
         </PagePad>
       </>
@@ -2674,8 +2771,58 @@
       );
     };
 
+    /* ST_I — Card-style spends. Same 3-month curve as ST_G but with the
+       smaller Rewards-card typography (T.caption + T.h3) and an inline
+       "↓ 16% vs Apr" delta tag. */
+    const ST_I = () => {
+      const VB_W = 312, VB_H = 80;
+      const months = [
+        { x: 0,   y: 56 },
+        { x: 140, y: 18 },
+        { x: 280, y: 36, current: true },
+      ];
+      const path = `M${months[0].x} ${months[0].y} ` + months.slice(1).map((p, i) => {
+        const prev = months[i];
+        const c1x = prev.x + 40, c1y = prev.y;
+        const c2x = p.x - 40, c2y = p.y;
+        return `C${c1x} ${c1y} ${c2x} ${c2y} ${p.x} ${p.y}`;
+      }).join(' ');
+      const current = months.find(m => m.current);
+      return (
+        <PagePad>
+          <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 16, overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+              <div>
+                <div style={T.caption}>May spends</div>
+                <div style={{ ...T.h3, marginTop: 4 }}>₹18,400</div>
+              </div>
+              <span style={{
+                ...T.caption, fontWeight: 500,
+                color: '#00A63E', background: '#E0F4E8',
+                padding: '3px 8px', borderRadius: 100, whiteSpace: 'nowrap',
+              }}>↓ 16% vs Apr</span>
+            </div>
+            <div style={{ position: 'relative', marginTop: 16, marginLeft: -16, marginRight: -16, marginBottom: -16, height: VB_H }}>
+              <svg width="100%" height={VB_H} viewBox={`0 0 ${VB_W} ${VB_H}`} fill="none" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="st_i_fill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#D30AD7" stopOpacity="0.14" />
+                    <stop offset="100%" stopColor="#D30AD7" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+                <path d={`${path} L${months[months.length-1].x} ${VB_H} L${months[0].x} ${VB_H} Z`} fill="url(#st_i_fill)" />
+                <path d={path} stroke="#D30AD7" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx={current.x} cy={current.y} r="11" fill="rgba(211,10,215,0.18)" />
+                <circle cx={current.x} cy={current.y} r="5" fill="#D30AD7" />
+              </svg>
+            </div>
+          </div>
+        </PagePad>
+      );
+    };
+
     const StatsSection = ({ variant, isInCard }) => {
-      const C = { A: ST_A, B: ST_B, C: ST_C, D: ST_D, E: ST_E, F: ST_F, G: ST_G }[variant];
+      const C = { A: ST_A, B: ST_B, C: ST_C, D: ST_D, E: ST_E, F: ST_F, G: ST_G, I: ST_I }[variant];
       return <C isInCard={isInCard} />;
     };
 
@@ -2683,44 +2830,18 @@
        Future products (insurance, gift cards) launch here before graduating
        into their own section. ----- */
 
-    /* A — Two small cards with a label / value / bottom-right decorative glyph.
-       AUTOPAY shows a gradient progress arc; CREDIT SCORE shows a sparkle + ellipse
-       (slice brand element + score badge). Uppercase metadata label. */
-    const AutopayGlyph = () => (
-      <img src="./assets/autopay_icon.png" width={56} height={56} alt="" style={{ display: 'block' }} />
+    /* A — Two small cards using the same ExploreMedium spec as the Rewards row:
+       caption subtext + H4 title + 52×52 icon pinned bottom-right. */
+    const MR_A = () => (
+      <PagePad>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <ExploreMedium subtext="Autopay" title="3 active"
+            icon={<img src="./assets/autopay_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
+          <ExploreMedium subtext="Credit score" title="778"
+            icon={<img src="./assets/credit_score_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
+        </div>
+      </PagePad>
     );
-    const CreditScoreGlyph = () => (
-      <img src="./assets/credit_score_icon.png" width={64} height={64} alt="" style={{ display: 'block' }} />
-    );
-    const MR_A = () => {
-      const cardBase = {
-        background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER,
-        borderRadius: 16, padding: 20, position: 'relative', overflow: 'hidden',
-        minHeight: 152,
-      };
-      return (
-        <PagePad>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <div style={cardBase}>
-              <div style={{ ...T.meta, color: 'rgba(0,0,0,0.5)' }}>AUTOPAY</div>
-              <div style={{ fontFamily: 'Rubik', fontSize: 18, fontWeight: 500, lineHeight: '22px', letterSpacing: '0.36px', color: 'rgba(0,0,0,0.9)', marginTop: 6, whiteSpace: 'nowrap' }}>3 upcoming</div>
-              <div style={{ position: 'absolute', right: 18, bottom: 18 }}>
-                <AutopayGlyph />
-              </div>
-            </div>
-            <div style={cardBase}>
-              <div style={{ ...T.meta, color: 'rgba(0,0,0,0.5)' }}>CREDIT SCORE</div>
-              <div style={{ fontFamily: 'Rubik', fontSize: 18, fontWeight: 500, lineHeight: '22px', letterSpacing: '0.36px', color: 'rgba(0,0,0,0.9)', marginTop: 6, whiteSpace: 'nowrap' }}>778</div>
-              {/* The gauge PNG has empty space at its bottom — anchor it slightly past
-                  the card edge so its visible content lines up with the AUTOPAY icon. */}
-              <div style={{ position: 'absolute', right: 10, bottom: -2 }}>
-                <CreditScoreGlyph />
-              </div>
-            </div>
-          </div>
-        </PagePad>
-      );
-    };
 
     const MR_B = () => (
       <>
@@ -2851,7 +2972,7 @@
           <BillsCompositeCard />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
             <ExploreMedium subtext="Play & win" title="5 fires"
-              icon={<img src="./assets/fire_sparkle.png" width={64} height={64} alt="" style={{ display: 'block' }} />} />
+              icon={<img src="./assets/fire_sparkle.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
             <ExploreMedium subtext="May spends" title="₹12,487"
               icon={<img src="./assets/may_spends.png" width={54} height={54} alt="" style={{ display: 'block' }} />} />
           </div>
@@ -2897,7 +3018,7 @@
             <>
               <SectionAnchor id="aiBanker" />
               <SectionBlock id="aiBanker" active={isActive('aiBanker')}>
-                <SectionWrap title="Ryan" headerStyle="None">
+                <SectionWrap title="AI banker" headerStyle="None">
                   <AiBankerSection variant={sections.aiBanker} />
                 </SectionWrap>
               </SectionBlock>
@@ -2907,6 +3028,7 @@
           <SectionBlock id="bills" active={isActive('bills')}>
             <SectionWrap title="Bills & Recharges" headerStyle={headerStyle}>
               <BillsSection variant={sections.bills} isInCard={isInCard} />
+              {headerStyle === 'Bold' && <Spacer h={8} />}
             </SectionWrap>
           </SectionBlock>
           <SectionAnchor id="rewards" />
@@ -2985,8 +3107,8 @@
         }
       },
       {
-        key: 'aiBanker', label: 'Ryan', variants: {
-          A: 'Pill + BETA tag', C: 'Avatar + chat bar', E: 'Pill + rolling examples', None: 'X'
+        key: 'aiBanker', label: 'AI banker', variants: {
+          A: 'Pill + BETA tag', C: 'Input + scroll pills', E: 'Pill + rolling examples', None: 'X'
         }
       },
       {
@@ -3001,7 +3123,7 @@
       },
       {
         key: 'stats', label: 'Statistics', variants: {
-          A: 'Bar chart', D: 'Sparkline card', G: 'Analytics widget',
+          A: 'Bar chart', D: 'Sparkline card', G: 'Analytics widget', I: 'Card-style spends',
         }
       },
       {
@@ -3031,7 +3153,7 @@
       V1: {
         label: 'Exploration',
         headerStyle: 'List',
-        sections: { forYou: 'A', aiBanker: 'E', bills: 'A', rewards: 'G', stats: 'G', more: 'A', footer: 'A' },
+        sections: { forYou: 'A', aiBanker: 'E', bills: 'C', rewards: 'G', stats: 'G', more: 'A', footer: 'A' },
       },
     };
 
@@ -3281,7 +3403,19 @@
         });
         scrollToSection(key);
       };
-      const updateHeader = (s) => { setUseOriginal(false); setHeaderStyle(s); };
+      const updateHeader = (s) => {
+        setUseOriginal(false);
+        setHeaderStyle(s);
+        /* In-card header style means the section title lives inside a card,
+           so Bills needs to render the grid in a card (variant B). Section gap
+           also tightens to 16 since each section is self-contained. */
+        if (s === 'None') {
+          setSections(prev => ({ ...prev, bills: 'B' }));
+          setSpacing(prev => ({ ...prev, gapNone: 20 }));
+        } else {
+          setSpacing(prev => ({ ...prev, gapNone: 24 }));
+        }
+      };
       const updateSpacing = (key, v) => setSpacing(prev => ({ ...prev, [key]: v }));
 
       const applyPreset = (k) => {
