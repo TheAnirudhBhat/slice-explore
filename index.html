@@ -1157,7 +1157,7 @@
         }}>
         <div style={T.caption}>{subtext}</div>
         <div style={{ ...T.h4, marginTop: 4 }}>{title}</div>
-        {icon && <div style={{ position: 'absolute', right: 16, bottom: 16 }}>{icon}</div>}
+        {icon && <div style={{ position: 'absolute', right: 18, bottom: 18 }}>{icon}</div>}
       </button>
     );
     const ExploreSmall = ({ subtext, title, trailing }) => (
@@ -1311,14 +1311,13 @@
       </div>
     );
 
-    /* Unified bill-icon avatar: 54×54 white circle with an even floating shadow.
-       Children render at their native size (PNG glyphs come in at 24×24). */
+    /* Unified bill-icon avatar: 54×54 with a subtle slate-tinted background so
+       the circle reads against the white page without harsh contrast. */
     const BillAvatar = ({ children }) => (
       <div style={{
         width: 54, height: 54, borderRadius: 100,
-        background: '#FFFFFF', border: 'none',
+        background: '#F6F9FC', border: 'none',
         display: 'grid', placeItems: 'center', flexShrink: 0,
-        boxShadow: '0 0 8px rgba(0,0,0,0.04)',
       }}>
         {children}
       </div>
@@ -2272,7 +2271,7 @@
       <HScroll gap={12}>
         <div style={{ flex: '0 0 200px' }}>
           <ExploreMedium subtext="Spark · 12 live" title="Expires in 2d"
-            icon={<img src="./assets/spark_icon.png" width={54} height={54} alt="" style={{ display: 'block' }} />} />
+            icon={<img src="./assets/spark_icon.png" width={80} height={80} alt="" style={{ display: 'block' }} />} />
         </div>
         <div style={{ flex: '0 0 200px' }}>
           <ExploreMedium subtext="Fire games" title="5 fires"
@@ -2280,7 +2279,7 @@
         </div>
         <div style={{ flex: '0 0 200px' }}>
           <ExploreMedium subtext="Monies" title="₹240"
-            icon={<img src="./assets/monies_icon.png" width={54} height={54} alt="" style={{ display: 'block' }} />} />
+            icon={<img src="./assets/monies_icon.png" width={64} height={64} alt="" style={{ display: 'block' }} />} />
         </div>
       </HScroll>
     );
@@ -2288,7 +2287,7 @@
     const RW_B = () => (
       <>
         <PagePad>
-          <MarketingCard glyph={<Avatar size={32} bg="#FAE2FA" glyph={<GlyphSpark color="#D30AD7" />} />}
+          <MarketingCard glyph={<img src="./assets/spark_icon.png" width={32} height={32} alt="" style={{ display: 'block' }} />}
             title="12 Spark offers live" subtitle="Fresh weekly drop · expires in 2 days" />
         </PagePad>
         <Spacer h={12} />
@@ -2322,11 +2321,11 @@
         </button>
         <div style={{ flex: '0 0 200px', scrollSnapAlign: 'start' }}>
           <ExploreMedium subtext="Fire games" title="5 fires"
-            icon={<img src="./assets/fire_sparkle.png" width={54} height={54} alt="" style={{ display: 'block' }} />} />
+            icon={<img src="./assets/fire_sparkle.png" width={64} height={64} alt="" style={{ display: 'block' }} />} />
         </div>
         <div style={{ flex: '0 0 200px', scrollSnapAlign: 'start' }}>
           <ExploreMedium subtext="Monies" title="₹240"
-            icon={<img src="./assets/monies_icon.png" width={54} height={54} alt="" style={{ display: 'block' }} />} />
+            icon={<img src="./assets/monies_icon.png" width={64} height={64} alt="" style={{ display: 'block' }} />} />
         </div>
       </HScroll>
     );
@@ -2352,11 +2351,11 @@
         <HScroll gap={12}>
           <div style={{ flex: '0 0 200px' }}>
             <ExploreMedium subtext="Spark · 12 live" title="Expires 2d"
-              icon={<img src="./assets/spark_icon.png" width={54} height={54} alt="" style={{ display: 'block' }} />} />
+              icon={<img src="./assets/spark_icon.png" width={80} height={80} alt="" style={{ display: 'block' }} />} />
           </div>
           <div style={{ flex: '0 0 200px' }}>
             <ExploreMedium subtext="Monies" title="₹240"
-              icon={<img src="./assets/monies_icon.png" width={54} height={54} alt="" style={{ display: 'block' }} />} />
+              icon={<img src="./assets/monies_icon.png" width={64} height={64} alt="" style={{ display: 'block' }} />} />
           </div>
         </HScroll>
       </>
@@ -2426,7 +2425,7 @@
           <ExploreMedium subtext="Fire games" title="5 fires"
             icon={<img src="./assets/fire_sparkle.png" width={54} height={54} alt="" />} />
           <ExploreMedium subtext="Monies" title="₹240"
-            icon={<img src="./assets/monies_icon.png" width={54} height={54} alt="" style={{ display: 'block' }} />} />
+            icon={<img src="./assets/monies_icon.png" width={64} height={64} alt="" style={{ display: 'block' }} />} />
         </div>
       );
       return (
@@ -2492,7 +2491,7 @@
             <ExploreMedium subtext="Spark · 12 live" title="2d to claim"
               icon={<Avatar size={44} bg="#FAE2FA" glyph={<GlyphSpark color="#D30AD7" />} />} />
             <ExploreMedium subtext="Monies" title="₹240"
-              icon={<img src="./assets/monies_icon.png" width={54} height={54} alt="" style={{ display: 'block' }} />} />
+              icon={<img src="./assets/monies_icon.png" width={64} height={64} alt="" style={{ display: 'block' }} />} />
           </div>
         </PagePad>
       </>
@@ -2695,10 +2694,10 @@
        AUTOPAY shows a gradient progress arc; CREDIT SCORE shows a sparkle + ellipse
        (slice brand element + score badge). Uppercase metadata label. */
     const AutopayGlyph = () => (
-      <img src="./assets/autopay_icon.png" width={56} height={56} alt="" style={{ display: 'block' }} />
+      <img src="./assets/autopay_icon.png" width={64} height={64} alt="" style={{ display: 'block' }} />
     );
     const CreditScoreGlyph = () => (
-      <img src="./assets/credit_score_icon.png" width={56} height={56} alt="" style={{ display: 'block' }} />
+      <img src="./assets/credit_score_icon.png" width={80} height={80} alt="" style={{ display: 'block' }} />
     );
     const MR_A = () => {
       const cardBase = {
@@ -2712,14 +2711,14 @@
             <div style={cardBase}>
               <div style={{ ...T.meta, color: 'rgba(0,0,0,0.5)' }}>AUTOPAY</div>
               <div style={{ fontFamily: 'Rubik', fontSize: 18, fontWeight: 500, lineHeight: '22px', letterSpacing: '0.36px', color: 'rgba(0,0,0,0.9)', marginTop: 6, whiteSpace: 'nowrap' }}>3 upcoming</div>
-              <div style={{ position: 'absolute', right: 12, bottom: 12 }}>
+              <div style={{ position: 'absolute', right: 18, bottom: 18 }}>
                 <AutopayGlyph />
               </div>
             </div>
             <div style={cardBase}>
               <div style={{ ...T.meta, color: 'rgba(0,0,0,0.5)' }}>CREDIT SCORE</div>
               <div style={{ fontFamily: 'Rubik', fontSize: 18, fontWeight: 500, lineHeight: '22px', letterSpacing: '0.36px', color: 'rgba(0,0,0,0.9)', marginTop: 6, whiteSpace: 'nowrap' }}>778</div>
-              <div style={{ position: 'absolute', right: 8, bottom: 8 }}>
+              <div style={{ position: 'absolute', right: 18, bottom: 18 }}>
                 <CreditScoreGlyph />
               </div>
             </div>
@@ -2857,7 +2856,7 @@
           <BillsCompositeCard />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
             <ExploreMedium subtext="Play & win" title="5 fires"
-              icon={<img src="./assets/fire_sparkle.png" width={54} height={54} alt="" style={{ display: 'block' }} />} />
+              icon={<img src="./assets/fire_sparkle.png" width={64} height={64} alt="" style={{ display: 'block' }} />} />
             <ExploreMedium subtext="May spends" title="₹12,487"
               icon={<img src="./assets/may_spends.png" width={54} height={54} alt="" style={{ display: 'block' }} />} />
           </div>
