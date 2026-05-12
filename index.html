@@ -1266,14 +1266,13 @@
     );
 
     /* Bills shortcut grid */
-    /* Bill tiles: 54px white circle (BillAvatar) holding a 22px line glyph.
-       Separating the circle from the glyph lets us control icon size
-       independently of the circle. */
+    /* Bill tiles: 54px white circle (BillAvatar) holding a 24×24 PNG glyph.
+       Icons exported from Figma at native 24px. */
     const BILL_ICONS = [
-      { glyph: <GlyphCard color="rgba(0,0,0,0.9)" />, t: 'Credit\ncard' },
-      { glyph: <GlyphBolt color="rgba(0,0,0,0.9)" />, t: 'Electricity\nbill' },
-      { glyph: <GlyphMobile color="rgba(0,0,0,0.9)" />, t: 'Mobile\nrecharge' },
-      { glyph: <GlyphPlus color="rgba(0,0,0,0.9)" />, t: 'View\nmore' },
+      { glyph: <img src="./assets/bill_v2_credit.png" width={24} height={24} alt="" style={{ display: 'block' }} />, t: 'Credit\ncard' },
+      { glyph: <img src="./assets/bill_v2_electric.png" width={24} height={24} alt="" style={{ display: 'block' }} />, t: 'Electricity\nbill' },
+      { glyph: <img src="./assets/bill_v2_mobile.png" width={24} height={24} alt="" style={{ display: 'block' }} />, t: 'Mobile\nrecharge' },
+      { glyph: <img src="./assets/bill_v2_more.png" width={24} height={24} alt="" style={{ display: 'block' }} />, t: 'View\nmore' },
     ];
 
     const BillsCompositeCard = () => (
@@ -1305,20 +1304,16 @@
       </div>
     );
 
-    /* Unified bill-icon avatar: 54×54 white circle with a subtle floating
-       drop shadow + a 22px line glyph centered. The glyph is rendered at a
-       restrained 22px so it sits comfortably inside the circle without
-       crowding the edges. */
+    /* Unified bill-icon avatar: 54×54 white circle with an even floating shadow.
+       Children render at their native size (PNG glyphs come in at 24×24). */
     const BillAvatar = ({ children }) => (
       <div style={{
         width: 54, height: 54, borderRadius: 100,
         background: '#FFFFFF', border: 'none',
         display: 'grid', placeItems: 'center', flexShrink: 0,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+        boxShadow: '0 0 12px rgba(0,0,0,0.08)',
       }}>
-        {React.isValidElement(children)
-          ? React.cloneElement(children, { width: 22, height: 22 })
-          : children}
+        {children}
       </div>
     );
 
@@ -2602,9 +2597,9 @@
     const ST_G = () => {
       const VB_W = 312, VB_H = 80;
       const months = [
-        { x: 40,  y: 56 },
-        { x: 156, y: 18 },
-        { x: 272, y: 36, current: true },
+        { x: 0,   y: 56 },
+        { x: 140, y: 18 },
+        { x: 280, y: 36, current: true },
       ];
       const path = `M${months[0].x} ${months[0].y} ` + months.slice(1).map((p, i) => {
         const prev = months[i];
