@@ -2554,15 +2554,16 @@
     const HEADER_STYLES = ['Bold', 'List', 'None'];
     const HEADER_LABELS = { 'Bold': 'Bold', 'List': 'List', 'None': 'In-card' };
 
-    /* V0 = live layout (renders OriginalExplore directly). V1 = section-system experimentation. */
+    /* Current = live layout (renders OriginalExplore directly).
+       Exploration = section-system experimentation surface. */
     const PRESETS = {
       V0: {
-        label: 'V0',
+        label: 'Current',
         headerStyle: 'List',
         sections: { forYou: 'B', aiBanker: 'E', bills: 'B', rewards: 'F', stats: 'A', more: 'A' },
       },
       V1: {
-        label: 'V1',
+        label: 'Exploration',
         headerStyle: 'List',
         sections: { forYou: 'A', aiBanker: 'E', bills: 'A', rewards: 'F', stats: 'A', more: 'B' },
       },
