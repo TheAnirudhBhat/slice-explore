@@ -1283,7 +1283,7 @@
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginTop: 20 }}>
           {BILL_ICONS.map((b, i) => (
             <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <img src={`./assets/${b.src}.png`} width={54} height={54} alt="" style={{ display: 'block' }} />
+              <img src={`./assets/${b.src}.png`} width={40} height={40} alt="" style={{ display: 'block' }} />
               <div style={{ ...T.caption, textAlign: 'center', marginTop: 8, whiteSpace: 'pre-line', color: 'rgba(0,0,0,0.7)' }}>
                 {b.t}
               </div>
@@ -1320,7 +1320,7 @@
             background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
             display: 'flex', flexDirection: 'column', alignItems: 'center',
           }}>
-            <img src={`./assets/${b.src}.png`} width={54} height={54} alt="" style={{ display: 'block' }} />
+            <img src={`./assets/${b.src}.png`} width={40} height={40} alt="" style={{ display: 'block' }} />
             <div style={{ ...T.caption, textAlign: 'center', marginTop: 8, whiteSpace: 'pre-line', color: 'rgba(0,0,0,0.7)' }}>
               {b.t}
             </div>
