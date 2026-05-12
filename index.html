@@ -2355,30 +2355,80 @@
       </>
     );
 
-    /* F — Featured Large + 2 Mediums. Spark hero, Fire + Monies as supporting tiles. */
+    /* F — Spark info-dense hero (Figma 9792:12018 ref) + Fire + Monies tiles below.
+       Hero structure: 40px brand-orange spark avatar + 2-line title, hairline
+       separator, then a stacked brand-logo cluster + status line with chevron. */
+    const BrandLogoStack = () => (
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        {[
+          { bg: '#000000', label: '✓' },
+          { bg: '#1DB954', label: 'S' },
+          { bg: '#107BD4', label: 'F' },
+          { bg: '#94A720', label: 'B' },
+        ].map((b, i) => (
+          <div key={i} style={{
+            width: 22, height: 22, borderRadius: 100, background: b.bg,
+            border: '1.5px solid #FFFFFF',
+            marginLeft: i === 0 ? 0 : -6,
+            display: 'grid', placeItems: 'center',
+            color: '#FFFFFF', fontSize: 10, fontWeight: 600,
+            flexShrink: 0,
+          }}>{b.label}</div>
+        ))}
+      </div>
+    );
+    const SparkOrangeAvatar = () => (
+      <div style={{
+        width: 40, height: 40, borderRadius: 100,
+        background: '#FFF3E3',
+        display: 'grid', placeItems: 'center', flexShrink: 0,
+        boxShadow: '0 0 0 1px rgba(0,0,0,0.04) inset',
+      }}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2 L13.6 9.5 L21 11 L13.6 12.5 L12 20 L10.4 12.5 L3 11 L10.4 9.5 Z"
+            fill="#FF8500" />
+        </svg>
+      </div>
+    );
     const RW_F = ({ isInCard }) => {
-      const cards = (
-        <>
-          <ExploreLarge
-            intent={<TagSubtle intent="main">12 live offers</TagSubtle>}
-            subtext="Spark · weekly drop"
-            title="Fresh rewards just dropped"
-            icon={<Avatar size={56} bg="#FAE2FA" glyph={<GlyphSpark color="#D30AD7" />} />} />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
-            <ExploreMedium subtext="Fire games" title="5 fires"
-              icon={<img src="./assets/fire_sparkle.png" width={54} height={54} alt="" />} />
-            <ExploreMedium subtext="Monies" title="₹240"
-              icon={<Avatar size={44} bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />} />} />
+      const sparkHero = (
+        <button className="tap" style={{
+          width: '100%', padding: 20, borderRadius: 16,
+          background: '#FFFFFF', border: CARD_BORDER, boxShadow: CARD_SHADOW,
+          textAlign: 'left', cursor: 'pointer',
+          display: 'flex', flexDirection: 'column', gap: 16,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <SparkOrangeAvatar />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ ...T.bodySm, fontWeight: 500, color: 'rgba(0,0,0,0.9)' }}>Activate spark</div>
+              <div style={{ ...T.caption, color: 'rgba(0,0,0,0.5)', marginTop: 2 }}>Instant cashback on top brands</div>
+            </div>
           </div>
-        </>
+          <div style={{ height: 1, background: 'rgba(0,0,0,0.05)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <BrandLogoStack />
+            <div style={{ flex: 1, ...T.caption, color: 'rgba(0,0,0,0.7)' }}>
+              <span style={{ color: 'rgba(0,0,0,0.9)', fontWeight: 500 }}>4 sparks live</span>
+              <span style={{ color: 'rgba(0,0,0,0.4)', margin: '0 6px' }}>·</span>
+              Due in 5 days
+            </div>
+            <Chevron />
+          </div>
+        </button>
       );
-      if (!isInCard) return <PagePad>{cards}</PagePad>;
+      const bottomRow = (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
+          <ExploreMedium subtext="Fire games" title="5 fires"
+            icon={<img src="./assets/fire_sparkle.png" width={54} height={54} alt="" />} />
+          <ExploreMedium subtext="Monies" title="₹240"
+            icon={<Avatar size={44} bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />} />} />
+        </div>
+      );
       return (
         <PagePad>
-          <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 24 }}>
-            <InCardHeader title="Rewards & Benefits" />
-            {cards}
-          </div>
+          {sparkHero}
+          {bottomRow}
         </PagePad>
       );
     };
