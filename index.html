@@ -1268,12 +1268,13 @@
     /* Bills shortcut grid */
     /* Bill tiles use the same PNG icons as variant D — circular grey
        background + line glyph, baked into the export. Shared across all
-       Bills variants for a unified icon language (Figma fix #2). */
+       Bills variants for a unified icon language (Figma fix #2).
+       Labels are 2-line so the row reads as a balanced grid. */
     const BILL_ICONS = [
-      { src: 'bill_mobile', t: 'Mobile' },
-      { src: 'bill_electric', t: 'Electricity' },
-      { src: 'bill_credit', t: 'Credit card' },
-      { src: 'bill_more', t: 'More' },
+      { src: 'bill_credit', t: 'Credit\ncard' },
+      { src: 'bill_electric', t: 'Electricity\nbill' },
+      { src: 'bill_mobile', t: 'Mobile\nrecharge' },
+      { src: 'bill_more', t: 'View\nmore' },
     ];
 
     const BillsCompositeCard = () => (
