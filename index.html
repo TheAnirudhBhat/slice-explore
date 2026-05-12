@@ -2164,35 +2164,64 @@
       </>
     );
 
-    /* D — Carousel with first card brand-gradient — Spark featured */
-    const RW_D = () => (
-      <HScroll gap={12}>
-        <div style={{ flex: '0 0 220px' }}>
-          <button className="tap" style={{
-            width: '100%', height: 148, padding: 16, borderRadius: 16,
-            background: 'linear-gradient(135deg, #D30AD7 0%, #2B6ACF 100%)',
-            border: 'none', boxShadow: CARD_SHADOW,
-            display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
-            textAlign: 'left', position: 'relative', overflow: 'hidden',
-            cursor: 'pointer',
-          }}>
-            <div style={{ ...T.caption, color: 'rgba(255,255,255,0.7)' }}>Spark · weekly drop</div>
-            <div style={{ ...T.h4, color: 'white', marginTop: 4 }}>12 live offers</div>
-            <div style={{ ...T.caption, color: 'rgba(255,255,255,0.7)', marginTop: 8 }}>Expires in 2 days</div>
-            <Avatar size={44} bg="rgba(255,255,255,0.18)" glyph={<GlyphSpark color="#FFFFFF" />}
-              style={{ position: 'absolute', right: 16, bottom: 16 }} />
-          </button>
-        </div>
-        <div style={{ flex: '0 0 200px' }}>
-          <ExploreMedium subtext="Fire games" title="5 fires"
-            icon={<img src="./assets/fire_sparkle.png" width={54} height={54} alt="" />} />
-        </div>
-        <div style={{ flex: '0 0 200px' }}>
-          <ExploreMedium subtext="Monies" title="₹240"
-            icon={<Avatar size={44} bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />} />} />
-        </div>
-      </HScroll>
-    );
+    /* D — Carousel. Tighter 168-wide cards with consistent internal rhythm:
+       icon top-left, value as the headline, label below, and a status chip pinned
+       to the bottom edge so all three cards read on the same horizontal lines. */
+    const RW_D = () => {
+      const cardBase = {
+        width: 168, height: 152, padding: 14, borderRadius: 16,
+        border: 'none', boxShadow: CARD_SHADOW,
+        display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+        textAlign: 'left', cursor: 'pointer', scrollSnapAlign: 'start',
+      };
+      const RewardCard = ({ icon, value, label, valueColor = 'rgba(0,0,0,0.9)', labelColor = 'rgba(0,0,0,0.5)', chip, bg = '#FFFFFF', chipBg = '#F6F9FC', chipColor = 'rgba(0,0,0,0.7)' }) => (
+        <button className="tap" style={{ ...cardBase, background: bg, flex: '0 0 168px' }}>
+          {icon}
+          <div>
+            <div style={{ ...T.h3, color: valueColor, fontSize: 22, lineHeight: '26px' }}>{value}</div>
+            <div style={{ ...T.caption, color: labelColor, marginTop: 2 }}>{label}</div>
+          </div>
+          {chip && (
+            <div style={{
+              alignSelf: 'flex-start', padding: '3px 8px', borderRadius: 100,
+              background: chipBg, color: chipColor, ...T.meta,
+            }}>{chip}</div>
+          )}
+        </button>
+      );
+      return (
+        <HScroll gap={12}>
+          {/* Spark — brand-gradient hero, same footprint as the others */}
+          <RewardCard
+            bg="linear-gradient(135deg, #D30AD7 0%, #2B6ACF 100%)"
+            icon={<Avatar size={36} bg="rgba(255,255,255,0.18)" glyph={<GlyphSpark color="#FFFFFF" />} />}
+            value="12 offers"
+            label="Spark · weekly drop"
+            valueColor="#FFFFFF"
+            labelColor="rgba(255,255,255,0.75)"
+            chip="EXPIRES IN 2D"
+            chipBg="rgba(255,255,255,0.18)"
+            chipColor="#FFFFFF"
+          />
+          <RewardCard
+            icon={<img src="./assets/fire_sparkle.png" width={36} height={36} alt="" />}
+            value="5 fires"
+            label="Fire games"
+            chip="SPIN TO CLAIM"
+            chipBg="#FAE2FA"
+            chipColor="#A008A3"
+          />
+          <RewardCard
+            icon={<Avatar size={36} bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />} />}
+            value="₹240"
+            label="Monies"
+            chip="EARN 1% ON CC"
+            chipBg="#E0F4E8"
+            chipColor="#0E7E33"
+          />
+        </HScroll>
+      );
+    };
 
     /* E — Streak banner + carousel */
     const RW_E = () => (
