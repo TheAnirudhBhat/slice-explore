@@ -2718,7 +2718,9 @@
             <div style={cardBase}>
               <div style={{ ...T.meta, color: 'rgba(0,0,0,0.5)' }}>CREDIT SCORE</div>
               <div style={{ fontFamily: 'Rubik', fontSize: 18, fontWeight: 500, lineHeight: '22px', letterSpacing: '0.36px', color: 'rgba(0,0,0,0.9)', marginTop: 6, whiteSpace: 'nowrap' }}>778</div>
-              <div style={{ position: 'absolute', right: 18, bottom: 18 }}>
+              {/* The gauge PNG has empty space at its bottom — anchor it slightly past
+                  the card edge so its visible content lines up with the AUTOPAY icon. */}
+              <div style={{ position: 'absolute', right: 10, bottom: -2 }}>
                 <CreditScoreGlyph />
               </div>
             </div>
