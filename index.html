@@ -1464,9 +1464,9 @@
       },
     ];
     const FY_SCHEMES = [
-      ['#FFE3FE', '#F5C5F8', '#E89DEC'],
-      ['#E8F8E8', '#C8EBC8', '#A5D8A5'],
-      ['#FFE8D0', '#FBD8B0', '#F5C088'],
+      ['#FFEDFF', '#FBDBFB', '#F0C2F0'],
+      ['#EFFAEF', '#D7EFD7', '#BDE3BD'],
+      ['#FFF1DC', '#FDDFBD', '#F8CD9C'],
     ];
 
     /* Hex → rgb → lerp helpers for continuous gradient interpolation between slide schemes. */
@@ -1648,7 +1648,7 @@
       const SLIDE_PCT = 100;
       const TEXT_BOTTOM = 52;
       const slideBg = (s) => {
-        return `linear-gradient(to bottom, #FFFFFF 0%, #FFFFFF 3%, ${s[0]} 46%, ${s[1]} 76%, ${s[2]} 100%)`;
+        return `linear-gradient(to bottom, #FFFFFF 0%, ${s[0]} 40%, ${s[1]} 70%, ${s[2]} 100%)`;
       };
       const [ref, idx, progress] = useInfiniteCarousel(FY_SLIDES.length);
       /* Wrapped progress → lo/hi schemes; hi wraps to 0 when crossing the last slide. */
@@ -1724,7 +1724,7 @@
       const MIN_H = 200;
       const SLIDE_PCT = 100;
       const slideBg = (s) => {
-        return `linear-gradient(to bottom, #FFFFFF 0%, #FFFFFF 3%, ${s[0]} 46%, ${s[1]} 76%, ${s[2]} 100%)`;
+        return `linear-gradient(to bottom, #FFFFFF 0%, ${s[0]} 40%, ${s[1]} 70%, ${s[2]} 100%)`;
       };
       const [ref, idx, progress] = useInfiniteCarousel(FY_SLIDES.length);
       const lo = Math.floor(progress) % FY_SCHEMES.length;
@@ -2002,7 +2002,7 @@
     ];
     const FY_V_SHADOW = '0 4px 24px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)';
     const FY_V = () => (
-      <div style={{ paddingTop: 16 }}>
+      <div style={{ paddingTop: 16, paddingBottom: 24 }}>
       <HScroll gap={16}>
         {FY_V_CARDS.map((c, i) => (
           <button key={i} className="tap" style={{
@@ -3031,9 +3031,11 @@
             <>
               <SectionAnchor id="aiBanker" />
               <SectionBlock id="aiBanker" active={isActive('aiBanker')}>
-                {/* Fixed 16px on top of the carousel's 16px dots padding → total
-                    32px from the dots' bottom edge to the AI banker top. */}
-                <Spacer h={16} />
+                {/* Carousels A and F have dots inside (16px internal padding below
+                    them); add another 16px so the dots-to-search-bar gap totals 32px.
+                    B and V are card variants without dots — those already include their
+                    own 8px paddingBottom, so no extra spacer. */}
+                {(sections.forYou === 'A' || sections.forYou === 'F' || sections.forYou === 'Z') && <Spacer h={16} />}
                 <SectionWrap title="AI banker" headerStyle="None" isFirst>
                   <AiBankerSection variant={sections.aiBanker} />
                 </SectionWrap>
