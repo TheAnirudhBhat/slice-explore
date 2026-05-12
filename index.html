@@ -1648,7 +1648,7 @@
       const SLIDE_PCT = 100;
       const TEXT_BOTTOM = 52;
       const slideBg = (s) => {
-        return `linear-gradient(to bottom, #FFFFFF 0%, ${s[0]} 40%, ${s[1]} 70%, ${s[2]} 100%)`;
+        return `linear-gradient(to bottom, #FFFFFF 0%, ${s[0]} 35%, ${s[1]} 60%, #FFFFFF 100%)`;
       };
       const [ref, idx, progress] = useInfiniteCarousel(FY_SLIDES.length);
       /* Wrapped progress → lo/hi schemes; hi wraps to 0 when crossing the last slide. */
@@ -1705,12 +1705,8 @@
                 </div>
               ))}
             </div>
-            {/* Bottom fade blending the carousel color into the page background */}
-            <div style={{
-              position: 'absolute', bottom: 0, left: 0, right: 0, height: 64,
-              background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 40%, rgba(255,255,255,0.8) 75%, #FFFFFF 100%)',
-              pointerEvents: 'none', zIndex: 1
-            }} />
+            {/* The slide-bg gradient ends in white at its bottom, so no overlay
+                is needed — the CTA sits cleanly on the colored portion above. */}
             <CarouselDots count={FY_SLIDES.length} activeIdx={idx} bottom={16} />
           </div>
         </>
@@ -1724,7 +1720,7 @@
       const MIN_H = 200;
       const SLIDE_PCT = 100;
       const slideBg = (s) => {
-        return `linear-gradient(to bottom, #FFFFFF 0%, ${s[0]} 40%, ${s[1]} 70%, ${s[2]} 100%)`;
+        return `linear-gradient(to bottom, #FFFFFF 0%, ${s[0]} 35%, ${s[1]} 60%, #FFFFFF 100%)`;
       };
       const [ref, idx, progress] = useInfiniteCarousel(FY_SLIDES.length);
       const lo = Math.floor(progress) % FY_SCHEMES.length;
@@ -1769,12 +1765,8 @@
                 </div>
               ))}
             </div>
-            {/* Bottom fade blending the carousel color into the page background */}
-            <div style={{
-              position: 'absolute', bottom: 0, left: 0, right: 0, height: 64,
-              background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 40%, rgba(255,255,255,0.8) 75%, #FFFFFF 100%)',
-              pointerEvents: 'none', zIndex: 1
-            }} />
+            {/* The slide-bg gradient ends in white at its bottom, so no overlay
+                is needed — the CTA sits cleanly on the colored portion above. */}
             <CarouselDots count={FY_SLIDES.length} activeIdx={idx} bottom={16} />
           </div>
         </>
@@ -1788,14 +1780,14 @@
          · Spends    → Slate-10 (#F6F9FC) light neutral
        CTAs reuse slice purple / white / slate-900 per surface contrast. */
     const FY_B_THEMES = [
-      /* Bill due — soft Valentino → Slate-tint gradient */
-      { bg: 'linear-gradient(135deg, #FAE2FA 0%, #F0E6F6 50%, #E6EDF9 100%)',
+      /* Bill due — pink (matching FY_A scheme[0] → scheme[2]) */
+      { bg: 'linear-gradient(135deg, #FCE3FC 0%, #F5C8F5 50%, #E5A8E5 100%)',
         titleColor: 'rgba(0,0,0,0.9)', subColor: 'rgba(0,0,0,0.7)', ctaBg: '#D30AD7', ctaColor: '#FFFFFF' },
       /* Spark — slice brand gradient */
       { bg: 'linear-gradient(135deg, #D30AD7 0%, #2B6ACF 100%)',
         titleColor: '#FFFFFF', subColor: 'rgba(255,255,255,0.85)', ctaBg: '#FFFFFF', ctaColor: '#D30AD7' },
-      /* Spends — slate → blue gradient (clearly visible on white page bg) */
-      { bg: 'linear-gradient(135deg, #EAEBED 0%, #E6EDF9 100%)',
+      /* Spends — green (matching FY_A scheme[0] → scheme[2]) */
+      { bg: 'linear-gradient(135deg, #E0F4E0 0%, #C2E6C2 50%, #9CD49C 100%)',
         titleColor: 'rgba(0,0,0,0.9)', subColor: 'rgba(0,0,0,0.7)', ctaBg: '#171A1F', ctaColor: '#FFFFFF' },
     ];
     const FY_B = () => (
@@ -2032,9 +2024,9 @@
       const [ref, idx, , progress] = useFYCarousel(FY_SLIDES.length, 100);
 
       const bgColors = [
-        '#FFE3FE', // Bill
-        '#E8F8E8', // Drop
-        '#FFE8D0', // Spends
+        '#FCE3FC', // Bill
+        '#E0F4E0', // Drop
+        '#FFE7CC', // Spends
       ];
 
       const p   = Math.max(0, Math.min(bgColors.length - 1, progress));
