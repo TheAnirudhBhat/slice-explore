@@ -2326,22 +2326,6 @@
           </div>
           <SpendBarChart />
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
-          <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 16 }}>
-            <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>Cashback earned</div>
-            <div style={{ ...T.h2, marginTop: 4, color: '#00A63E' }}>₹2,840</div>
-            <div style={{ ...T.caption, marginTop: 12, lineHeight: '18px' }}>
-              Till date
-            </div>
-          </div>
-          <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 16 }}>
-            <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>Interest earned</div>
-            <div style={{ ...T.h2, marginTop: 4, color: '#00A63E' }}>₹1,267</div>
-            <div style={{ ...T.caption, marginTop: 12, lineHeight: '18px' }}>
-              On savings & FDs
-            </div>
-          </div>
-        </div>
       </PagePad>
     );
 
@@ -2350,14 +2334,6 @@
         <ListItemAvatar bg="#FAE2FA" glyph={<GlyphChart />}
           title="May spends" subtitle="↓ 18% vs Apr"
           trailing={<div style={T.h4}>₹12,487</div>} />
-        <DividerInset />
-        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />}
-          title="Cashback earned" subtitle="Till date"
-          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>₹2,840</div>} />
-        <DividerInset />
-        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphChart color="#00A63E" />}
-          title="Interest earned" subtitle="On savings & FDs"
-          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>₹1,267</div>} />
         <DividerInset />
         <ListItemAvatar bg="#F0F4F7" glyph={<GlyphMore />} title="View full report" />
       </>
@@ -2399,18 +2375,10 @@
             </div>
           </div>
         </PagePad>
-        <Spacer h={12} />
-        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />}
-          title="Cashback earned" subtitle="Till date"
-          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>₹2,840</div>} />
-        <DividerInset />
-        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphChart color="#00A63E" />}
-          title="Interest earned" subtitle="On savings & FDs"
-          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>₹1,267</div>} />
       </>
     );
 
-    /* E — Bar chart + 2 list rows (NEW, max info density) */
+    /* E — Bar chart only (cashback/interest stripped per latest direction) */
     const ST_E = () => (
       <>
         <PagePad>
@@ -2425,14 +2393,6 @@
             <SpendBarChart />
           </div>
         </PagePad>
-        <Spacer h={12} />
-        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />}
-          title="Cashback earned" subtitle="Till date"
-          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>₹2,840</div>} />
-        <DividerInset />
-        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphChart color="#00A63E" />}
-          title="Interest earned" subtitle="On savings & FDs"
-          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>₹1,267</div>} />
       </>
     );
 
@@ -2918,8 +2878,8 @@
       },
       {
         key: 'stats', label: 'Statistics', variants: {
-          F: 'In-card Header (Premium)', A: 'Bar chart + 2 cards', D: 'Sparkline card + rows',
-          G: 'Sparkline hero (Analytics)', H: 'Categories list (Analytics)',
+          F: 'In-card Header (Premium)', A: 'Bar chart', D: 'Sparkline card',
+          G: 'Analytics widget',
         }
       },
       {
