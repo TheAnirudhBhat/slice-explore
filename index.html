@@ -2441,52 +2441,26 @@
     };
 
     /* RW_G — Fire-game hero card + Spark/Monies 2-up below.
-       Hero references Figma 9792:10201: title + leaderboard pip on the left, a
-       decorative stack of scratch/receipt cards on the right, "Play now" CTA. */
-    const FireScratchStack = () => (
-      <div style={{ position: 'relative', width: 120, height: 130, flexShrink: 0 }}>
-        {[
-          { rot: -14, x: -8, y: 18, w: 76, h: 96, bg: '#FAE2FA', shadow: '0 6px 16px rgba(0,0,0,0.08)' },
-          { rot: 8,   x: 26, y: 12, w: 76, h: 96, bg: '#FFE6E0', shadow: '0 6px 16px rgba(0,0,0,0.08)' },
-          { rot: -2,  x: 12, y: 0,  w: 76, h: 96, bg: '#FFFFFF', shadow: '0 8px 18px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.06)' },
-        ].map((c, i) => (
-          <div key={i} style={{
-            position: 'absolute', left: c.x, top: c.y, width: c.w, height: c.h,
-            background: c.bg, borderRadius: 12, transform: `rotate(${c.rot}deg)`,
-            boxShadow: c.shadow,
-            display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-            padding: '12px 10px',
-          }}>
-            {i === 2 && (
-              <>
-                <div style={{ ...T.meta, color: 'rgba(0,0,0,0.5)' }}>₹389 paid to</div>
-                <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.9)' }}>Zomato</div>
-              </>
-            )}
-          </div>
-        ))}
-      </div>
-    );
+       Hero matches Figma 9792:10201: title + rank badge + leaderboard pip on
+       the left, fire-stack illustration on the right, "Play now" CTA at bottom. */
     const RW_G = () => (
       <>
         <PagePad>
           <button className="tap" style={{
             width: '100%', padding: 16, borderRadius: 16,
             background: '#FFFFFF', border: CARD_BORDER, boxShadow: CARD_SHADOW,
-            display: 'flex', alignItems: 'center', gap: 12,
+            display: 'flex', alignItems: 'stretch', gap: 12,
             textAlign: 'left', cursor: 'pointer', position: 'relative', overflow: 'hidden',
             minHeight: 172,
           }}>
-            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignSelf: 'stretch' }}>
+            <div style={{
+              flex: 1, minWidth: 0,
+              display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+            }}>
               <div>
-                <div style={{ ...T.h4, color: 'rgba(0,0,0,0.9)' }}>Play & win</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
-                  <div style={{
-                    width: 18, height: 18, borderRadius: 100,
-                    background: 'linear-gradient(135deg, #FFD668 0%, #FF9A17 100%)',
-                    color: '#FFFFFF', fontSize: 10, fontWeight: 600,
-                    display: 'grid', placeItems: 'center', flexShrink: 0,
-                  }}>1</div>
+                <div style={{ ...T.h4, color: 'rgba(0,0,0,0.9)' }}>Play &amp; win</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 6 }}>
+                  <img src="./assets/rank_badge_1.png" width={17} height={17} alt="" style={{ display: 'block' }} />
                   <span style={{ ...T.caption, color: 'rgba(0,0,0,0.7)' }}>Aman leading with</span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
                     <img src="./assets/fire_sparkle.png" width={14} height={14} alt="" />
@@ -2501,7 +2475,10 @@
                 ...T.btnSm, color: '#D30AD7', alignItems: 'center',
               }}>Play now</div>
             </div>
-            <FireScratchStack />
+            <img src="./assets/fire_stack.png" alt="" style={{
+              flexShrink: 0, width: 140, height: 'auto', objectFit: 'contain',
+              alignSelf: 'center', display: 'block',
+            }} />
           </button>
         </PagePad>
         <Spacer h={16} />
@@ -3038,7 +3015,7 @@
       },
       {
         key: 'rewards', label: 'Rewards & Benefits', variants: {
-          G: 'Fire hero + 2 below', F: 'Featured Large + 2 Med', D: 'Carousel · brand-grad first', E: 'Streak banner + carousel',
+          G: 'Fire hero + 2 below', F: 'Featured Large + 2 Med', D: 'Carousel · brand-grad first',
         }
       },
       {
