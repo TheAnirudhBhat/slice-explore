@@ -2695,16 +2695,7 @@
        AUTOPAY shows a gradient progress arc; CREDIT SCORE shows a sparkle + ellipse
        (slice brand element + score badge). Uppercase metadata label. */
     const AutopayGlyph = () => (
-      <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
-        <defs>
-          <linearGradient id="mr_autopay_grad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#FFD668" />
-            <stop offset="50%" stopColor="#3DBB6C" />
-            <stop offset="100%" stopColor="#2B6ACF" />
-          </linearGradient>
-        </defs>
-        <path d="M 28 6 A 22 22 0 1 1 7.5 16.6" stroke="url(#mr_autopay_grad)" strokeWidth="8" strokeLinecap="round" fill="none" />
-      </svg>
+      <img src="./assets/autopay_icon.png" width={56} height={56} alt="" style={{ display: 'block' }} />
     );
     const CreditScoreGlyph = () => (
       <img src="./assets/credit_score_icon.png" width={56} height={56} alt="" style={{ display: 'block' }} />
