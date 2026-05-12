@@ -2453,8 +2453,8 @@
             display: 'flex', flexDirection: 'column', gap: 12,
             textAlign: 'left', cursor: 'pointer', position: 'relative', overflow: 'hidden',
           }}>
-            {/* Header row */}
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+            {/* Header row — chevron vertically centered with the title block */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ ...T.h4, color: 'rgba(0,0,0,0.9)' }}>Play &amp; win</div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
@@ -2475,15 +2475,14 @@
                 width: 132, height: 'auto', flexShrink: 0,
                 objectFit: 'contain', display: 'block',
                 marginBottom: -20, /* let the illustration kiss the card bottom */
-                marginLeft: -8,
               }} />
               <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
                 <div style={{
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  padding: '8px 24px', height: 40, borderRadius: 100,
+                  padding: '6px 18px', height: 32, borderRadius: 100,
                   background: 'transparent',
                   border: '1px solid #D30AD7',
-                  ...T.btnNm, color: '#D30AD7',
+                  ...T.btnSm, color: '#D30AD7',
                 }}>Play Now</div>
               </div>
             </div>
