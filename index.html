@@ -1806,22 +1806,26 @@
     );
 
     /* FY_V — vertical-card horizontal-scroll variant (Figma L0 ref).
-       Each card uses an end-to-end illustration PNG anchored to the bottom edge,
-       matching the Figma source assets: lightbulb (bill), brand logos (spark),
-       sparkline (spends). Title + sub sit above the illustration band. */
+       Clean white cards with strengthened shadow + no border. Each card carries
+       a subtle theme-tinted background tint and an end-to-end illustration PNG
+       at the bottom (matching the Figma source assets). */
     const FY_V_CARDS = [
-      { title: 'Electricity bill due in 3 days', sub: 'BSES · ₹1,240', illo: 'fy_v_bill.png' },
-      { title: 'New Spark Drop', sub: 'Fresh rewards just dropped', illo: 'fy_v_spark.png' },
-      { title: 'Spent ₹18K last month', sub: '22% higher than usual', illo: 'fy_v_spends.png' },
+      { title: 'Electricity bill due in 3 days', sub: 'BSES · ₹1,240', illo: 'fy_v_bill.png',
+        bg: '#FFFFFF' },
+      { title: 'New Spark Drop', sub: 'Fresh rewards just dropped', illo: 'fy_v_spark.png',
+        bg: '#FFFFFF' },
+      { title: 'Spent ₹18K last month', sub: '22% higher than usual', illo: 'fy_v_spends.png',
+        bg: '#FFFFFF' },
     ];
+    const FY_V_SHADOW = '0 4px 24px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)';
     const FY_V = () => (
       <div style={{ paddingTop: 8 }}>
       <HScroll gap={16}>
         {FY_V_CARDS.map((c, i) => (
           <button key={i} className="tap" style={{
             flex: '0 0 168px', minHeight: 196,
-            background: 'white', borderRadius: 16,
-            boxShadow: CARD_SHADOW, border: CARD_BORDER,
+            background: c.bg, borderRadius: 16,
+            boxShadow: FY_V_SHADOW, border: 'none',
             scrollSnapAlign: 'start',
             display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
             textAlign: 'left', cursor: 'pointer', overflow: 'hidden',
