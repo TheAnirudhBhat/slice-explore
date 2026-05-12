@@ -336,16 +336,20 @@
     }
 
 
-    /* When a section's variant is changed, a single subtle pulse draws the eye and settles. */
+    /* When a section's variant is changed, a single subtle pulse draws the eye and settles.
+       scroll-margin-top lets scrollIntoView land the section just below the app bar. */
     .section-block {
       position: relative;
+    }
+    [data-section] {
+      scroll-margin-top: calc(var(--bar-overlap, 118px) + 12px);
     }
     .section-block.active {
       animation: section-pulse 700ms ease both;
     }
     @keyframes section-pulse {
       0%, 100% { filter: drop-shadow(0 0 0 transparent); }
-      50%      { filter: drop-shadow(0 6px 16px rgba(211, 10, 215, 0.12)); }
+      50%      { filter: drop-shadow(0 8px 18px rgba(211, 10, 215, 0.18)); }
     }
 
     .debug-drawer-tab,
@@ -446,7 +450,7 @@
         transform: translateX(-8px);
       }
 
-      /* Edit popup — full-width sheet pinned to the bottom edge, ~40% of viewport height. */
+      /* Edit popup — dark editing surface, clearly distinct from the white phone shell above. */
       .debug-drawer {
         position: fixed !important;
         left: 0 !important;
@@ -455,21 +459,28 @@
         top: auto !important;
         width: 100vw !important;
         max-width: 100vw !important;
-        height: 40dvh;
-        max-height: 40dvh;
+        height: 50dvh;
+        max-height: 50dvh;
         z-index: 70;
         border-radius: 20px 20px 0 0 !important;
         transform: translateY(100%);
         transition: transform 280ms cubic-bezier(0.32, 0.72, 0, 1);
         overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: none;
+        -webkit-overflow-scrolling: auto;
         scrollbar-width: none;
         -ms-overflow-style: none;
         padding: 8px 0 max(20px, calc(env(safe-area-inset-bottom, 0px) + 12px)) !important;
-        box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.08);
-        background: #FFFFFF;
+        box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.25);
+        background: #171A1F;
+        color: rgba(255, 255, 255, 0.9);
       }
       .debug-drawer::-webkit-scrollbar { display: none; }
+
+      /* Grab handle — translucent white on dark */
+      .debug-drawer::before {
+        background: rgba(255, 255, 255, 0.18) !important;
+      }
 
       /* Force the inner panel to fill the sheet edge-to-edge */
       .debug-drawer .debug-panel {
@@ -482,47 +493,99 @@
         padding: 8px 16px !important;
       }
 
-      /* Compact controls inside the bottom sheet */
+      /* Compact dark controls — DLS chip grouping reinterpreted for the dark surface */
       .debug-drawer .var-row {
-        padding: 6px 0 !important;
+        padding: 5px 0 !important;
+        border-bottom: none !important;
       }
       .debug-drawer .var-btn {
         width: 24px !important;
         height: 24px !important;
         font-size: 11px !important;
         border-radius: 6px !important;
+        background: rgba(255, 255, 255, 0.06) !important;
+        border-color: transparent !important;
+        color: rgba(255, 255, 255, 0.6) !important;
       }
-      .debug-drawer .var-pick {
-        gap: 3px !important;
+      .debug-drawer .var-btn:hover {
+        background: rgba(255, 255, 255, 0.10) !important;
       }
+      .debug-drawer .var-btn.active {
+        background: rgba(211, 10, 215, 0.20) !important;
+        border-color: #DE45E1 !important;
+        color: #DE45E1 !important;
+      }
+      .debug-drawer .var-pick { gap: 4px !important; }
+
+      /* Segmented controls: subtle inset on dark, brand-tinted active */
       .debug-drawer .seg-pick {
         padding: 3px !important;
         gap: 3px !important;
+        background: rgba(255, 255, 255, 0.06) !important;
+        border: none;
       }
       .debug-drawer .seg-btn {
-        padding: 5px 8px !important;
-        font-size: 11px !important;
+        padding: 6px 8px !important;
+        font-size: 12px !important;
+        color: rgba(255, 255, 255, 0.55) !important;
       }
-      /* Tighten margins on the inline labels + segmented controls */
+      .debug-drawer .seg-btn.active {
+        background: rgba(211, 10, 215, 0.20) !important;
+        color: #FFFFFF !important;
+        box-shadow: none !important;
+      }
+      .debug-drawer .preset-tag {
+        display: none !important;
+      }
+
+      /* Force all panel text to white-alpha — inline T.meta/T.bodySm colors are dark and
+         would otherwise be invisible on the dark sheet. Specific overrides below restore
+         button/active-state colors. */
+      .debug-drawer .debug-panel,
+      .debug-drawer .debug-panel * {
+        color: rgba(255, 255, 255, 0.9) !important;
+      }
+
+      /* Tighten label spacing inside the dark sheet */
       .debug-drawer .debug-panel > div[style*="margin-bottom: 16px"] {
-        margin-bottom: 8px !important;
+        margin-bottom: 10px !important;
       }
       .debug-drawer .debug-panel > div[style*="margin-bottom: 8px"] {
-        margin-bottom: 4px !important;
+        margin-bottom: 6px !important;
       }
+
       /* Hide the "Page composition" header — sheet context makes it redundant */
       .debug-drawer .debug-panel > div:first-child {
         display: none !important;
       }
-      /* Shrink the variant-row label text */
-      .debug-drawer .var-row > div:first-child {
-        font-size: 12px !important;
-        line-height: 16px !important;
+
+      /* Meta labels (PRESET, HEADER STYLE, SECTION VARIANTS, Highlight spacing) — dim */
+      .debug-drawer .debug-panel div[style*="uppercase"],
+      .debug-drawer .debug-panel span[style*="uppercase"] {
+        color: rgba(255, 255, 255, 0.5) !important;
+        letter-spacing: 0.6px !important;
       }
-      /* Tighten the highlight-spacing toggle block */
+
+      /* Variant-row label text */
+      .debug-drawer .var-row > div:first-child {
+        font-size: 13px !important;
+        line-height: 18px !important;
+        color: rgba(255, 255, 255, 0.85) !important;
+      }
+
+      /* Highlight-spacing toggle separator — white-alpha hairline */
       .debug-drawer .debug-panel > div[style*="border-top"] {
+        margin-top: 12px !important;
+        padding-top: 12px !important;
+        border-top-color: rgba(255, 255, 255, 0.08) !important;
+      }
+
+      /* Single divider before SECTION VARIANTS group */
+      .debug-drawer .debug-panel > div[style*="margin-bottom: 4px"]:not(:first-of-type) {
+        position: relative;
+        padding-top: 12px;
         margin-top: 8px !important;
-        padding-top: 8px !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
       }
 
       /* No dimming backdrop on mobile — the phone stays bright so the section being
@@ -546,26 +609,28 @@
         margin: 0 auto 12px;
       }
 
-      /* Close (×) button — top-right of the sheet, dismisses without applying further changes */
+      /* "Done" text button — top-right of the sheet, low-key (changes apply live) */
       .drawer-close {
         position: absolute;
-        top: 12px;
+        top: 14px;
         right: 16px;
-        width: 32px;
-        height: 32px;
-        display: flex;
+        height: 28px;
+        padding: 0 4px;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
         border: none;
-        background: rgba(0, 0, 0, 0.05);
-        border-radius: 100px;
+        background: transparent;
         cursor: pointer;
-        font-size: 18px;
+        font-family: 'Rubik';
+        font-size: 14px;
         line-height: 1;
-        color: rgba(0, 0, 0, 0.7);
+        font-weight: 500;
+        letter-spacing: 0.28px;
+        color: #DE45E1;
         z-index: 2;
       }
-      .drawer-close:active { background: rgba(0, 0, 0, 0.1); }
+      .drawer-close:active { opacity: 0.6; }
 
       .debug-backdrop {
         display: block;
@@ -1783,7 +1848,7 @@
 
     /* A — Plain shortcut grid, no card wrapper */
     const BL_A = () => (
-      <PagePad>
+      <PagePad style={{ paddingTop: 8 }}>
         <BillsShortcutGrid />
       </PagePad>
     );
@@ -1908,22 +1973,6 @@
     );
 
     /* C — Featured Large + 2 Mediums (NEW, extends Marketing concept) */
-    const RW_C = () => (
-      <PagePad>
-        <ExploreLarge
-          intent={<TagSubtle intent="main">5 fires earned</TagSubtle>}
-          subtext="Play & win"
-          title="Spin to claim 2x rewards"
-          icon={<img src="./assets/fire_sparkle.png" width={56} height={56} alt="" />} />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
-          <ExploreMedium subtext="Cashback" title="₹85"
-            icon={<Avatar size={44} bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />} />} />
-          <ExploreMedium subtext="Invite" title="Get ₹150"
-            icon={<img src="./assets/invite_magnet.png" width={54} height={54} alt="" />} />
-        </div>
-      </PagePad>
-    );
-
     /* D — Carousel with first card brand-gradient (NEW, extends carousel) */
     const RW_D = () => (
       <HScroll gap={12}>
@@ -2025,7 +2074,7 @@
     };
 
     const RewardsSection = ({ variant, isInCard }) => {
-      const C = { A: RW_A, B: RW_B, C: RW_C, D: RW_D, E: RW_E, F: RW_F }[variant];
+      const C = { A: RW_A, B: RW_B, D: RW_D, E: RW_E, F: RW_F }[variant] || RW_F;
       return <C isInCard={isInCard} />;
     };
 
@@ -2445,7 +2494,7 @@
       },
       {
         key: 'rewards', label: 'Rewards & Benefits', variants: {
-          F: 'In-card Header (Premium)', C: 'Featured Large + 2 Med', D: 'Carousel · brand-grad first', E: 'Streak banner + carousel',
+          F: 'Featured Large + 2 Med', D: 'Carousel · brand-grad first', E: 'Streak banner + carousel',
         }
       },
       {
@@ -2469,12 +2518,12 @@
       V0: {
         label: 'V0',
         headerStyle: 'List',
-        sections: { forYou: 'B', aiBanker: 'E', bills: 'B', rewards: 'C', stats: 'A', more: 'A' },
+        sections: { forYou: 'B', aiBanker: 'E', bills: 'B', rewards: 'F', stats: 'A', more: 'A' },
       },
       V1: {
         label: 'V1',
         headerStyle: 'List',
-        sections: { forYou: 'A', aiBanker: 'E', bills: 'F', rewards: 'F', stats: 'A', more: 'B' },
+        sections: { forYou: 'A', aiBanker: 'E', bills: 'A', rewards: 'F', stats: 'A', more: 'B' },
       },
     };
 
@@ -2628,19 +2677,13 @@
     };
 
     /* After a section's variant changes, scroll the phone to that section so the user
-       can immediately see what changed. Works on both mobile (background of the bottom sheet)
-       and desktop (the embedded phone column). */
+       can immediately see what changed. scrollIntoView works correctly even when the
+       phone-screen is transform-scaled on mobile; scroll-margin-top (CSS) handles the
+       offset for the fixed app bar. */
     const scrollToSection = (key) => {
       requestAnimationFrame(() => {
-        const scroll = document.querySelector('.screen-scroll');
         const target = document.querySelector(`[data-section="${key}"]`);
-        if (!scroll || !target) return;
-        const scrollRect = scroll.getBoundingClientRect();
-        const targetRect = target.getBoundingClientRect();
-        const bar = scroll.querySelector('.app-bar-l0');
-        const barH = bar ? bar.offsetHeight : 0;
-        const top = scroll.scrollTop + (targetRect.top - scrollRect.top) - barH;
-        scroll.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     };
 
@@ -2718,7 +2761,7 @@
                   className={'debug-backdrop' + (drawerOpen ? ' open' : '')}
                   onClick={() => setDrawerOpen(false)} />
                 <div className={'debug-drawer' + (drawerOpen ? ' open' : '')}>
-                  <button className="drawer-close" onClick={() => setDrawerOpen(false)} aria-label="Close edit sheet">×</button>
+                  <button className="drawer-close" onClick={() => setDrawerOpen(false)} aria-label="Done editing">Done</button>
                   {debugPanel}
                 </div>
                 <button
