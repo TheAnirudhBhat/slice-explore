@@ -7,6 +7,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="theme-color" content="#FFFFFF" />
+  <meta name="color-scheme" content="light only" />
+  <meta name="supported-color-schemes" content="light" />
   <title>explore — slice modular iterations</title>
   <link rel="icon" type="image/png" href="./assets/slice_icon.png" />
   <link rel="apple-touch-icon" href="./assets/slice_icon.png" />
@@ -20,10 +22,15 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
+    :root {
+      color-scheme: light;
+    }
+
     html,
     body,
     #root {
       height: 100%;
+      background: #FFFFFF;
     }
 
     body {
