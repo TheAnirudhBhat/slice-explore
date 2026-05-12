@@ -2130,19 +2130,21 @@
 
     /* ----- Rewards & Benefits: A:carousel(kept) B:marketing+rows(kept) C/D/E:NEW ----- */
 
+    /* Rewards sub-components (PRD): Spark, Fire games, Monies.
+       Invite & earn moved to the Footer section. */
     const RW_A = () => (
       <HScroll gap={12}>
         <div style={{ flex: '0 0 200px' }}>
-          <ExploreMedium subtext="Play & win" title="5 fires"
+          <ExploreMedium subtext="Spark · 12 live" title="Expires in 2d"
+            icon={<Avatar size={44} bg="#FAE2FA" glyph={<GlyphSpark color="#D30AD7" />} />} />
+        </div>
+        <div style={{ flex: '0 0 200px' }}>
+          <ExploreMedium subtext="Fire games" title="5 fires"
             icon={<img src="./assets/fire_sparkle.png" width={54} height={54} alt="" />} />
         </div>
         <div style={{ flex: '0 0 200px' }}>
-          <ExploreMedium subtext="Cashback" title="₹85 earned"
+          <ExploreMedium subtext="Monies" title="₹240"
             icon={<Avatar size={44} bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />} />} />
-        </div>
-        <div style={{ flex: '0 0 200px' }}>
-          <ExploreMedium subtext="Invite" title="Get ₹150"
-            icon={<img src="./assets/invite_magnet.png" width={54} height={54} alt="" />} />
         </div>
       </HScroll>
     );
@@ -2150,20 +2152,19 @@
     const RW_B = () => (
       <>
         <PagePad>
-          <MarketingCard glyph={<img src="./assets/fire_sparkle.png" width={32} height={32} alt="" />}
-            title="5 fires earned" subtitle="Spin the wheel to claim 2x cashback" />
+          <MarketingCard glyph={<Avatar size={32} bg="#FAE2FA" glyph={<GlyphSpark color="#D30AD7" />} />}
+            title="12 Spark offers live" subtitle="Fresh weekly drop · expires in 2 days" />
         </PagePad>
         <Spacer h={12} />
-        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />}
-          title="Cashback ₹85" subtitle="Earned this month" />
+        <ListItemAvatar asset="fire_sparkle.png"
+          title="Fire games" subtitle="5 fires · spin to claim 2x" />
         <DividerInset />
-        <ListItemAvatar asset="invite_magnet.png"
-          title="Invite & earn" subtitle="Get ₹150 per friend" />
+        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />}
+          title="Monies ₹240" subtitle="Earn 1% on every CC bill · redeem now" />
       </>
     );
 
-    /* C — Featured Large + 2 Mediums (NEW, extends Marketing concept) */
-    /* D — Carousel with first card brand-gradient (NEW, extends carousel) */
+    /* D — Carousel with first card brand-gradient — Spark featured */
     const RW_D = () => (
       <HScroll gap={12}>
         <div style={{ flex: '0 0 220px' }}>
@@ -2175,29 +2176,25 @@
             textAlign: 'left', position: 'relative', overflow: 'hidden',
             cursor: 'pointer',
           }}>
-            <div style={{ ...T.caption, color: 'rgba(255,255,255,0.7)' }}>Fire hour live</div>
-            <div style={{ ...T.h4, color: 'white', marginTop: 4 }}>5 fires earned</div>
-            <div style={{ ...T.caption, color: 'rgba(255,255,255,0.7)', marginTop: 8 }}>Tap to spin</div>
-            <img src="./assets/fire_sparkle.png" width={54} height={54} alt=""
+            <div style={{ ...T.caption, color: 'rgba(255,255,255,0.7)' }}>Spark · weekly drop</div>
+            <div style={{ ...T.h4, color: 'white', marginTop: 4 }}>12 live offers</div>
+            <div style={{ ...T.caption, color: 'rgba(255,255,255,0.7)', marginTop: 8 }}>Expires in 2 days</div>
+            <Avatar size={44} bg="rgba(255,255,255,0.18)" glyph={<GlyphSpark color="#FFFFFF" />}
               style={{ position: 'absolute', right: 16, bottom: 16 }} />
           </button>
         </div>
         <div style={{ flex: '0 0 200px' }}>
-          <ExploreMedium subtext="Cashback" title="₹85 earned"
+          <ExploreMedium subtext="Fire games" title="5 fires"
+            icon={<img src="./assets/fire_sparkle.png" width={54} height={54} alt="" />} />
+        </div>
+        <div style={{ flex: '0 0 200px' }}>
+          <ExploreMedium subtext="Monies" title="₹240"
             icon={<Avatar size={44} bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />} />} />
-        </div>
-        <div style={{ flex: '0 0 200px' }}>
-          <ExploreMedium subtext="Invite" title="Get ₹150"
-            icon={<img src="./assets/invite_magnet.png" width={54} height={54} alt="" />} />
-        </div>
-        <div style={{ flex: '0 0 200px' }}>
-          <ExploreMedium subtext="Offers" title="12 nearby"
-            icon={<Avatar size={44} bg="#FFF3E3" glyph={<GlyphSpark color="#C27511" />} />} />
         </div>
       </HScroll>
     );
 
-    /* E — Streak banner + carousel (NEW, engagement layer above the carousel) */
+    /* E — Streak banner + carousel */
     const RW_E = () => (
       <>
         <PagePad>
@@ -2217,38 +2214,31 @@
         <Spacer h={12} />
         <HScroll gap={12}>
           <div style={{ flex: '0 0 200px' }}>
-            <ExploreMedium subtext="Cashback" title="₹85"
+            <ExploreMedium subtext="Spark · 12 live" title="Expires 2d"
+              icon={<Avatar size={44} bg="#FAE2FA" glyph={<GlyphSpark color="#D30AD7" />} />} />
+          </div>
+          <div style={{ flex: '0 0 200px' }}>
+            <ExploreMedium subtext="Monies" title="₹240"
               icon={<Avatar size={44} bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />} />} />
-          </div>
-          <div style={{ flex: '0 0 200px' }}>
-            <ExploreMedium subtext="Invite" title="Get ₹150"
-              icon={<img src="./assets/invite_magnet.png" width={54} height={54} alt="" />} />
-          </div>
-          <div style={{ flex: '0 0 200px' }}>
-            <ExploreMedium subtext="Offers" title="12 nearby"
-              icon={<Avatar size={44} bg="#FFF3E3" glyph={<GlyphSpark color="#C27511" />} />} />
           </div>
         </HScroll>
       </>
     );
 
-    /* F — Premium In-card Header Variant */
+    /* F — Featured Large + 2 Mediums. Spark hero, Fire + Monies as supporting tiles. */
     const RW_F = ({ isInCard }) => {
-      /* Inner content is already 3 cards (Large + 2 Medium). We only wrap them in an
-         outer card when the section header lives inside (isInCard) — otherwise we'd be
-         nesting cards in cards. In Bold/List modes the three cards stand on their own. */
       const cards = (
         <>
           <ExploreLarge
-            intent={<TagSubtle intent="main">5 fires earned</TagSubtle>}
-            subtext="Play & win"
-            title="Spin to claim 2x rewards"
-            icon={<img src="./assets/fire_sparkle.png" width={56} height={56} alt="" />} />
+            intent={<TagSubtle intent="main">12 live offers</TagSubtle>}
+            subtext="Spark · weekly drop"
+            title="Fresh rewards just dropped"
+            icon={<Avatar size={56} bg="#FAE2FA" glyph={<GlyphSpark color="#D30AD7" />} />} />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
-            <ExploreMedium subtext="Cashback" title="₹85"
+            <ExploreMedium subtext="Fire games" title="5 fires"
+              icon={<img src="./assets/fire_sparkle.png" width={54} height={54} alt="" />} />
+            <ExploreMedium subtext="Monies" title="₹240"
               icon={<Avatar size={44} bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />} />} />
-            <ExploreMedium subtext="Invite" title="Get ₹150"
-              icon={<img src="./assets/invite_magnet.png" width={54} height={54} alt="" />} />
           </div>
         </>
       );
@@ -2256,7 +2246,7 @@
       return (
         <PagePad>
           <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 24 }}>
-            <InCardHeader title="Rewards & Benefits" icon={<GlyphSpark color="#D30AD7" />} />
+            <InCardHeader title="Rewards & Benefits" />
             {cards}
           </div>
         </PagePad>
@@ -2798,7 +2788,7 @@
           </div>
           <div style={{
             fontFamily: 'Rubik', fontSize: 12, fontWeight: 400, lineHeight: '16px', letterSpacing: '0.24px',
-            color: 'rgba(0,0,0,0.7)',
+            color: 'rgba(0,0,0,0.5)',
           }}>
             Win a fire when they make their first transaction on slice.
           </div>
