@@ -183,17 +183,6 @@
       opacity: 0.9;
     }
 
-    .ryan-caret {
-      display: inline-block;
-      margin-left: 1px;
-      color: #D30AD7;
-      font-weight: 500;
-      animation: ryan-blink 1s steps(2, end) infinite;
-    }
-    @keyframes ryan-blink {
-      0%, 50% { opacity: 1; }
-      51%, 100% { opacity: 0; }
-    }
 
     .debug-panel {
       width: 360px;
@@ -1846,55 +1835,21 @@
       </PagePad>
     );
 
-    /* AI Banker E — typewriter cycle. Types out a suggested query character-by-character,
-       holds, then backspaces. Tick-driven state machine so timings don't drift across
-       phase changes. Cursor blinks via CSS. */
+    /* AI Banker E — quiet vertical roll between example queries.
+       Single 20px line height; the next prompt slides up from below every ~3.5s.
+       Less attention-grabbing than a typewriter. */
     const AB_E = () => {
       const examples = [
         "Why is my CC bill ₹4,200 this month?",
         "How do I redeem my monies?",
         "What's a pot?",
       ];
-      const [text, setText] = React.useState('');
-      const stateRef = React.useRef({ phase: 'typing', i: 0, n: 0 });
-      const TYPE_MS = 55;
-      const ERASE_MS = 30;
-      const HOLD_MS = 1400;
-      const PAUSE_MS = 350;
-
+      const [idx, setIdx] = React.useState(0);
       React.useEffect(() => {
-        let timer;
-        const tick = () => {
-          const s = stateRef.current;
-          const target = examples[s.i];
-          if (s.phase === 'typing') {
-            if (s.n < target.length) {
-              s.n += 1;
-              setText(target.slice(0, s.n));
-              timer = setTimeout(tick, TYPE_MS);
-            } else {
-              s.phase = 'holding';
-              timer = setTimeout(tick, HOLD_MS);
-            }
-          } else if (s.phase === 'holding') {
-            s.phase = 'erasing';
-            timer = setTimeout(tick, ERASE_MS);
-          } else if (s.phase === 'erasing') {
-            if (s.n > 0) {
-              s.n -= 1;
-              setText(target.slice(0, s.n));
-              timer = setTimeout(tick, ERASE_MS);
-            } else {
-              s.i = (s.i + 1) % examples.length;
-              s.phase = 'typing';
-              timer = setTimeout(tick, PAUSE_MS);
-            }
-          }
-        };
-        tick();
-        return () => clearTimeout(timer);
+        const t = setInterval(() => setIdx(i => (i + 1) % examples.length), 3500);
+        return () => clearInterval(t);
       }, []);
-
+      const LINE_H = 20;
       return (
         <PagePad>
           <button className="tap" style={{
@@ -1905,13 +1860,22 @@
             cursor: 'pointer', textAlign: 'left',
           }}>
             <GlyphAi />
-            <span style={{
-              ...T.bodySm, color: 'rgba(0,0,0,0.5)', flex: 1,
-              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'clip',
+            <div style={{
+              flex: 1, height: LINE_H, overflow: 'hidden', position: 'relative',
             }}>
-              {text}
-              <span className="ryan-caret">|</span>
-            </span>
+              <div style={{
+                transform: `translateY(${-idx * LINE_H}px)`,
+                transition: 'transform 520ms cubic-bezier(0.22, 0.61, 0.36, 1)',
+              }}>
+                {examples.map((e, i) => (
+                  <div key={i} style={{
+                    height: LINE_H, lineHeight: `${LINE_H}px`,
+                    ...T.bodySm, color: 'rgba(0,0,0,0.5)',
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                  }}>{e}</div>
+                ))}
+              </div>
+            </div>
             <Chevron color="#D30AD7" />
           </button>
         </PagePad>
@@ -2592,7 +2556,7 @@
       },
       {
         key: 'aiBanker', label: 'Ryan', variants: {
-          A: 'Pill + BETA tag', C: 'Avatar + chat bar', E: 'Pill + typing examples', None: 'X'
+          A: 'Pill + BETA tag', C: 'Avatar + chat bar', E: 'Pill + rolling examples', None: 'X'
         }
       },
       {
