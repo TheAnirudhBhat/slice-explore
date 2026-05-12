@@ -2388,8 +2388,84 @@
       );
     };
 
+    /* RW_G — Fire-game hero card + Spark/Monies 2-up below.
+       Hero references Figma 9792:10201: title + leaderboard pip on the left, a
+       decorative stack of scratch/receipt cards on the right, "Play now" CTA. */
+    const FireScratchStack = () => (
+      <div style={{ position: 'relative', width: 120, height: 130, flexShrink: 0 }}>
+        {[
+          { rot: -14, x: -8, y: 18, w: 76, h: 96, bg: '#FAE2FA', shadow: '0 6px 16px rgba(0,0,0,0.08)' },
+          { rot: 8,   x: 26, y: 12, w: 76, h: 96, bg: '#FFE6E0', shadow: '0 6px 16px rgba(0,0,0,0.08)' },
+          { rot: -2,  x: 12, y: 0,  w: 76, h: 96, bg: '#FFFFFF', shadow: '0 8px 18px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.06)' },
+        ].map((c, i) => (
+          <div key={i} style={{
+            position: 'absolute', left: c.x, top: c.y, width: c.w, height: c.h,
+            background: c.bg, borderRadius: 12, transform: `rotate(${c.rot}deg)`,
+            boxShadow: c.shadow,
+            display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+            padding: '12px 10px',
+          }}>
+            {i === 2 && (
+              <>
+                <div style={{ ...T.meta, color: 'rgba(0,0,0,0.5)' }}>₹389 paid to</div>
+                <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.9)' }}>Zomato</div>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+    const RW_G = () => (
+      <>
+        <PagePad>
+          <button className="tap" style={{
+            width: '100%', padding: 16, borderRadius: 16,
+            background: '#FFFFFF', border: CARD_BORDER, boxShadow: CARD_SHADOW,
+            display: 'flex', alignItems: 'center', gap: 12,
+            textAlign: 'left', cursor: 'pointer', position: 'relative', overflow: 'hidden',
+            minHeight: 172,
+          }}>
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignSelf: 'stretch' }}>
+              <div>
+                <div style={{ ...T.h4, color: 'rgba(0,0,0,0.9)' }}>Play & win</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
+                  <div style={{
+                    width: 18, height: 18, borderRadius: 100,
+                    background: 'linear-gradient(135deg, #FFD668 0%, #FF9A17 100%)',
+                    color: '#FFFFFF', fontSize: 10, fontWeight: 600,
+                    display: 'grid', placeItems: 'center', flexShrink: 0,
+                  }}>1</div>
+                  <span style={{ ...T.caption, color: 'rgba(0,0,0,0.7)' }}>Aman leading with</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                    <img src="./assets/fire_sparkle.png" width={14} height={14} alt="" />
+                    <span style={{ ...T.caption, color: 'rgba(0,0,0,0.9)', fontWeight: 500 }}>240</span>
+                  </span>
+                </div>
+              </div>
+              <div style={{
+                display: 'inline-flex', alignSelf: 'flex-start',
+                padding: '8px 16px', height: 36, borderRadius: 100,
+                background: 'rgba(211,10,215,0.08)',
+                ...T.btnSm, color: '#D30AD7', alignItems: 'center',
+              }}>Play now</div>
+            </div>
+            <FireScratchStack />
+          </button>
+        </PagePad>
+        <Spacer h={16} />
+        <PagePad>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <ExploreMedium subtext="Spark · 12 live" title="2d to claim"
+              icon={<Avatar size={44} bg="#FAE2FA" glyph={<GlyphSpark color="#D30AD7" />} />} />
+            <ExploreMedium subtext="Monies" title="₹240"
+              icon={<Avatar size={44} bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />} />} />
+          </div>
+        </PagePad>
+      </>
+    );
+
     const RewardsSection = ({ variant, isInCard }) => {
-      const C = { A: RW_A, B: RW_B, D: RW_D, E: RW_E, F: RW_F }[variant] || RW_F;
+      const C = { A: RW_A, B: RW_B, D: RW_D, E: RW_E, F: RW_F, G: RW_G }[variant] || RW_F;
       return <C isInCard={isInCard} />;
     };
 
@@ -2912,7 +2988,7 @@
       },
       {
         key: 'rewards', label: 'Rewards & Benefits', variants: {
-          F: 'Featured Large + 2 Med', D: 'Carousel · brand-grad first', E: 'Streak banner + carousel',
+          G: 'Fire hero + 2 below', F: 'Featured Large + 2 Med', D: 'Carousel · brand-grad first', E: 'Streak banner + carousel',
         }
       },
       {
