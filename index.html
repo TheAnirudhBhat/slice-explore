@@ -2541,9 +2541,41 @@
               <MoreSection variant={sections.more} isInCard={isInCard} />
             </SectionWrap>
           </SectionBlock>
+          {sections.footer !== 'None' && (
+            <>
+              <SectionAnchor id="footer" />
+              <SectionBlock id="footer" active={isActive('footer')}>
+                <SectionWrap title="" headerStyle="None">
+                  <FooterSection variant={sections.footer} />
+                </SectionWrap>
+              </SectionBlock>
+            </>
+          )}
         </ScreenShell>
       );
     };
+
+    /* ----- Footer — invite-driven closer at the bottom of the page. ----- */
+    const FT_A = () => (
+      <PagePad>
+        <div style={{
+          background: '#F6F9FC', borderRadius: 16, padding: 32, position: 'relative', overflow: 'hidden',
+        }}>
+          <div style={{ ...T.h2, color: 'rgba(0,0,0,0.9)', maxWidth: 220 }}>
+            Invite & earn up to ₹500
+          </div>
+          <div style={{ ...T.bodySm, color: 'rgba(0,0,0,0.5)', marginTop: 8, maxWidth: 260 }}>
+            Win a fire when they make their first transaction on slice.
+          </div>
+          <button className="tap" style={{
+            marginTop: 20, padding: '8px 16px',
+            background: '#D30AD7', border: 'none', borderRadius: 100,
+            ...T.btnSm, color: '#FFFFFF', cursor: 'pointer',
+          }}>Send link</button>
+        </div>
+      </PagePad>
+    );
+    const FooterSection = ({ variant }) => ({ A: FT_A }[variant] || FT_A)();
 
     /* ============= DEBUG PANEL ============= */
 
@@ -2579,6 +2611,11 @@
           F: 'In-card Header (Premium)', A: 'List rows', B: 'List rows w/ subtitles', E: 'Condensed text-only',
         }
       },
+      {
+        key: 'footer', label: 'Footer', variants: {
+          A: 'Invite closer', None: 'X'
+        }
+      },
     ];
 
     /* Three header styles. "None" renders no section header above content — labels live inside cards instead. */
@@ -2591,12 +2628,12 @@
       V0: {
         label: 'Current',
         headerStyle: 'List',
-        sections: { forYou: 'B', aiBanker: 'E', bills: 'B', rewards: 'F', stats: 'A', more: 'A' },
+        sections: { forYou: 'B', aiBanker: 'E', bills: 'B', rewards: 'F', stats: 'A', more: 'A', footer: 'None' },
       },
       V1: {
         label: 'Exploration',
         headerStyle: 'List',
-        sections: { forYou: 'A', aiBanker: 'E', bills: 'A', rewards: 'F', stats: 'A', more: 'B' },
+        sections: { forYou: 'A', aiBanker: 'E', bills: 'A', rewards: 'F', stats: 'A', more: 'B', footer: 'A' },
       },
     };
 
