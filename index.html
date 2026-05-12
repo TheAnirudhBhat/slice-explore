@@ -1278,12 +1278,15 @@
 
     /* overflowX: auto forces the browser to compute overflowY as auto too, which clips
        vertical card shadows. Inner vertical padding gives the shadow room; matching
-       negative margins keep the surrounding layout flow unchanged. */
+       negative margins keep the surrounding layout flow unchanged.
+       Scroll-snap → cards latch on swipe so vertical-card layouts feel clean. */
     const HScroll = ({ children, gap = 12 }) => (
       <div style={{
         overflowX: 'auto', paddingLeft: 24, paddingRight: 24,
-        paddingTop: 6, paddingBottom: 18,
-        marginTop: -6, marginBottom: -18,
+        paddingTop: 16, paddingBottom: 28,
+        marginTop: -16, marginBottom: -28,
+        scrollSnapType: 'x proximity',
+        overscrollBehaviorX: 'contain',
       }} className="scrollbar-hide">
         <div style={{ display: 'flex', gap, paddingRight: 24 }}>{children}</div>
       </div>
@@ -1559,6 +1562,7 @@
               flex: '0 0 280px', minHeight: 160, borderRadius: 16, padding: 24,
               background: th.bg, border: 'none',
               boxShadow: CARD_SHADOW,
+              scrollSnapAlign: 'start',
               display: 'flex', flexDirection: 'column', justifyContent: 'space-between', textAlign: 'left',
               position: 'relative', overflow: 'hidden'
             }}>
@@ -1753,6 +1757,7 @@
             flex: '0 0 156px', minHeight: 182, padding: 16,
             background: 'white', borderRadius: 16,
             boxShadow: CARD_SHADOW, border: CARD_BORDER,
+            scrollSnapAlign: 'start',
             display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
             textAlign: 'left', cursor: 'pointer',
           }}>
