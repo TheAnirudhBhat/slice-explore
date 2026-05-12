@@ -2595,19 +2595,16 @@
       </PagePad>
     );
 
-    /* ST_G — Functional 3-month spends chart.
-       Bigger surface than ST_D. Shows Mar/Apr/May with the current-month pulse
-       in the middle of the visual rhythm. Each point carries its amount label;
-       the delta vs last month sits in the header so the comparison is immediate. */
+    /* ST_G — Quiet 3-month spends sparkline.
+       Visual element, not a full chart: smooth curve with a soft fill, pulse on
+       the current month. Header carries the headline + delta — no axis labels,
+       no per-point amounts, no legend. */
     const ST_G = () => {
-      /* Plot 3 months evenly across the card with the current month (May) at the
-         visual midpoint of the curve. Adding a trailing faded extension keeps the
-         curve from looking truncated at the right edge. */
-      const VB_W = 312, VB_H = 140;
+      const VB_W = 312, VB_H = 80;
       const months = [
-        { label: 'Mar', value: '₹14.2K', x: 40,  y: 92,  amount: 14200 },
-        { label: 'Apr', value: '₹22.0K', x: 156, y: 36,  amount: 22000 },
-        { label: 'May', value: '₹18.4K', x: 272, y: 64,  amount: 18400, current: true },
+        { x: 40,  y: 56 },
+        { x: 156, y: 18 },
+        { x: 272, y: 36, current: true },
       ];
       const path = `M${months[0].x} ${months[0].y} ` + months.slice(1).map((p, i) => {
         const prev = months[i];
@@ -2627,50 +2624,19 @@
               </div>
               <TagSubtle intent="positive">↓ 16% vs Apr</TagSubtle>
             </div>
-            <div style={{ position: 'relative', marginTop: 20, height: VB_H }}>
+            <div style={{ position: 'relative', marginTop: 16, height: VB_H }}>
               <svg width="100%" height={VB_H} viewBox={`0 0 ${VB_W} ${VB_H}`} fill="none" preserveAspectRatio="none">
-                {/* Faint gradient fill under the line for body */}
                 <defs>
                   <linearGradient id="st_g_fill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#D30AD7" stopOpacity="0.16" />
+                    <stop offset="0%" stopColor="#D30AD7" stopOpacity="0.14" />
                     <stop offset="100%" stopColor="#D30AD7" stopOpacity="0" />
                   </linearGradient>
                 </defs>
                 <path d={`${path} L${months[months.length-1].x} ${VB_H} L${months[0].x} ${VB_H} Z`} fill="url(#st_g_fill)" />
-                {/* Curve */}
                 <path d={path} stroke="#D30AD7" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                {/* Past markers — small filled dots */}
-                {months.filter(m => !m.current).map((m, i) => (
-                  <circle key={i} cx={m.x} cy={m.y} r="4" fill="#FFFFFF" stroke="#D30AD7" strokeWidth="2" />
-                ))}
-                {/* Current-month pulse — larger ring + dot */}
-                <circle cx={current.x} cy={current.y} r="14" fill="rgba(211,10,215,0.16)" />
-                <circle cx={current.x} cy={current.y} r="6" fill="#D30AD7" />
+                <circle cx={current.x} cy={current.y} r="11" fill="rgba(211,10,215,0.18)" />
+                <circle cx={current.x} cy={current.y} r="5" fill="#D30AD7" />
               </svg>
-              {/* Per-point amount labels */}
-              {months.map((m, i) => (
-                <div key={i} style={{
-                  position: 'absolute',
-                  left: `${m.x / VB_W * 100}%`,
-                  top: `${m.y / VB_H * 100}%`,
-                  transform: 'translate(-50%, calc(-100% - 14px))',
-                  ...T.meta,
-                  color: m.current ? '#D30AD7' : 'rgba(0,0,0,0.5)',
-                  fontWeight: m.current ? 500 : 400,
-                  whiteSpace: 'nowrap',
-                  pointerEvents: 'none',
-                }}>{m.value}</div>
-              ))}
-            </div>
-            {/* Month labels — evenly spaced under the chart */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, padding: '0 8px' }}>
-              {months.map((m, i) => (
-                <div key={i} style={{
-                  ...T.caption,
-                  color: m.current ? '#D30AD7' : 'rgba(0,0,0,0.5)',
-                  fontWeight: m.current ? 500 : 400,
-                }}>{m.label}</div>
-              ))}
             </div>
           </div>
         </PagePad>
