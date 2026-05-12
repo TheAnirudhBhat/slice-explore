@@ -2272,7 +2272,7 @@
       <HScroll gap={12}>
         <div style={{ flex: '0 0 200px' }}>
           <ExploreMedium subtext="Spark · 12 live" title="Expires in 2d"
-            icon={<Avatar size={44} bg="#FAE2FA" glyph={<GlyphSpark color="#D30AD7" />} />} />
+            icon={<img src="./assets/spark_icon.png" width={54} height={54} alt="" style={{ display: 'block' }} />} />
         </div>
         <div style={{ flex: '0 0 200px' }}>
           <ExploreMedium subtext="Fire games" title="5 fires"
@@ -2280,7 +2280,7 @@
         </div>
         <div style={{ flex: '0 0 200px' }}>
           <ExploreMedium subtext="Monies" title="₹240"
-            icon={<Avatar size={44} bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />} />} />
+            icon={<img src="./assets/monies_icon.png" width={54} height={54} alt="" style={{ display: 'block' }} />} />
         </div>
       </HScroll>
     );
@@ -2326,7 +2326,7 @@
         </div>
         <div style={{ flex: '0 0 200px', scrollSnapAlign: 'start' }}>
           <ExploreMedium subtext="Monies" title="₹240"
-            icon={<Avatar size={44} bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />} />} />
+            icon={<img src="./assets/monies_icon.png" width={54} height={54} alt="" style={{ display: 'block' }} />} />
         </div>
       </HScroll>
     );
@@ -2352,11 +2352,11 @@
         <HScroll gap={12}>
           <div style={{ flex: '0 0 200px' }}>
             <ExploreMedium subtext="Spark · 12 live" title="Expires 2d"
-              icon={<Avatar size={44} bg="#FAE2FA" glyph={<GlyphSpark color="#D30AD7" />} />} />
+              icon={<img src="./assets/spark_icon.png" width={54} height={54} alt="" style={{ display: 'block' }} />} />
           </div>
           <div style={{ flex: '0 0 200px' }}>
             <ExploreMedium subtext="Monies" title="₹240"
-              icon={<Avatar size={44} bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />} />} />
+              icon={<img src="./assets/monies_icon.png" width={54} height={54} alt="" style={{ display: 'block' }} />} />
           </div>
         </HScroll>
       </>
@@ -2387,14 +2387,11 @@
     const SparkOrangeAvatar = () => (
       <div style={{
         width: 40, height: 40, borderRadius: 100,
-        background: '#FFF3E3',
+        background: '#FFFFFF',
         display: 'grid', placeItems: 'center', flexShrink: 0,
         boxShadow: '0 0 0 1px rgba(0,0,0,0.04) inset',
       }}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <path d="M12 2 L13.6 9.5 L21 11 L13.6 12.5 L12 20 L10.4 12.5 L3 11 L10.4 9.5 Z"
-            fill="#FF8500" />
-        </svg>
+        <img src="./assets/spark_icon.png" width={22} height={22} alt="" style={{ display: 'block' }} />
       </div>
     );
     const RW_F = ({ isInCard }) => {
@@ -2429,7 +2426,7 @@
           <ExploreMedium subtext="Fire games" title="5 fires"
             icon={<img src="./assets/fire_sparkle.png" width={54} height={54} alt="" />} />
           <ExploreMedium subtext="Monies" title="₹240"
-            icon={<Avatar size={44} bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />} />} />
+            icon={<img src="./assets/monies_icon.png" width={54} height={54} alt="" style={{ display: 'block' }} />} />
         </div>
       );
       return (
@@ -2495,7 +2492,7 @@
             <ExploreMedium subtext="Spark · 12 live" title="2d to claim"
               icon={<Avatar size={44} bg="#FAE2FA" glyph={<GlyphSpark color="#D30AD7" />} />} />
             <ExploreMedium subtext="Monies" title="₹240"
-              icon={<Avatar size={44} bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />} />} />
+              icon={<img src="./assets/monies_icon.png" width={54} height={54} alt="" style={{ display: 'block' }} />} />
           </div>
         </PagePad>
       </>
@@ -2710,16 +2707,7 @@
       </svg>
     );
     const CreditScoreGlyph = () => (
-      <svg width="64" height="56" viewBox="0 0 64 56" fill="none">
-        {/* Brand sparkle — 4-point star */}
-        <path d="M44 8 L46.6 17.4 L56 20 L46.6 22.6 L44 32 L41.4 22.6 L32 20 L41.4 17.4 Z"
-          fill="none" stroke="#D30AD7" strokeWidth="1.6" strokeLinejoin="round" />
-        {/* Score badge — flat ellipse */}
-        <ellipse cx="40" cy="42" rx="20" ry="6" fill="none" stroke="#171A1F" strokeWidth="1.4" />
-        <line x1="40" y1="36" x2="40" y2="48" stroke="#171A1F" strokeWidth="1.4" />
-        <line x1="34" y1="36" x2="34" y2="48" stroke="#171A1F" strokeWidth="1.4" />
-        <line x1="46" y1="36" x2="46" y2="48" stroke="#171A1F" strokeWidth="1.4" />
-      </svg>
+      <img src="./assets/credit_score_icon.png" width={56} height={56} alt="" style={{ display: 'block' }} />
     );
     const MR_A = () => {
       const cardBase = {
