@@ -1694,6 +1694,36 @@
       </PagePad>
     );
 
+    /* FY_V — vertical-card horizontal-scroll variant (Figma L0 ref).
+       Compact 144×182 cards, 2.x visible per row, branded avatar in the bottom-right.
+       Card content maps to PRD card types: bill due, spark drop, spends summary. */
+    const FY_V_CARDS = [
+      { title: 'Electricity bill due in 3 days', sub: 'BSES · ₹1,240', accentBg: '#FAE2FA', glyph: <GlyphBolt color="#D30AD7" /> },
+      { title: 'New Spark Drop', sub: 'Fresh rewards just dropped', accentBg: '#FAE2FA', glyph: <GlyphSpark color="#D30AD7" /> },
+      { title: 'Spent ₹18K last month', sub: '22% higher than usual', accentBg: '#E0F4E8', glyph: <GlyphChart color="#00A63E" /> },
+    ];
+    const FY_V = () => (
+      <HScroll gap={12}>
+        {FY_V_CARDS.map((c, i) => (
+          <button key={i} className="tap" style={{
+            flex: '0 0 156px', minHeight: 182, padding: 16,
+            background: 'white', borderRadius: 16,
+            boxShadow: CARD_SHADOW, border: CARD_BORDER,
+            display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+            textAlign: 'left', cursor: 'pointer',
+          }}>
+            <div>
+              <div style={{ ...T.bodySm, fontWeight: 500, color: 'rgba(0,0,0,0.9)', lineHeight: '18px' }}>{c.title}</div>
+              <div style={{ ...T.caption, color: 'rgba(0,0,0,0.5)', marginTop: 6 }}>{c.sub}</div>
+            </div>
+            <div style={{ alignSelf: 'flex-end', marginTop: 12 }}>
+              <Avatar size={36} bg={c.accentBg} glyph={c.glyph} />
+            </div>
+          </button>
+        ))}
+      </HScroll>
+    );
+
     /* FY_Z — Full Banner Variant (AI generated banners with baked-in text) */
     const FY_Z = () => {
       const OVERLAP = 126;
@@ -1746,6 +1776,7 @@
       if (variant === 'C') return <FY_C />;
       if (variant === 'F') return <FY_F />;
       if (variant === 'Z') return <FY_Z />;
+      if (variant === 'V') return <FY_V />;
       return ({ B: FY_B, D: FY_D, E: FY_E }[variant])();
     };
 
@@ -2583,7 +2614,7 @@
     const SECTION_META = [
       {
         key: 'forYou', label: 'For You', variants: {
-          A: 'Full-bleed carousel', F: 'Centered carousel', B: 'Horizontal strip',
+          A: 'Full-bleed carousel', F: 'Centered carousel', B: 'Horizontal strip', V: 'Vertical cards',
         }
       },
       {
