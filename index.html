@@ -1537,33 +1537,46 @@
       );
     };
 
-    /* FY_B — HScroll layout with coloured banners matching FY_A design */
+    /* FY_B — HScroll banner carousel themed with slice DLS palette.
+       Per-slide visual identity:
+         · Bill due  → Valentino-50 (#FAE2FA) — urgency in slice's signature pink
+         · Spark drop → slice brand gradient (#D30AD7 → #2B6ACF) with white text
+         · Spends    → Slate-10 (#F6F9FC) light neutral
+       CTAs reuse slice purple / white / slate-900 per surface contrast. */
+    const FY_B_THEMES = [
+      { bg: '#FAE2FA', titleColor: 'rgba(0,0,0,0.9)', subColor: 'rgba(0,0,0,0.7)', ctaBg: '#D30AD7', ctaColor: '#FFFFFF' },
+      { bg: 'linear-gradient(135deg, #D30AD7 0%, #2B6ACF 100%)', titleColor: '#FFFFFF', subColor: 'rgba(255,255,255,0.85)', ctaBg: '#FFFFFF', ctaColor: '#D30AD7' },
+      { bg: '#F6F9FC', titleColor: 'rgba(0,0,0,0.9)', subColor: 'rgba(0,0,0,0.7)', ctaBg: '#171A1F', ctaColor: '#FFFFFF' },
+    ];
     const FY_B = () => (
       <div style={{ paddingTop: 8, paddingBottom: 8 }}>
         <HScroll gap={12}>
-        {FY_SLIDES.map((s, i) => (
-          <button className="tap" key={i} style={{
-            flex: '0 0 280px', minHeight: 160, borderRadius: 24, padding: 24,
-            background: `linear-gradient(135deg, ${FY_SCHEMES[i][0]} 0%, ${FY_SCHEMES[i][1]} 100%)`, 
-            border: 'none',
-            display: 'flex', flexDirection: 'column', justifyContent: 'space-between', textAlign: 'left',
-            position: 'relative', overflow: 'hidden'
-          }}>
-            <div style={{ width: '100%', paddingRight: 110, boxSizing: 'border-box', position: 'relative', zIndex: 1 }}>
-              <div style={{ ...T.h4, lineHeight: '20px' }}>{s.title}</div>
-              <div style={{ ...T.caption, color: 'rgba(0,0,0,0.7)', marginTop: 4 }}>{s.sub}</div>
-            </div>
-            <div style={{
-              marginTop: 24, padding: '6px 14px', background: '#000', borderRadius: 100,
-              ...T.btnSm, color: 'white', alignSelf: 'flex-start', position: 'relative', zIndex: 1
-            }}>{s.cta}</div>
-            
-            <img src={`./assets/${s.heroImg}`} alt="" style={{
-              position: 'absolute', right: 12, bottom: 12,
-              width: 96, height: 96, objectFit: 'contain', pointerEvents: 'none', zIndex: 0
-            }} />
-          </button>
-        ))}
+        {FY_SLIDES.map((s, i) => {
+          const th = FY_B_THEMES[i % FY_B_THEMES.length];
+          return (
+            <button className="tap" key={i} style={{
+              flex: '0 0 280px', minHeight: 160, borderRadius: 16, padding: 24,
+              background: th.bg, border: 'none',
+              boxShadow: CARD_SHADOW,
+              display: 'flex', flexDirection: 'column', justifyContent: 'space-between', textAlign: 'left',
+              position: 'relative', overflow: 'hidden'
+            }}>
+              <div style={{ width: '100%', paddingRight: 110, boxSizing: 'border-box', position: 'relative', zIndex: 1 }}>
+                <div style={{ ...T.h4, lineHeight: '20px', color: th.titleColor }}>{s.title}</div>
+                <div style={{ ...T.caption, color: th.subColor, marginTop: 4 }}>{s.sub}</div>
+              </div>
+              <div style={{
+                marginTop: 24, padding: '6px 14px', background: th.ctaBg, borderRadius: 100,
+                ...T.btnSm, color: th.ctaColor, alignSelf: 'flex-start', position: 'relative', zIndex: 1
+              }}>{s.cta}</div>
+
+              <img src={`./assets/${s.heroImg}`} alt="" style={{
+                position: 'absolute', right: 12, bottom: 12,
+                width: 96, height: 96, objectFit: 'contain', pointerEvents: 'none', zIndex: 0
+              }} />
+            </button>
+          );
+        })}
         </HScroll>
       </div>
     );
@@ -1954,13 +1967,7 @@
     const BL_F = ({ isInCard }) => (
       <PagePad>
         <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 24 }}>
-          {isInCard
-            ? <InCardHeader title="Bills & Recharges" cta="History" />
-            : (
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 16 }}>
-                <button className="tap" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, ...T.btnSm, color: '#D30AD7' }}>History</button>
-              </div>
-            )}
+          {isInCard && <InCardHeader title="Bills & Recharges" />}
           <BillsShortcutGrid />
         </div>
       </PagePad>
