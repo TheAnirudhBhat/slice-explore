@@ -2167,56 +2167,36 @@
       </>
     );
 
-    /* D — Carousel. 168-wide cards with text top-left + illustration bottom-right.
-       Same layout pattern as For-You vertical cards: label + value at top,
-       supporting line, and a decorative avatar/illustration tucked to the bottom-right. */
-    const RW_D = () => {
-      const cardBase = {
-        width: 168, height: 152, padding: 14, borderRadius: 16,
-        border: 'none', boxShadow: CARD_SHADOW, overflow: 'hidden',
-        textAlign: 'left', cursor: 'pointer', scrollSnapAlign: 'start',
-        position: 'relative',
-      };
-      const RewardCard = ({ illo, value, label, sub, bg = '#FFFFFF', valueColor = 'rgba(0,0,0,0.9)', labelColor = 'rgba(0,0,0,0.5)', subColor = 'rgba(0,0,0,0.7)' }) => (
-        <button className="tap" style={{ ...cardBase, background: bg, flex: '0 0 168px' }}>
-          <div style={{ position: 'relative', zIndex: 1, paddingRight: 36 }}>
-            <div style={{ ...T.caption, color: labelColor }}>{label}</div>
-            <div style={{ ...T.h3, color: valueColor, fontSize: 22, lineHeight: '26px', marginTop: 4 }}>{value}</div>
-            {sub && <div style={{ ...T.caption, color: subColor, marginTop: 6 }}>{sub}</div>}
-          </div>
-          <div style={{ position: 'absolute', right: 12, bottom: 12, zIndex: 0 }}>
-            {illo}
+    /* D — HScroll of explore-medium cards (live-design pattern).
+       Same 200×148 footprint, caption + H4 + bottom-right icon. First card is
+       the brand-gradient Spark hero; the rest mirror Fire + Monies in white. */
+    const RW_D = () => (
+      <HScroll gap={16}>
+        {/* Spark — brand-gradient hero, same ExploreMedium dimensions */}
+        <button className="tap" style={{
+          flex: '0 0 200px', height: 148, padding: 16, borderRadius: 16,
+          background: 'linear-gradient(135deg, #D30AD7 0%, #2B6ACF 100%)',
+          border: 'none', boxShadow: CARD_SHADOW,
+          display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
+          textAlign: 'left', position: 'relative', overflow: 'hidden',
+          cursor: 'pointer', scrollSnapAlign: 'start',
+        }}>
+          <div style={{ ...T.caption, color: 'rgba(255,255,255,0.75)' }}>Spark · weekly drop</div>
+          <div style={{ ...T.h4, color: '#FFFFFF', marginTop: 4 }}>12 live offers</div>
+          <div style={{ position: 'absolute', right: 16, bottom: 16 }}>
+            <Avatar size={44} bg="rgba(255,255,255,0.2)" glyph={<GlyphSpark color="#FFFFFF" />} />
           </div>
         </button>
-      );
-      return (
-        <HScroll gap={12}>
-          {/* Spark — brand-gradient hero */}
-          <RewardCard
-            bg="linear-gradient(135deg, #D30AD7 0%, #2B6ACF 100%)"
-            label="Spark · weekly drop"
-            value="12 offers"
-            sub="Expires in 2 days"
-            valueColor="#FFFFFF"
-            labelColor="rgba(255,255,255,0.75)"
-            subColor="rgba(255,255,255,0.85)"
-            illo={<Avatar size={48} bg="rgba(255,255,255,0.2)" glyph={<GlyphSpark color="#FFFFFF" />} />}
-          />
-          <RewardCard
-            label="Fire games"
-            value="5 fires"
-            sub="Spin to claim 2x"
-            illo={<img src="./assets/fire_sparkle.png" width={56} height={56} alt="" style={{ display: 'block' }} />}
-          />
-          <RewardCard
-            label="Monies"
-            value="₹240"
-            sub="Earn 1% on CC bills"
-            illo={<Avatar size={48} bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />} />}
-          />
-        </HScroll>
-      );
-    };
+        <div style={{ flex: '0 0 200px', scrollSnapAlign: 'start' }}>
+          <ExploreMedium subtext="Fire games" title="5 fires"
+            icon={<img src="./assets/fire_sparkle.png" width={54} height={54} alt="" style={{ display: 'block' }} />} />
+        </div>
+        <div style={{ flex: '0 0 200px', scrollSnapAlign: 'start' }}>
+          <ExploreMedium subtext="Monies" title="₹240"
+            icon={<Avatar size={44} bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />} />} />
+        </div>
+      </HScroll>
+    );
 
     /* E — Streak banner + carousel */
     const RW_E = () => (
@@ -2722,23 +2702,22 @@
       <div style={{
         background: '#F4F7FA', padding: '42px 0 200px', marginBottom: -200,
       }}>
-        <div style={{
-          padding: '0 32px', display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-start',
-        }}>
+        <div style={{ padding: '0 32px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
           <div style={{
             fontFamily: 'Rubik', fontSize: 32, fontWeight: 500, lineHeight: '40px',
-            color: '#000000',
+            color: 'rgba(0,0,0,0.9)',
           }}>
             Invite & earn up<br/>to ₹500
           </div>
           <div style={{
+            marginTop: 8,
             fontFamily: 'Rubik', fontSize: 12, fontWeight: 400, lineHeight: '16px', letterSpacing: '0.24px',
-            color: 'rgba(0,0,0,0.5)',
+            color: 'rgba(0,0,0,0.7)',
           }}>
             Win a fire per friend who joins slice.
           </div>
           <button className="tap" style={{
-            marginTop: 0, height: 36, padding: '0 16px',
+            marginTop: 24, height: 36, padding: '0 16px',
             background: '#D30AD7', border: 'none', borderRadius: 64,
             fontFamily: 'Rubik', fontSize: 14, fontWeight: 500, lineHeight: '20px', letterSpacing: '0.28px',
             color: '#FFFFFF', cursor: 'pointer',
