@@ -368,6 +368,13 @@
     }
 
     @media (max-width: 768px) {
+      /* App-like feel on mobile: no text selection, no callout, no tap highlight. */
+      body, .app-stage, .app-stage * {
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+      }
       .app-stage {
         padding: 0;
         gap: 0;
@@ -428,15 +435,15 @@
 
       /* Edit tab — subtle left-edge handle, low contrast and slim */
       /* Swipe-up zone — invisible band over the bottom nav. An upward drag opens
-         the editor drawer. Sits above the safe-area; doesn't catch normal scrolling
-         because it's a fixed band, not an overlay over scroll content. */
+         the editor drawer. Sits above the iOS home-indicator safe area so the
+         OS-level swipe-to-close gesture isn't intercepted. */
       .swipe-up-zone {
         display: block;
         position: fixed;
         left: 0;
         right: 0;
-        bottom: 0;
-        height: calc(120px + env(safe-area-inset-bottom, 0px));
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+        height: 96px;
         z-index: 55;
         touch-action: pan-y;
         background: transparent;
@@ -1790,39 +1797,110 @@
       { bg: 'linear-gradient(135deg, #E0F4E0 0%, #C2E6C2 50%, #9CD49C 100%)',
         titleColor: 'rgba(0,0,0,0.9)', subColor: 'rgba(0,0,0,0.7)', ctaBg: '#171A1F', ctaColor: '#FFFFFF' },
     ];
-    const FY_B = () => (
-      <div style={{ paddingTop: 16, paddingBottom: 8 }}>
-        <HScroll gap={16}>
-        {FY_SLIDES.map((s, i) => {
-          const th = FY_B_THEMES[i % FY_B_THEMES.length];
-          return (
-            <button className="tap" key={i} style={{
-              flex: '0 0 280px', minHeight: 160, borderRadius: 16, padding: 24,
-              background: th.bg, border: 'none',
-              boxShadow: CARD_SHADOW,
-              scrollSnapAlign: 'start',
-              display: 'flex', flexDirection: 'column', justifyContent: 'space-between', textAlign: 'left',
-              position: 'relative', overflow: 'hidden'
-            }}>
-              <div style={{ width: '100%', paddingRight: 110, boxSizing: 'border-box', position: 'relative', zIndex: 1 }}>
-                <div style={{ ...T.h4, lineHeight: '20px', color: th.titleColor }}>{s.title}</div>
-                <div style={{ ...T.caption, color: th.subColor, marginTop: 4 }}>{s.sub}</div>
-              </div>
-              <div style={{
-                marginTop: 24, padding: '6px 14px', background: th.ctaBg, borderRadius: 100,
-                ...T.btnSm, color: th.ctaColor, alignSelf: 'flex-start', position: 'relative', zIndex: 1
-              }}>{s.cta}</div>
+    /* FY_B — centered card carousel with infinite scroll.
+       Cards are 280×~160, centered in the viewport via scroll-snap-align:center
+       and a calculated side padding. Cloned edges teleport back to the real
+       index after the scroll snap settles. */
+    const FY_B = () => {
+      const ref = React.useRef(null);
+      const CARD_W = 280;
+      const GAP = 16;
+      const STRIDE = CARD_W + GAP;
+      const teleporting = React.useRef(false);
+      const N = FY_SLIDES.length;
+      const renderedSlides = [FY_SLIDES[N - 1], ...FY_SLIDES, FY_SLIDES[0]];
 
-              <img src={`./assets/${s.heroImg}`} alt="" style={{
-                position: 'absolute', right: 12, bottom: 12,
-                width: 96, height: 96, objectFit: 'contain', pointerEvents: 'none', zIndex: 0
-              }} />
-            </button>
-          );
-        })}
-        </HScroll>
-      </div>
-    );
+      React.useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const init = () => {
+          if (el.clientWidth === 0) { requestAnimationFrame(init); return; }
+          el.scrollLeft = STRIDE; /* land on the first real card */
+        };
+        init();
+      }, []);
+
+      React.useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        let settleTimer;
+        const onScroll = () => {
+          if (teleporting.current) return;
+          clearTimeout(settleTimer);
+          settleTimer = setTimeout(() => {
+            const pos = Math.round(el.scrollLeft / STRIDE);
+            if (pos <= 0) {
+              teleporting.current = true;
+              const prev = el.style.scrollBehavior;
+              el.style.scrollBehavior = 'auto';
+              el.scrollLeft = STRIDE * N;
+              requestAnimationFrame(() => {
+                el.style.scrollBehavior = prev;
+                teleporting.current = false;
+              });
+            } else if (pos >= N + 1) {
+              teleporting.current = true;
+              const prev = el.style.scrollBehavior;
+              el.style.scrollBehavior = 'auto';
+              el.scrollLeft = STRIDE;
+              requestAnimationFrame(() => {
+                el.style.scrollBehavior = prev;
+                teleporting.current = false;
+              });
+            }
+          }, 160);
+        };
+        el.addEventListener('scroll', onScroll, { passive: true });
+        return () => {
+          el.removeEventListener('scroll', onScroll);
+          clearTimeout(settleTimer);
+        };
+      }, [N]);
+
+      return (
+        <div style={{ paddingTop: 16, paddingBottom: 32 }}>
+          <div ref={ref} style={{
+            overflowX: 'auto', overflowY: 'visible',
+            paddingLeft: 'calc((100% - 280px) / 2)',
+            paddingRight: 'calc((100% - 280px) / 2)',
+            paddingTop: 24, paddingBottom: 48,
+            marginTop: -24, marginBottom: -48,
+            scrollSnapType: 'x mandatory',
+            overscrollBehaviorX: 'contain',
+          }} className="scrollbar-hide">
+            <div style={{ display: 'flex', gap: GAP }}>
+              {renderedSlides.map((s, i) => {
+                const themeIdx = i === 0 ? N - 1 : i === N + 1 ? 0 : i - 1;
+                const th = FY_B_THEMES[themeIdx % FY_B_THEMES.length];
+                return (
+                  <button className="tap" key={i} style={{
+                    flex: `0 0 ${CARD_W}px`, minHeight: 160, borderRadius: 16, padding: 24,
+                    background: th.bg, border: 'none',
+                    boxShadow: CARD_SHADOW,
+                    scrollSnapAlign: 'center',
+                    display: 'flex', flexDirection: 'column', justifyContent: 'space-between', textAlign: 'left',
+                    position: 'relative', overflow: 'hidden',
+                  }}>
+                    <div style={{ width: '100%', paddingRight: 110, boxSizing: 'border-box', position: 'relative', zIndex: 1 }}>
+                      <div style={{ ...T.h4, lineHeight: '20px', color: th.titleColor }}>{s.title}</div>
+                      <div style={{ ...T.caption, color: th.subColor, marginTop: 4 }}>{s.sub}</div>
+                    </div>
+                    <div style={{
+                      marginTop: 24, padding: '6px 14px', background: th.ctaBg, borderRadius: 100,
+                      ...T.btnSm, color: th.ctaColor, alignSelf: 'flex-start', position: 'relative', zIndex: 1
+                    }}>{s.cta}</div>
+                    <img src={`./assets/${s.heroImg}`} alt="" style={{
+                      position: 'absolute', right: 12, bottom: 12,
+                      width: 96, height: 96, objectFit: 'contain', pointerEvents: 'none', zIndex: 0
+                    }} />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    };
 
     /* FY_C — Multiple L0/Medium cards, one at a time, with autoscroll. Padded carousel. */
     const FY_C = () => {
