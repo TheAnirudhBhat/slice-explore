@@ -2469,22 +2469,21 @@
             </div>
             {/* Dashed separator */}
             <div style={{ borderTop: '1px dashed rgba(0,0,0,0.12)' }} />
-            {/* Bottom row — illustration + CTA, vertically centered */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 4 }}>
+            {/* Bottom row — illustration + CTA, vertically centered (Figma 9792:10201) */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, paddingTop: 4 }}>
               <img src="./assets/fire_stack.png" alt="" style={{
-                width: 104, height: 'auto', flexShrink: 0,
+                width: 124, height: 'auto', flexShrink: 0,
                 objectFit: 'contain', display: 'block',
                 marginBottom: -20, /* let the illustration kiss the card bottom */
-                marginLeft: 32,
+                marginLeft: 16,
               }} />
               <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
                 <div style={{
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  padding: '10px 24px', height: 44, borderRadius: 100,
+                  padding: '8px 20px', height: 36, borderRadius: 100,
                   background: '#FFFFFF',
                   border: '1.5px solid #D30AD7',
-                  fontFamily: 'Rubik', fontSize: 16, fontWeight: 500, lineHeight: '24px', letterSpacing: '0.32px',
-                  color: '#D30AD7', whiteSpace: 'nowrap',
+                  ...T.btnSm, color: '#D30AD7', whiteSpace: 'nowrap',
                 }}>Play Now</div>
               </div>
             </div>
