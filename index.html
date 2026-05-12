@@ -2081,11 +2081,13 @@
               <div style={{ ...T.caption, color: 'rgba(0,0,0,0.5)', marginTop: 2 }}>Your AI banker</div>
             </div>
           </div>
-          <div style={{
-            background: '#FAE2FA', borderRadius: 12, padding: '10px 14px',
-            ...T.bodySm, color: '#A008A3',
-          }}>
-            Why is my CC bill ₹4,200?
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {['My CC bill?', 'Redeem monies', "What's a pot?"].map((q, i) => (
+              <span key={i} style={{
+                ...T.caption, color: '#A008A3', background: '#FAE2FA',
+                padding: '6px 10px', borderRadius: 100, whiteSpace: 'nowrap',
+              }}>{q}</span>
+            ))}
           </div>
         </button>
       </PagePad>
