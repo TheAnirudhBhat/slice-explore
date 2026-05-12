@@ -172,8 +172,6 @@
     .screen-scroll {
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
-      overscroll-behavior-x: none;
-      overflow-x: hidden;
     }
 
     .tap {
@@ -184,7 +182,6 @@
       transform: scale(0.97);
       opacity: 0.9;
     }
-
 
     .debug-panel {
       width: 360px;
@@ -1064,54 +1061,6 @@
         <path d="M12 5v14M5 12h14" />
       </svg>
     );
-    /* Bill-category glyphs — single-stroke line icons matching Figma fix #2's icon
-       language. Used inside BillAvatar (grey #F8F8F9 circle, 54×54). */
-    const GlyphFastag = ({ color = 'rgba(0,0,0,0.85)' }) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="6" width="18" height="12" rx="2" />
-        <path d="M3 10h18 M7 14h3" />
-      </svg>
-    );
-    const GlyphInsurance = ({ color = 'rgba(0,0,0,0.85)' }) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z" />
-        <path d="M9 12l2 2 4-4" />
-      </svg>
-    );
-    const GlyphBroadband = ({ color = 'rgba(0,0,0,0.85)' }) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M1.4 9a16 16 0 0 1 21.2 0" />
-        <path d="M5 12.5a11 11 0 0 1 14 0" />
-        <path d="M8.5 16a6 6 0 0 1 7 0" />
-        <circle cx="12" cy="19.5" r="1.1" fill={color} stroke="none" />
-      </svg>
-    );
-    const GlyphDTH = ({ color = 'rgba(0,0,0,0.85)' }) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 16a10 10 0 0 1 16 0" />
-        <path d="M9 20h6 M12 16v4" />
-        <circle cx="12" cy="11" r="2.5" />
-      </svg>
-    );
-    const GlyphWater = ({ color = 'rgba(0,0,0,0.85)' }) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 2.5C8 8 6 11 6 14.5a6 6 0 0 0 12 0c0-3.5-2-6.5-6-12z" />
-      </svg>
-    );
-    const GlyphGas = ({ color = 'rgba(0,0,0,0.85)' }) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M7 21V8a5 5 0 0 1 10 0v13z" />
-        <path d="M7 12h10" />
-        <path d="M10 5V3h4v2" />
-      </svg>
-    );
-    const GlyphLoan = ({ color = 'rgba(0,0,0,0.85)' }) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="9" />
-        <path d="M9 14c0 1.5 1.3 2 3 2s3-.7 3-2-1-1.7-3-2-3-.5-3-2 1.3-2 3-2 3 .5 3 2" />
-        <path d="M12 7v2 M12 15v2" />
-      </svg>
-    );
 
     /* List items */
     const ListItemAvatar = ({ asset, bg, glyph, title, subtitle, trailing }) => (
@@ -1266,15 +1215,11 @@
     );
 
     /* Bills shortcut grid */
-    /* Bill tiles use the same PNG icons as variant D — circular grey
-       background + line glyph, baked into the export. Shared across all
-       Bills variants for a unified icon language (Figma fix #2).
-       Labels are 2-line so the row reads as a balanced grid. */
     const BILL_ICONS = [
-      { src: 'bill_credit', t: 'Credit\ncard' },
-      { src: 'bill_electric', t: 'Electricity\nbill' },
-      { src: 'bill_mobile', t: 'Mobile\nrecharge' },
-      { src: 'bill_more', t: 'View\nmore' },
+      { glyph: <GlyphCard color="rgba(0,0,0,0.9)" />, t: 'Credit\ncard' },
+      { glyph: <GlyphBolt color="rgba(0,0,0,0.9)" />, t: 'Electricity\nbill' },
+      { glyph: <GlyphMobile color="rgba(0,0,0,0.9)" />, t: 'Mobile\nrecharge' },
+      { glyph: <GlyphPlus color="rgba(0,0,0,0.9)" />, t: 'View\nmore' },
     ];
 
     const BillsCompositeCard = () => (
@@ -1286,7 +1231,7 @@
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginTop: 20 }}>
           {BILL_ICONS.map((b, i) => (
             <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <img src={`./assets/${b.src}.png`} width={40} height={40} alt="" style={{ display: 'block', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.06))' }} />
+              <BillAvatar>{b.glyph}</BillAvatar>
               <div style={{ ...T.caption, textAlign: 'center', marginTop: 8, whiteSpace: 'pre-line', color: 'rgba(0,0,0,0.7)' }}>
                 {b.t}
               </div>
@@ -1306,24 +1251,22 @@
       </div>
     );
 
-    /* Figma fix #2: unified bill-icon language. Soft grey circle (no border),
-       54×54, line glyph centered. Applies across all Bills variants. */
     const BillAvatar = ({ children }) => (
       <div style={{
-        width: 54, height: 54, borderRadius: 100,
-        background: '#F8F8F9', border: 'none',
+        width: 48, height: 48, borderRadius: 100,
+        background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.08)',
         display: 'grid', placeItems: 'center', flexShrink: 0,
       }}>{children}</div>
     );
 
-    const BillsShortcutGrid = ({ columnGap = 8 }) => (
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: columnGap }}>
+    const BillsShortcutGrid = () => (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
         {BILL_ICONS.map((b, i) => (
           <button key={i} className="tap" style={{
             background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
             display: 'flex', flexDirection: 'column', alignItems: 'center',
           }}>
-            <img src={`./assets/${b.src}.png`} width={40} height={40} alt="" style={{ display: 'block', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.06))' }} />
+            <BillAvatar>{b.glyph}</BillAvatar>
             <div style={{ ...T.caption, textAlign: 'center', marginTop: 8, whiteSpace: 'pre-line', color: 'rgba(0,0,0,0.7)' }}>
               {b.t}
             </div>
@@ -1334,16 +1277,12 @@
 
     /* overflowX: auto forces the browser to compute overflowY as auto too, which clips
        vertical card shadows. Inner vertical padding gives the shadow room; matching
-       negative margins keep the surrounding layout flow unchanged.
-       Scroll-snap → cards latch on swipe so vertical-card layouts feel clean. */
-    const HScroll = ({ children, gap = 16 }) => (
+       negative margins keep the surrounding layout flow unchanged. */
+    const HScroll = ({ children, gap = 12 }) => (
       <div style={{
         overflowX: 'auto', paddingLeft: 24, paddingRight: 24,
-        paddingTop: 24, paddingBottom: 48,
-        marginTop: -24, marginBottom: -48,
-        scrollSnapType: 'x proximity',
-        scrollPaddingLeft: 24, scrollPaddingRight: 24,
-        overscrollBehaviorX: 'contain',
+        paddingTop: 6, paddingBottom: 18,
+        marginTop: -6, marginBottom: -18,
       }} className="scrollbar-hide">
         <div style={{ display: 'flex', gap, paddingRight: 24 }}>{children}</div>
       </div>
@@ -1535,8 +1474,8 @@
     /* For You F — centered layout carousel. Text + CTA centred within slide,
        illustration above text. Uses generated illustrations at 80px. always Bleed. */
     const FY_F = () => {
-      const PAD_TOP_CSS = 'calc(var(--bar-overlap, 118px) + 8px)';
-      const MIN_H = 200;
+      const PAD_TOP_CSS = 'calc(var(--bar-overlap, 118px) + 32px)';
+      const MIN_H = 220;
       const SLIDE_PCT = 100;
       const slideBg = (s) => {
         return `linear-gradient(to bottom, #FFFFFF 0%, #FFFFFF 3%, ${s[0]} 46%, ${s[1]} 76%, ${s[2]} 100%)`;
@@ -1598,53 +1537,33 @@
       );
     };
 
-    /* FY_B — HScroll banner carousel themed with slice DLS palette.
-       Per-slide visual identity:
-         · Bill due  → Valentino-50 (#FAE2FA) — urgency in slice's signature pink
-         · Spark drop → slice brand gradient (#D30AD7 → #2B6ACF) with white text
-         · Spends    → Slate-10 (#F6F9FC) light neutral
-       CTAs reuse slice purple / white / slate-900 per surface contrast. */
-    const FY_B_THEMES = [
-      /* Bill due — soft Valentino → Slate-tint gradient */
-      { bg: 'linear-gradient(135deg, #FAE2FA 0%, #F0E6F6 50%, #E6EDF9 100%)',
-        titleColor: 'rgba(0,0,0,0.9)', subColor: 'rgba(0,0,0,0.7)', ctaBg: '#D30AD7', ctaColor: '#FFFFFF' },
-      /* Spark — slice brand gradient */
-      { bg: 'linear-gradient(135deg, #D30AD7 0%, #2B6ACF 100%)',
-        titleColor: '#FFFFFF', subColor: 'rgba(255,255,255,0.85)', ctaBg: '#FFFFFF', ctaColor: '#D30AD7' },
-      /* Spends — slate / green tint gradient */
-      { bg: 'linear-gradient(135deg, #F6F9FC 0%, #ECF4EE 100%)',
-        titleColor: 'rgba(0,0,0,0.9)', subColor: 'rgba(0,0,0,0.7)', ctaBg: '#171A1F', ctaColor: '#FFFFFF' },
-    ];
+    /* FY_B — HScroll layout with coloured banners matching FY_A design */
     const FY_B = () => (
       <div style={{ paddingTop: 8, paddingBottom: 8 }}>
         <HScroll gap={12}>
-        {FY_SLIDES.map((s, i) => {
-          const th = FY_B_THEMES[i % FY_B_THEMES.length];
-          return (
-            <button className="tap" key={i} style={{
-              flex: '0 0 280px', minHeight: 160, borderRadius: 16, padding: 24,
-              background: th.bg, border: 'none',
-              boxShadow: CARD_SHADOW,
-              scrollSnapAlign: 'start',
-              display: 'flex', flexDirection: 'column', justifyContent: 'space-between', textAlign: 'left',
-              position: 'relative', overflow: 'hidden'
-            }}>
-              <div style={{ width: '100%', paddingRight: 110, boxSizing: 'border-box', position: 'relative', zIndex: 1 }}>
-                <div style={{ ...T.h4, lineHeight: '20px', color: th.titleColor }}>{s.title}</div>
-                <div style={{ ...T.caption, color: th.subColor, marginTop: 4 }}>{s.sub}</div>
-              </div>
-              <div style={{
-                marginTop: 24, padding: '6px 14px', background: th.ctaBg, borderRadius: 100,
-                ...T.btnSm, color: th.ctaColor, alignSelf: 'flex-start', position: 'relative', zIndex: 1
-              }}>{s.cta}</div>
-
-              <img src={`./assets/${s.heroImg}`} alt="" style={{
-                position: 'absolute', right: 12, bottom: 12,
-                width: 96, height: 96, objectFit: 'contain', pointerEvents: 'none', zIndex: 0
-              }} />
-            </button>
-          );
-        })}
+        {FY_SLIDES.map((s, i) => (
+          <button className="tap" key={i} style={{
+            flex: '0 0 280px', minHeight: 160, borderRadius: 24, padding: 24,
+            background: `linear-gradient(135deg, ${FY_SCHEMES[i][0]} 0%, ${FY_SCHEMES[i][1]} 100%)`, 
+            border: 'none',
+            display: 'flex', flexDirection: 'column', justifyContent: 'space-between', textAlign: 'left',
+            position: 'relative', overflow: 'hidden'
+          }}>
+            <div style={{ width: '100%', paddingRight: 110, boxSizing: 'border-box', position: 'relative', zIndex: 1 }}>
+              <div style={{ ...T.h4, lineHeight: '20px' }}>{s.title}</div>
+              <div style={{ ...T.caption, color: 'rgba(0,0,0,0.7)', marginTop: 4 }}>{s.sub}</div>
+            </div>
+            <div style={{
+              marginTop: 24, padding: '6px 14px', background: '#000', borderRadius: 100,
+              ...T.btnSm, color: 'white', alignSelf: 'flex-start', position: 'relative', zIndex: 1
+            }}>{s.cta}</div>
+            
+            <img src={`./assets/${s.heroImg}`} alt="" style={{
+              position: 'absolute', right: 12, bottom: 12,
+              width: 96, height: 96, objectFit: 'contain', pointerEvents: 'none', zIndex: 0
+            }} />
+          </button>
+        ))}
         </HScroll>
       </div>
     );
@@ -1761,82 +1680,6 @@
       </PagePad>
     );
 
-    /* FY_S — Search-at-bottom hero variant (Figma "image 58" ref).
-       Single banner card with brand-gradient bg + headline + illustration tucked
-       right, plus a persistent rounded search input docked at the bottom with a
-       scan icon trailing. Bottom search invites engagement without forcing taps. */
-    const FY_S = () => (
-      <PagePad>
-        <div style={{
-          position: 'relative', borderRadius: 16, overflow: 'hidden',
-          background: 'linear-gradient(135deg, #FAE2FA 0%, #FFE6E0 100%)',
-          boxShadow: CARD_SHADOW,
-        }}>
-          <div style={{ padding: '24px 24px 16px', position: 'relative', zIndex: 1, maxWidth: '70%' }}>
-            <div style={{ ...T.h3, color: 'rgba(0,0,0,0.9)' }}>
-              Explore rewards & bills
-            </div>
-            <div style={{ ...T.bodySm, color: 'rgba(0,0,0,0.7)', marginTop: 4 }}>
-              Personalized for you
-            </div>
-          </div>
-          <img src="./assets/fire_sparkle.png" alt="" style={{
-            position: 'absolute', right: 12, top: 12, width: 84, height: 84,
-            objectFit: 'contain', zIndex: 0,
-          }} />
-          <div style={{ padding: '0 16px 16px' }}>
-            <div className="tap" style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '12px 16px', background: '#FFFFFF',
-              border: '1px solid rgba(0,0,0,0.05)', borderRadius: 100,
-              cursor: 'text',
-            }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="7" />
-                <line x1="20" y1="20" x2="16.65" y2="16.65" />
-              </svg>
-              <span style={{ ...T.bodySm, color: 'rgba(0,0,0,0.5)', flex: 1 }}>Search bills, rewards, more…</span>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.5)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 7V5a2 2 0 0 1 2-2h2 M17 3h2a2 2 0 0 1 2 2v2 M21 17v2a2 2 0 0 1-2 2h-2 M7 21H5a2 2 0 0 1-2-2v-2" />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </PagePad>
-    );
-
-    /* FY_V — vertical-card horizontal-scroll variant (Figma L0 ref).
-       Each card uses an end-to-end illustration PNG anchored to the bottom edge,
-       matching the Figma source assets: lightbulb (bill), brand logos (spark),
-       sparkline (spends). Title + sub sit above the illustration band. */
-    const FY_V_CARDS = [
-      { title: 'Electricity bill due in 3 days', sub: 'BSES · ₹1,240', illo: 'fy_v_bill.png' },
-      { title: 'New Spark Drop', sub: 'Fresh rewards just dropped', illo: 'fy_v_spark.png' },
-      { title: 'Spent ₹18K last month', sub: '22% higher than usual', illo: 'fy_v_spends.png' },
-    ];
-    const FY_V = () => (
-      <HScroll gap={16}>
-        {FY_V_CARDS.map((c, i) => (
-          <button key={i} className="tap" style={{
-            flex: '0 0 168px', minHeight: 196,
-            background: 'white', borderRadius: 16,
-            boxShadow: CARD_SHADOW, border: CARD_BORDER,
-            scrollSnapAlign: 'start',
-            display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-            textAlign: 'left', cursor: 'pointer', overflow: 'hidden',
-          }}>
-            <div style={{ padding: '20px 20px 0' }}>
-              <div style={{ ...T.bodySm, fontWeight: 500, color: 'rgba(0,0,0,0.9)', lineHeight: '18px' }}>{c.title}</div>
-              <div style={{ ...T.caption, color: 'rgba(0,0,0,0.5)', marginTop: 8 }}>{c.sub}</div>
-            </div>
-            <img src={`./assets/${c.illo}`} alt="" style={{
-              width: '100%', display: 'block', objectFit: 'contain',
-            }} />
-          </button>
-        ))}
-      </HScroll>
-    );
-
     /* FY_Z — Full Banner Variant (AI generated banners with baked-in text) */
     const FY_Z = () => {
       const OVERLAP = 126;
@@ -1889,8 +1732,6 @@
       if (variant === 'C') return <FY_C />;
       if (variant === 'F') return <FY_F />;
       if (variant === 'Z') return <FY_Z />;
-      if (variant === 'V') return <FY_V />;
-      if (variant === 'S') return <FY_S />;
       return ({ B: FY_B, D: FY_D, E: FY_E }[variant])();
     };
 
@@ -1916,7 +1757,7 @@
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
             </svg>
           </div>
-          <span style={{ ...T.bodySm, color: 'rgba(0,0,0,0.5)', flex: 1 }}>Ask Ryan…</span>
+          <span style={{ ...T.bodySm, color: 'rgba(0,0,0,0.5)', flex: 1 }}>Ask AI banker…</span>
           <span style={{
             ...T.meta, fontWeight: 500,
             background: '#FAE2FA', color: '#A008A3',
@@ -1936,13 +1777,13 @@
           cursor: 'pointer', textAlign: 'left',
         }}>
           <GlyphAi />
-          <span style={{ ...T.body, color: 'rgba(0,0,0,0.5)', flex: 1 }}>Ask Ryan anything…</span>
+          <span style={{ ...T.body, color: 'rgba(0,0,0,0.5)', flex: 1 }}>Ask AI banker anything…</span>
           <Chevron color="#D30AD7" />
         </button>
         <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-          <TagSubtle intent="neutral">My CC bill?</TagSubtle>
-          <TagSubtle intent="neutral">Redeem monies</TagSubtle>
-          <TagSubtle intent="neutral">What's a pot?</TagSubtle>
+          <TagSubtle intent="neutral">Bills due?</TagSubtle>
+          <TagSubtle intent="neutral">May spends?</TagSubtle>
+          <TagSubtle intent="neutral">Best FD rate?</TagSubtle>
         </div>
       </PagePad>
     );
@@ -1974,27 +1815,23 @@
           padding: '8px 0', display: 'flex', alignItems: 'center', gap: 8,
         }}>
           <GlyphAi />
-          <span style={{ ...T.btnSm, color: '#D30AD7' }}>Ask Ryan</span>
+          <span style={{ ...T.btnSm, color: '#D30AD7' }}>Ask AI banker</span>
           <GlyphArrow color="#D30AD7" />
         </button>
       </PagePad>
     );
 
-    /* AI Banker E — quiet vertical roll between example queries.
-       Single 20px line height; the next prompt slides up from below every ~3.5s.
-       Less attention-grabbing than a typewriter. */
     const AB_E = () => {
       const examples = [
-        "Why is my CC bill ₹4,200?",
-        "Redeem my monies",
-        "What's a pot?",
+        'How much did I spend on food last month?',
+        'When is my next bill due?',
+        'Should I increase my FD?',
       ];
       const [idx, setIdx] = React.useState(0);
       React.useEffect(() => {
-        const t = setInterval(() => setIdx(i => (i + 1) % examples.length), 3500);
+        const t = setInterval(() => setIdx(prev => (prev + 1) % examples.length), 2500);
         return () => clearInterval(t);
       }, []);
-      const LINE_H = 20;
       return (
         <PagePad>
           <button className="tap" style={{
@@ -2005,22 +1842,12 @@
             cursor: 'pointer', textAlign: 'left',
           }}>
             <GlyphAi />
-            <div style={{
-              flex: 1, height: LINE_H, overflow: 'hidden', position: 'relative',
+            <span style={{
+              ...T.bodySm, color: 'rgba(0,0,0,0.5)', flex: 1,
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
             }}>
-              <div style={{
-                transform: `translateY(${-idx * LINE_H}px)`,
-                transition: 'transform 520ms cubic-bezier(0.22, 0.61, 0.36, 1)',
-              }}>
-                {examples.map((e, i) => (
-                  <div key={i} style={{
-                    height: LINE_H, lineHeight: `${LINE_H}px`,
-                    ...T.bodySm, color: 'rgba(0,0,0,0.5)',
-                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                  }}>{e}</div>
-                ))}
-              </div>
-            </div>
+              {examples[idx]}
+            </span>
             <Chevron color="#D30AD7" />
           </button>
         </PagePad>
@@ -2032,13 +1859,12 @@
     /* ----- Bills & Recharges — no nudges (urgency lives in For You). No inner heading
        (the section header above is the title). 5 ways to present the shortcut surface. ----- */
 
-    /* DLS rule: in-card headers don't carry a leading icon and don't render a
-       divider below the title. The card itself provides containment; an extra
-       hairline would double the boundary. The `icon` prop is accepted but ignored
-       so existing call sites keep working. */
-    const InCardHeader = ({ title, cta }) => (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <span style={{ ...T.h4 }}>{title}</span>
+    const InCardHeader = ({ title, cta, icon }) => (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 16, borderBottom: '1px solid rgba(0,0,0,0.05)', marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {icon && <div style={{ display: 'flex', color: '#D30AD7' }}>{icon}</div>}
+          <span style={{ ...T.h4 }}>{title}</span>
+        </div>
         {cta && <button className="tap" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, ...T.btnSm, color: '#D30AD7' }}>{cta}</button>}
       </div>
     );
@@ -2050,12 +1876,11 @@
       </PagePad>
     );
 
-    /* B — Grid in a card, no inner heading. Looser column gap (20px) so the
-       4 shortcut items feel spaced out inside the card padding. */
+    /* B — Grid in a card, no inner heading */
     const BL_B = () => (
       <PagePad>
         <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 24 }}>
-          <BillsShortcutGrid columnGap={20} />
+          <BillsShortcutGrid />
         </div>
       </PagePad>
     );
@@ -2096,7 +1921,7 @@
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', columnGap: 8, rowGap: 20 }}>
               {tiles.map((b, i) => (
                 <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <img src={`./assets/${b.src}.png`} width={40} height={40} alt="" style={{ display: 'block', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.06))' }} />
+                  <img src={`./assets/${b.src}.png`} width={40} height={40} alt="" style={{ display: 'block' }} />
                   <div style={{ ...T.caption, textAlign: 'center', marginTop: 8, whiteSpace: 'pre-line', color: 'rgba(0,0,0,0.7)' }}>
                     {b.t}
                   </div>
@@ -2128,7 +1953,13 @@
     const BL_F = ({ isInCard }) => (
       <PagePad>
         <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 24 }}>
-          {isInCard && <InCardHeader title="Bills & Recharges" />}
+          {isInCard
+            ? <InCardHeader title="Bills & Recharges" cta="History" />
+            : (
+              <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 16, borderBottom: '1px solid rgba(0,0,0,0.05)', marginBottom: 20 }}>
+                <button className="tap" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, ...T.btnSm, color: '#D30AD7' }}>History</button>
+              </div>
+            )}
           <BillsShortcutGrid />
         </div>
       </PagePad>
@@ -2141,21 +1972,19 @@
 
     /* ----- Rewards & Benefits: A:carousel(kept) B:marketing+rows(kept) C/D/E:NEW ----- */
 
-    /* Rewards sub-components (PRD): Spark, Fire games, Monies.
-       Invite & earn moved to the Footer section. */
     const RW_A = () => (
       <HScroll gap={12}>
         <div style={{ flex: '0 0 200px' }}>
-          <ExploreMedium subtext="Spark · 12 live" title="Expires in 2d"
-            icon={<Avatar size={44} bg="#FAE2FA" glyph={<GlyphSpark color="#D30AD7" />} />} />
-        </div>
-        <div style={{ flex: '0 0 200px' }}>
-          <ExploreMedium subtext="Fire games" title="5 fires"
+          <ExploreMedium subtext="Play & win" title="5 fires"
             icon={<img src="./assets/fire_sparkle.png" width={54} height={54} alt="" />} />
         </div>
         <div style={{ flex: '0 0 200px' }}>
-          <ExploreMedium subtext="Monies" title="₹240"
+          <ExploreMedium subtext="Cashback" title="₹85 earned"
             icon={<Avatar size={44} bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />} />} />
+        </div>
+        <div style={{ flex: '0 0 200px' }}>
+          <ExploreMedium subtext="Invite" title="Get ₹150"
+            icon={<img src="./assets/invite_magnet.png" width={54} height={54} alt="" />} />
         </div>
       </HScroll>
     );
@@ -2163,50 +1992,54 @@
     const RW_B = () => (
       <>
         <PagePad>
-          <MarketingCard glyph={<Avatar size={32} bg="#FAE2FA" glyph={<GlyphSpark color="#D30AD7" />} />}
-            title="12 Spark offers live" subtitle="Fresh weekly drop · expires in 2 days" />
+          <MarketingCard glyph={<img src="./assets/fire_sparkle.png" width={32} height={32} alt="" />}
+            title="5 fires earned" subtitle="Spin the wheel to claim 2x cashback" />
         </PagePad>
         <Spacer h={12} />
-        <ListItemAvatar asset="fire_sparkle.png"
-          title="Fire games" subtitle="5 fires · spin to claim 2x" />
-        <DividerInset />
         <ListItemAvatar bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />}
-          title="Monies ₹240" subtitle="Earn 1% on every CC bill · redeem now" />
+          title="Cashback ₹85" subtitle="Earned this month" />
+        <DividerInset />
+        <ListItemAvatar asset="invite_magnet.png"
+          title="Invite & earn" subtitle="Get ₹150 per friend" />
       </>
     );
 
-    /* D — HScroll of explore-medium cards (live-design pattern).
-       Same 200×148 footprint, caption + H4 + bottom-right icon. First card is
-       the brand-gradient Spark hero; the rest mirror Fire + Monies in white. */
+    /* C — Featured Large + 2 Mediums (NEW, extends Marketing concept) */
+    /* D — Carousel with first card brand-gradient (NEW, extends carousel) */
     const RW_D = () => (
-      <HScroll gap={16}>
-        {/* Spark — brand-gradient hero, same ExploreMedium dimensions */}
-        <button className="tap" style={{
-          flex: '0 0 200px', height: 148, padding: 16, borderRadius: 16,
-          background: 'linear-gradient(135deg, #D30AD7 0%, #2B6ACF 100%)',
-          border: 'none', boxShadow: CARD_SHADOW,
-          display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
-          textAlign: 'left', position: 'relative', overflow: 'hidden',
-          cursor: 'pointer', scrollSnapAlign: 'start',
-        }}>
-          <div style={{ ...T.caption, color: 'rgba(255,255,255,0.75)' }}>Spark · weekly drop</div>
-          <div style={{ ...T.h4, color: '#FFFFFF', marginTop: 4 }}>12 live offers</div>
-          <div style={{ position: 'absolute', right: 16, bottom: 16 }}>
-            <Avatar size={44} bg="rgba(255,255,255,0.2)" glyph={<GlyphSpark color="#FFFFFF" />} />
-          </div>
-        </button>
-        <div style={{ flex: '0 0 200px', scrollSnapAlign: 'start' }}>
-          <ExploreMedium subtext="Fire games" title="5 fires"
-            icon={<img src="./assets/fire_sparkle.png" width={54} height={54} alt="" style={{ display: 'block' }} />} />
+      <HScroll gap={12}>
+        <div style={{ flex: '0 0 220px' }}>
+          <button className="tap" style={{
+            width: '100%', height: 148, padding: 16, borderRadius: 16,
+            background: 'linear-gradient(135deg, #D30AD7 0%, #2B6ACF 100%)',
+            border: 'none', boxShadow: CARD_SHADOW,
+            display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
+            textAlign: 'left', position: 'relative', overflow: 'hidden',
+            cursor: 'pointer',
+          }}>
+            <div style={{ ...T.caption, color: 'rgba(255,255,255,0.7)' }}>Fire hour live</div>
+            <div style={{ ...T.h4, color: 'white', marginTop: 4 }}>5 fires earned</div>
+            <div style={{ ...T.caption, color: 'rgba(255,255,255,0.7)', marginTop: 8 }}>Tap to spin</div>
+            <img src="./assets/fire_sparkle.png" width={54} height={54} alt=""
+              style={{ position: 'absolute', right: 16, bottom: 16 }} />
+          </button>
         </div>
-        <div style={{ flex: '0 0 200px', scrollSnapAlign: 'start' }}>
-          <ExploreMedium subtext="Monies" title="₹240"
+        <div style={{ flex: '0 0 200px' }}>
+          <ExploreMedium subtext="Cashback" title="₹85 earned"
             icon={<Avatar size={44} bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />} />} />
+        </div>
+        <div style={{ flex: '0 0 200px' }}>
+          <ExploreMedium subtext="Invite" title="Get ₹150"
+            icon={<img src="./assets/invite_magnet.png" width={54} height={54} alt="" />} />
+        </div>
+        <div style={{ flex: '0 0 200px' }}>
+          <ExploreMedium subtext="Offers" title="12 nearby"
+            icon={<Avatar size={44} bg="#FFF3E3" glyph={<GlyphSpark color="#C27511" />} />} />
         </div>
       </HScroll>
     );
 
-    /* E — Streak banner + carousel */
+    /* E — Streak banner + carousel (NEW, engagement layer above the carousel) */
     const RW_E = () => (
       <>
         <PagePad>
@@ -2226,31 +2059,38 @@
         <Spacer h={12} />
         <HScroll gap={12}>
           <div style={{ flex: '0 0 200px' }}>
-            <ExploreMedium subtext="Spark · 12 live" title="Expires 2d"
-              icon={<Avatar size={44} bg="#FAE2FA" glyph={<GlyphSpark color="#D30AD7" />} />} />
+            <ExploreMedium subtext="Cashback" title="₹85"
+              icon={<Avatar size={44} bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />} />} />
           </div>
           <div style={{ flex: '0 0 200px' }}>
-            <ExploreMedium subtext="Monies" title="₹240"
-              icon={<Avatar size={44} bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />} />} />
+            <ExploreMedium subtext="Invite" title="Get ₹150"
+              icon={<img src="./assets/invite_magnet.png" width={54} height={54} alt="" />} />
+          </div>
+          <div style={{ flex: '0 0 200px' }}>
+            <ExploreMedium subtext="Offers" title="12 nearby"
+              icon={<Avatar size={44} bg="#FFF3E3" glyph={<GlyphSpark color="#C27511" />} />} />
           </div>
         </HScroll>
       </>
     );
 
-    /* F — Featured Large + 2 Mediums. Spark hero, Fire + Monies as supporting tiles. */
+    /* F — Premium In-card Header Variant */
     const RW_F = ({ isInCard }) => {
+      /* Inner content is already 3 cards (Large + 2 Medium). We only wrap them in an
+         outer card when the section header lives inside (isInCard) — otherwise we'd be
+         nesting cards in cards. In Bold/List modes the three cards stand on their own. */
       const cards = (
         <>
           <ExploreLarge
-            intent={<TagSubtle intent="main">12 live offers</TagSubtle>}
-            subtext="Spark · weekly drop"
-            title="Fresh rewards just dropped"
-            icon={<Avatar size={56} bg="#FAE2FA" glyph={<GlyphSpark color="#D30AD7" />} />} />
+            intent={<TagSubtle intent="main">5 fires earned</TagSubtle>}
+            subtext="Play & win"
+            title="Spin to claim 2x rewards"
+            icon={<img src="./assets/fire_sparkle.png" width={56} height={56} alt="" />} />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
-            <ExploreMedium subtext="Fire games" title="5 fires"
-              icon={<img src="./assets/fire_sparkle.png" width={54} height={54} alt="" />} />
-            <ExploreMedium subtext="Monies" title="₹240"
+            <ExploreMedium subtext="Cashback" title="₹85"
               icon={<Avatar size={44} bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />} />} />
+            <ExploreMedium subtext="Invite" title="Get ₹150"
+              icon={<img src="./assets/invite_magnet.png" width={54} height={54} alt="" />} />
           </div>
         </>
       );
@@ -2258,7 +2098,7 @@
       return (
         <PagePad>
           <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 24 }}>
-            <InCardHeader title="Rewards & Benefits" />
+            <InCardHeader title="Rewards & Benefits" icon={<GlyphSpark color="#D30AD7" />} />
             {cards}
           </div>
         </PagePad>
@@ -2309,6 +2149,26 @@
           </div>
           <SpendBarChart />
         </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
+          <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 16 }}>
+            <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>Credit score</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
+              <span style={T.h2}>785</span>
+              <span style={{ ...T.btnSm, color: '#00A63E' }}>+12</span>
+            </div>
+            <div style={{ height: 4, background: '#EAEBED', borderRadius: 2, marginTop: 12, overflow: 'hidden' }}>
+              <div style={{ width: '70%', height: '100%', background: '#00A63E', borderRadius: 2 }} />
+            </div>
+            <div style={{ ...T.caption, marginTop: 8 }}>On track for 800+</div>
+          </div>
+          <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 16 }}>
+            <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>Autopay</div>
+            <div style={{ ...T.h2, marginTop: 4 }}>1 active</div>
+            <div style={{ ...T.caption, marginTop: 12, lineHeight: '18px' }}>
+              Next: ₹239<br />on 8 May
+            </div>
+          </div>
+        </div>
       </PagePad>
     );
 
@@ -2317,6 +2177,13 @@
         <ListItemAvatar bg="#FAE2FA" glyph={<GlyphChart />}
           title="May spends" subtitle="↓ 18% vs Apr"
           trailing={<div style={T.h4}>₹12,487</div>} />
+        <DividerInset />
+        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphChart color="#00A63E" />}
+          title="Credit score" subtitle="Updated 5 May"
+          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>785</div>} />
+        <DividerInset />
+        <ListItemAvatar bg="#E6EDF9" glyph={<GlyphBolt color="#2B6ACF" />}
+          title="Autopay" subtitle="1 mandate active" />
         <DividerInset />
         <ListItemAvatar bg="#F0F4F7" glyph={<GlyphMore />} title="View full report" />
       </>
@@ -2358,10 +2225,17 @@
             </div>
           </div>
         </PagePad>
+        <Spacer h={12} />
+        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphChart color="#00A63E" />}
+          title="Credit score" subtitle="Updated 5 May"
+          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>785</div>} />
+        <DividerInset />
+        <ListItemAvatar bg="#E6EDF9" glyph={<GlyphBolt color="#2B6ACF" />}
+          title="Autopay" subtitle="1 active" />
       </>
     );
 
-    /* E — Bar chart only (cashback/interest stripped per latest direction) */
+    /* E — Bar chart + 2 list rows (NEW, max info density) */
     const ST_E = () => (
       <>
         <PagePad>
@@ -2376,6 +2250,13 @@
             <SpendBarChart />
           </div>
         </PagePad>
+        <Spacer h={12} />
+        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphChart color="#00A63E" />}
+          title="Credit score" subtitle="Updated 5 May"
+          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>785</div>} />
+        <DividerInset />
+        <ListItemAvatar bg="#E6EDF9" glyph={<GlyphBolt color="#2B6ACF" />}
+          title="Autopay" subtitle="1 mandate active" />
       </>
     );
 
@@ -2396,118 +2277,55 @@
       </PagePad>
     );
 
-    /* ST_G — Analytics-inspired spends widget, simplified.
-       Stays close to ST_D's quiet card feel but borrows the bigger amount + smooth
-       sparkline + "AVG" pill on a dashed line. No month chips, no insight row. */
-    const ST_G = () => {
-      const pts = [
-        { x: 22,  y: 78 },
-        { x: 67,  y: 56 },
-        { x: 112, y: 86 },
-        { x: 157, y: 32 },
-        { x: 202, y: 60 },
-        { x: 247, y: 70 },
-        { x: 292, y: 90 },
-      ];
-      const activeIdx = 3;
-      const path = `M${pts[0].x} ${pts[0].y} ` + pts.slice(1).map((p, i) => {
-        const prev = pts[i];
-        const c1x = prev.x + 22, c1y = prev.y;
-        const c2x = p.x - 22, c2y = p.y;
-        return `C${c1x} ${c1y} ${c2x} ${c2y} ${p.x} ${p.y}`;
-      }).join(' ');
-      const AVG_Y = 70;
-
-      return (
-        <PagePad>
-          <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-              <div>
-                <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>May spends</div>
-                <div style={{ ...T.display, marginTop: 4 }}>₹18,400</div>
-              </div>
-              <TagSubtle intent="positive">↓ 16% vs Apr</TagSubtle>
-            </div>
-            <div style={{ position: 'relative', marginTop: 16, height: 110 }}>
-              <svg width="100%" height="110" viewBox="0 0 312 110" fill="none" preserveAspectRatio="none">
-                <line x1="0" y1={AVG_Y} x2="312" y2={AVG_Y} stroke="rgba(0,0,0,0.15)" strokeWidth="1" strokeDasharray="3 4" />
-                <path d={path} stroke="#D30AD7" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                <circle cx={pts[activeIdx].x} cy={pts[activeIdx].y} r="5" fill="#D30AD7" />
-                <circle cx={pts[activeIdx].x} cy={pts[activeIdx].y} r="9" fill="rgba(211,10,215,0.18)" />
-              </svg>
-              <div style={{
-                position: 'absolute', left: 0, top: `calc(${AVG_Y / 110 * 100}% - 10px)`,
-                background: '#4E5866', color: '#FFFFFF',
-                ...T.meta, padding: '4px 8px', borderRadius: 100,
-              }}>AVG ₹15K</div>
-            </div>
-          </div>
-        </PagePad>
-      );
-    };
-
     const StatsSection = ({ variant, isInCard }) => {
-      const C = { A: ST_A, B: ST_B, C: ST_C, D: ST_D, E: ST_E, F: ST_F, G: ST_G }[variant];
+      const C = { A: ST_A, B: ST_B, C: ST_C, D: ST_D, E: ST_E, F: ST_F }[variant];
       return <C isInCard={isInCard} />;
     };
 
-    /* ----- More: VAS landing zone. Phase-1 content: AutoPay + CIBIL.
-       Future products (insurance, gift cards) launch here before graduating
-       into their own section. ----- */
+    /* ----- More: A:simple-list(kept) B:list+subtitles(was D,kept) C/D/E:NEW ----- */
 
-    /* A — Two small cards side-by-side, mirrors the small-card pattern from Stats
-       (where CIBIL + AutoPay used to live). Keeps visual continuity now that those
-       two items have moved into More. */
     const MR_A = () => (
-      <PagePad>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 16 }}>
-            <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>CIBIL score</div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
-              <span style={T.h2}>785</span>
-              <span style={{ ...T.btnSm, color: '#00A63E' }}>+12</span>
-            </div>
-            <div style={{ height: 4, background: '#EAEBED', borderRadius: 2, marginTop: 12, overflow: 'hidden' }}>
-              <div style={{ width: '70%', height: '100%', background: '#00A63E', borderRadius: 2 }} />
-            </div>
-            <div style={{ ...T.caption, marginTop: 8 }}>On track for 800+</div>
-          </div>
-          <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 16 }}>
-            <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>AutoPay</div>
-            <div style={{ ...T.h2, marginTop: 4 }}>1 active</div>
-            <div style={{ ...T.caption, marginTop: 12, lineHeight: '18px' }}>
-              Next: ₹239<br />on 8 May
-            </div>
-          </div>
-        </div>
-      </PagePad>
+      <>
+        <ListItemAvatar bg="#F0F4F7" glyph={<GlyphSettings />} title="Settings" />
+        <DividerInset />
+        <ListItemAvatar bg="#F0F4F7" glyph={<GlyphHelp />} title="Help & support" />
+        <DividerInset />
+        <ListItemAvatar bg="#F0F4F7" glyph={<GlyphInfo />} title="About slice" />
+      </>
     );
 
     const MR_B = () => (
       <>
-        <ListItemAvatar bg="#E6EDF9" glyph={<GlyphBolt color="#2B6ACF" />}
-          title="AutoPay" subtitle="1 mandate active · next ₹239 on 8 May" />
+        <ListItemAvatar bg="#F0F4F7" glyph={<GlyphSettings />} title="Settings"
+          subtitle="Profile, security, notifications" />
         <DividerInset />
-        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphChart color="#00A63E" />}
-          title="CIBIL score" subtitle="+12 this month · on track for 800+"
-          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>785</div>} />
+        <ListItemAvatar bg="#F0F4F7" glyph={<GlyphHelp />} title="Help & support"
+          subtitle="FAQs, chat with us" />
+        <DividerInset />
+        <ListItemAvatar bg="#F0F4F7" glyph={<GlyphShield />} title="Privacy & data"
+          subtitle="Permissions, ad preferences" />
+        <DividerInset />
+        <ListItemAvatar bg="#F0F4F7" glyph={<GlyphInfo />} title="About slice"
+          subtitle="Version, terms, licenses" />
       </>
     );
 
-    /* C — Compact 2-column tile rows */
+    /* C — Compact 2-column tile rows (NEW) */
     const MR_C = () => (
       <PagePad>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {[
-            { glyph: <GlyphBolt color="#2B6ACF" />, bg: '#E6EDF9', label: 'AutoPay', sub: '1 mandate active' },
-            { glyph: <GlyphChart color="#00A63E" />, bg: '#E0F4E8', label: 'CIBIL', sub: '785 · +12' },
+            { glyph: <GlyphSettings />, label: 'Settings', sub: 'Profile, security' },
+            { glyph: <GlyphHelp />, label: 'Help', sub: 'FAQs, chat' },
+            { glyph: <GlyphShield />, label: 'Privacy', sub: 'Data, ads' },
+            { glyph: <GlyphInfo />, label: 'About', sub: 'Version, terms' },
           ].map((m, i) => (
             <button key={i} className="tap" style={{
               background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 12,
               padding: 12, display: 'flex', alignItems: 'center', gap: 10,
               cursor: 'pointer', textAlign: 'left',
             }}>
-              <Avatar size={36} bg={m.bg} glyph={m.glyph} />
+              <Avatar size={36} bg="#F0F4F7" glyph={m.glyph} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={T.bodySm}>{m.label}</div>
                 <div style={{ ...T.caption, marginTop: 2 }}>{m.sub}</div>
@@ -2518,27 +2336,35 @@
       </PagePad>
     );
 
-    /* D — Grouped sub-headers + lists */
+    /* D — Grouped sub-headers + lists (NEW) */
     const MR_D = () => (
       <>
-        <div style={{ padding: '0 24px 4px', ...T.meta }}>Payments</div>
-        <ListItemAvatar bg="#E6EDF9" glyph={<GlyphBolt color="#2B6ACF" />}
-          title="AutoPay" subtitle="1 mandate active · next ₹239 on 8 May" />
+        <div style={{ padding: '0 24px 4px', ...T.meta }}>Account</div>
+        <ListItemAvatar bg="#F0F4F7" glyph={<GlyphSettings />} title="Settings"
+          subtitle="Profile, security, notifications" />
+        <DividerInset />
+        <ListItemAvatar bg="#F0F4F7" glyph={<GlyphShield />} title="Privacy & data"
+          subtitle="Permissions, ad preferences" />
         <Spacer h={16} />
-        <div style={{ padding: '0 24px 4px', ...T.meta }}>Credit</div>
-        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphChart color="#00A63E" />}
-          title="CIBIL score" subtitle="+12 this month"
-          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>785</div>} />
+        <div style={{ padding: '0 24px 4px', ...T.meta }}>Support</div>
+        <ListItemAvatar bg="#F0F4F7" glyph={<GlyphHelp />} title="Help & support"
+          subtitle="FAQs, chat with us" />
+        <DividerInset />
+        <ListItemAvatar bg="#F0F4F7" glyph={<GlyphInfo />} title="About slice"
+          subtitle="Version, terms, licenses" />
       </>
     );
 
-    /* E — Condensed text-only rows */
+    /* E — Condensed text-only rows (NEW, ultra-minimal) */
     const MR_E = () => (
       <PagePad>
         <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, overflow: 'hidden' }}>
           {[
-            { label: 'AutoPay', value: '1 active' },
-            { label: 'CIBIL score', value: '785' },
+            { label: 'Settings', danger: false },
+            { label: 'Help & support', danger: false },
+            { label: 'Privacy & data', danger: false },
+            { label: 'About slice', danger: false },
+            { label: 'Logout', danger: true },
           ].map((row, i) => (
             <button key={i} className="tap" style={{
               width: '100%', padding: '14px 16px',
@@ -2547,11 +2373,8 @@
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               cursor: 'pointer', textAlign: 'left',
             }}>
-              <span style={{ ...T.body, color: 'rgba(0,0,0,0.9)' }}>{row.label}</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>{row.value}</span>
-                <Chevron />
-              </span>
+              <span style={{ ...T.body, color: row.danger ? '#CE1D26' : 'rgba(0,0,0,0.9)' }}>{row.label}</span>
+              {!row.danger && <Chevron />}
             </button>
           ))}
         </div>
@@ -2568,15 +2391,17 @@
             {isInCard
               ? <InCardHeader title="More" cta="Edit" />
               : (
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: 16, borderBottom: '1px solid rgba(0,0,0,0.05)', marginBottom: 4 }}>
                   <button className="tap" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, ...T.btnSm, color: '#D30AD7' }}>Edit</button>
                 </div>
               )}
           </div>
           <div style={{ padding: '8px 16px 16px' }}>
             {[
-              { label: 'AutoPay', sub: '1 mandate active', glyph: <GlyphBolt color="#2B6ACF" />, value: null },
-              { label: 'CIBIL score', sub: '+12 this month', glyph: <GlyphChart color="#00A63E" />, value: '785' },
+              { label: 'Settings', danger: false, glyph: <GlyphSettings /> },
+              { label: 'Help & support', danger: false, glyph: <GlyphHelp /> },
+              { label: 'Privacy & data', danger: false, glyph: <GlyphShield /> },
+              { label: 'Logout', danger: true, glyph: null },
             ].map((row, i) => (
               <button key={i} className="tap" style={{
                 width: '100%', padding: '12px 8px',
@@ -2584,13 +2409,9 @@
                 display: 'flex', alignItems: 'center', gap: 12,
                 cursor: 'pointer', textAlign: 'left',
               }}>
-                <Avatar size={36} bg="#F0F4F7" glyph={row.glyph} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={T.body}>{row.label}</div>
-                  <div style={{ ...T.caption, marginTop: 2 }}>{row.sub}</div>
-                </div>
-                {row.value && <div style={{ ...T.h4, color: '#00A63E' }}>{row.value}</div>}
-                <Chevron />
+                {row.glyph && <div style={{ color: 'rgba(0,0,0,0.5)' }}>{row.glyph}</div>}
+                <span style={{ ...T.body, color: row.danger ? '#CE1D26' : 'rgba(0,0,0,0.9)', flex: 1 }}>{row.label}</span>
+                {!row.danger && <Chevron />}
               </button>
             ))}
           </div>
@@ -2658,7 +2479,7 @@
             <>
               <SectionAnchor id="aiBanker" />
               <SectionBlock id="aiBanker" active={isActive('aiBanker')}>
-                <SectionWrap title="Ryan" headerStyle="None">
+                <SectionWrap title="AI banker" headerStyle="None">
                   <AiBankerSection variant={sections.aiBanker} />
                 </SectionWrap>
               </SectionBlock>
@@ -2688,53 +2509,9 @@
               <MoreSection variant={sections.more} isInCard={isInCard} />
             </SectionWrap>
           </SectionBlock>
-          {sections.footer !== 'None' && (
-            <>
-              <SectionAnchor id="footer" />
-              <SectionBlock id="footer" active={isActive('footer')}>
-                <Spacer h={8} />
-                <SectionWrap title="" headerStyle="None">
-                  <FooterSection variant={sections.footer} />
-                </SectionWrap>
-              </SectionBlock>
-            </>
-          )}
         </ScreenShell>
       );
     };
-
-    /* ----- Footer — invite-driven closer (Figma 9774:9628 match).
-       Edge-to-edge band that is THE END of the page: its #F4F7FA background
-       extends below the CTA to cover the area behind the floating bottom nav,
-       so there's no further scroll content visible after it. ----- */
-    const FT_A = () => (
-      <div style={{
-        background: '#F4F7FA', padding: '42px 0 200px', marginBottom: -200,
-      }}>
-        <div style={{ padding: '0 32px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-          <div style={{
-            fontFamily: 'Rubik', fontSize: 32, fontWeight: 500, lineHeight: '40px',
-            color: 'rgba(0,0,0,0.9)',
-          }}>
-            Invite & earn up<br/>to ₹500
-          </div>
-          <div style={{
-            marginTop: 8,
-            fontFamily: 'Rubik', fontSize: 12, fontWeight: 400, lineHeight: '16px', letterSpacing: '0.24px',
-            color: 'rgba(0,0,0,0.7)',
-          }}>
-            Win a fire per friend who joins slice.
-          </div>
-          <button className="tap" style={{
-            marginTop: 24, height: 36, padding: '0 16px',
-            background: '#D30AD7', border: 'none', borderRadius: 64,
-            fontFamily: 'Rubik', fontSize: 14, fontWeight: 500, lineHeight: '20px', letterSpacing: '0.28px',
-            color: '#FFFFFF', cursor: 'pointer',
-          }}>Send link</button>
-        </div>
-      </div>
-    );
-    const FooterSection = ({ variant }) => ({ A: FT_A }[variant] || FT_A)();
 
     /* ============= DEBUG PANEL ============= */
 
@@ -2742,17 +2519,18 @@
     const SECTION_META = [
       {
         key: 'forYou', label: 'For You', variants: {
-          A: 'Full-bleed carousel', F: 'Centered carousel', B: 'Horizontal strip', V: 'Vertical cards',
+          A: 'Full-bleed carousel', F: 'Centered carousel', B: 'Horizontal strip',
         }
       },
       {
-        key: 'aiBanker', label: 'Ryan', variants: {
-          A: 'Pill + BETA tag', C: 'Avatar + chat bar', E: 'Pill + rolling examples', None: 'X'
+        key: 'aiBanker', label: 'AI Banker', variants: {
+          A: 'Pill + BETA tag', C: 'Avatar + chat bar', E: 'Pill + rotating examples', None: 'X'
         }
       },
       {
         key: 'bills', label: 'Bills & Recharges', variants: {
-          A: 'Grid', B: 'Grid in card',
+          F: 'In-card Header (Premium)', A: 'Grid + 2 transactions', B: 'Composite + 1 txn',
+          D: 'Composite + 3 txns + view all',
         }
       },
       {
@@ -2762,18 +2540,12 @@
       },
       {
         key: 'stats', label: 'Statistics', variants: {
-          F: 'In-card Header (Premium)', A: 'Bar chart', D: 'Sparkline card',
-          G: 'Analytics widget',
+          F: 'In-card Header (Premium)', A: 'Bar chart + 2 cards', D: 'Sparkline card + rows',
         }
       },
       {
         key: 'more', label: 'More', variants: {
-          A: 'List rows', B: 'List rows w/ subtitles', E: 'Condensed text-only',
-        }
-      },
-      {
-        key: 'footer', label: 'Footer', variants: {
-          A: 'Invite closer', None: 'X'
+          F: 'In-card Header (Premium)', A: 'List rows', B: 'List rows w/ subtitles', E: 'Condensed text-only',
         }
       },
     ];
@@ -2782,18 +2554,17 @@
     const HEADER_STYLES = ['Bold', 'List', 'None'];
     const HEADER_LABELS = { 'Bold': 'Bold', 'List': 'List', 'None': 'In-card' };
 
-    /* Current = live layout (renders OriginalExplore directly).
-       Exploration = section-system experimentation surface. */
+    /* V0 = live layout (renders OriginalExplore directly). V1 = section-system experimentation. */
     const PRESETS = {
       V0: {
-        label: 'Current',
+        label: 'V0',
         headerStyle: 'List',
-        sections: { forYou: 'B', aiBanker: 'E', bills: 'B', rewards: 'F', stats: 'A', more: 'A', footer: 'None' },
+        sections: { forYou: 'B', aiBanker: 'E', bills: 'B', rewards: 'F', stats: 'A', more: 'A' },
       },
       V1: {
-        label: 'Exploration',
+        label: 'V1',
         headerStyle: 'List',
-        sections: { forYou: 'A', aiBanker: 'E', bills: 'A', rewards: 'F', stats: 'A', more: 'A', footer: 'A' },
+        sections: { forYou: 'A', aiBanker: 'E', bills: 'A', rewards: 'F', stats: 'A', more: 'B' },
       },
     };
 
