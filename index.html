@@ -1336,11 +1336,11 @@
        vertical card shadows. Inner vertical padding gives the shadow room; matching
        negative margins keep the surrounding layout flow unchanged.
        Scroll-snap → cards latch on swipe so vertical-card layouts feel clean. */
-    const HScroll = ({ children, gap = 12 }) => (
+    const HScroll = ({ children, gap = 16 }) => (
       <div style={{
         overflowX: 'auto', paddingLeft: 24, paddingRight: 24,
-        paddingTop: 20, paddingBottom: 40,
-        marginTop: -20, marginBottom: -40,
+        paddingTop: 24, paddingBottom: 48,
+        marginTop: -24, marginBottom: -48,
         scrollSnapType: 'x proximity',
         scrollPaddingLeft: 24, scrollPaddingRight: 24,
         overscrollBehaviorX: 'contain',
@@ -1605,9 +1605,15 @@
          · Spends    → Slate-10 (#F6F9FC) light neutral
        CTAs reuse slice purple / white / slate-900 per surface contrast. */
     const FY_B_THEMES = [
-      { bg: '#FAE2FA', titleColor: 'rgba(0,0,0,0.9)', subColor: 'rgba(0,0,0,0.7)', ctaBg: '#D30AD7', ctaColor: '#FFFFFF' },
-      { bg: 'linear-gradient(135deg, #D30AD7 0%, #2B6ACF 100%)', titleColor: '#FFFFFF', subColor: 'rgba(255,255,255,0.85)', ctaBg: '#FFFFFF', ctaColor: '#D30AD7' },
-      { bg: '#F6F9FC', titleColor: 'rgba(0,0,0,0.9)', subColor: 'rgba(0,0,0,0.7)', ctaBg: '#171A1F', ctaColor: '#FFFFFF' },
+      /* Bill due — soft Valentino → Slate-tint gradient */
+      { bg: 'linear-gradient(135deg, #FAE2FA 0%, #F0E6F6 50%, #E6EDF9 100%)',
+        titleColor: 'rgba(0,0,0,0.9)', subColor: 'rgba(0,0,0,0.7)', ctaBg: '#D30AD7', ctaColor: '#FFFFFF' },
+      /* Spark — slice brand gradient */
+      { bg: 'linear-gradient(135deg, #D30AD7 0%, #2B6ACF 100%)',
+        titleColor: '#FFFFFF', subColor: 'rgba(255,255,255,0.85)', ctaBg: '#FFFFFF', ctaColor: '#D30AD7' },
+      /* Spends — slate / green tint gradient */
+      { bg: 'linear-gradient(135deg, #F6F9FC 0%, #ECF4EE 100%)',
+        titleColor: 'rgba(0,0,0,0.9)', subColor: 'rgba(0,0,0,0.7)', ctaBg: '#171A1F', ctaColor: '#FFFFFF' },
     ];
     const FY_B = () => (
       <div style={{ paddingTop: 8, paddingBottom: 8 }}>
@@ -1808,10 +1814,10 @@
       { title: 'Spent ₹18K last month', sub: '22% higher than usual', accentBg: '#E0F4E8', glyph: <GlyphChart color="#00A63E" /> },
     ];
     const FY_V = () => (
-      <HScroll gap={12}>
+      <HScroll gap={16}>
         {FY_V_CARDS.map((c, i) => (
           <button key={i} className="tap" style={{
-            flex: '0 0 156px', minHeight: 182, padding: 16,
+            flex: '0 0 168px', minHeight: 196, padding: 20,
             background: 'white', borderRadius: 16,
             boxShadow: CARD_SHADOW, border: CARD_BORDER,
             scrollSnapAlign: 'start',
@@ -1820,10 +1826,10 @@
           }}>
             <div>
               <div style={{ ...T.bodySm, fontWeight: 500, color: 'rgba(0,0,0,0.9)', lineHeight: '18px' }}>{c.title}</div>
-              <div style={{ ...T.caption, color: 'rgba(0,0,0,0.5)', marginTop: 6 }}>{c.sub}</div>
+              <div style={{ ...T.caption, color: 'rgba(0,0,0,0.5)', marginTop: 8 }}>{c.sub}</div>
             </div>
-            <div style={{ alignSelf: 'flex-end', marginTop: 12 }}>
-              <Avatar size={36} bg={c.accentBg} glyph={c.glyph} />
+            <div style={{ alignSelf: 'flex-end', marginTop: 16 }}>
+              <Avatar size={40} bg={c.accentBg} glyph={c.glyph} />
             </div>
           </button>
         ))}
