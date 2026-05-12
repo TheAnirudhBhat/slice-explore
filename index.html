@@ -2611,15 +2611,20 @@
 
       return (
         <PagePad>
-          <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 20 }}>
+          <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 20, overflow: 'hidden' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
               <div>
                 <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>May spends</div>
                 <div style={{ ...T.display, marginTop: 4 }}>₹18,400</div>
               </div>
-              <TagSubtle intent="positive">↓ 16% vs Apr</TagSubtle>
+              <span style={{
+                ...T.caption, fontWeight: 500,
+                color: '#00A63E', background: '#E0F4E8',
+                padding: '3px 8px', borderRadius: 100, whiteSpace: 'nowrap',
+              }}>↓ 16% vs Apr</span>
             </div>
-            <div style={{ position: 'relative', marginTop: 16, height: VB_H }}>
+            {/* Negative side margins so the curve bleeds to the card's outer edges */}
+            <div style={{ position: 'relative', marginTop: 16, marginLeft: -20, marginRight: -20, marginBottom: -20, height: VB_H }}>
               <svg width="100%" height={VB_H} viewBox={`0 0 ${VB_W} ${VB_H}`} fill="none" preserveAspectRatio="none">
                 <defs>
                   <linearGradient id="st_g_fill" x1="0" y1="0" x2="0" y2="1">
@@ -2647,33 +2652,60 @@
        Future products (insurance, gift cards) launch here before graduating
        into their own section. ----- */
 
-    /* A — Two small cards side-by-side, mirrors the small-card pattern from Stats
-       (where CIBIL + AutoPay used to live). Keeps visual continuity now that those
-       two items have moved into More. */
-    const MR_A = () => (
-      <PagePad>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 16 }}>
-            <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>CIBIL score</div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
-              <span style={T.h2}>785</span>
-              <span style={{ ...T.btnSm, color: '#00A63E' }}>+12</span>
-            </div>
-            <div style={{ height: 4, background: '#EAEBED', borderRadius: 2, marginTop: 12, overflow: 'hidden' }}>
-              <div style={{ width: '70%', height: '100%', background: '#00A63E', borderRadius: 2 }} />
-            </div>
-            <div style={{ ...T.caption, marginTop: 8 }}>On track for 800+</div>
-          </div>
-          <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 16 }}>
-            <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>AutoPay</div>
-            <div style={{ ...T.h2, marginTop: 4 }}>1 active</div>
-            <div style={{ ...T.caption, marginTop: 12, lineHeight: '18px' }}>
-              Next: ₹239<br />on 8 May
-            </div>
-          </div>
-        </div>
-      </PagePad>
+    /* A — Two small cards with a label / value / bottom-right decorative glyph.
+       AUTOPAY shows a gradient progress arc; CREDIT SCORE shows a sparkle + ellipse
+       (slice brand element + score badge). Uppercase metadata label. */
+    const AutopayGlyph = () => (
+      <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+        <defs>
+          <linearGradient id="mr_autopay_grad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#FFD668" />
+            <stop offset="50%" stopColor="#3DBB6C" />
+            <stop offset="100%" stopColor="#2B6ACF" />
+          </linearGradient>
+        </defs>
+        <path d="M 28 6 A 22 22 0 1 1 7.5 16.6" stroke="url(#mr_autopay_grad)" strokeWidth="8" strokeLinecap="round" fill="none" />
+      </svg>
     );
+    const CreditScoreGlyph = () => (
+      <svg width="64" height="56" viewBox="0 0 64 56" fill="none">
+        {/* Brand sparkle — 4-point star */}
+        <path d="M44 8 L46.6 17.4 L56 20 L46.6 22.6 L44 32 L41.4 22.6 L32 20 L41.4 17.4 Z"
+          fill="none" stroke="#D30AD7" strokeWidth="1.6" strokeLinejoin="round" />
+        {/* Score badge — flat ellipse */}
+        <ellipse cx="40" cy="42" rx="20" ry="6" fill="none" stroke="#171A1F" strokeWidth="1.4" />
+        <line x1="40" y1="36" x2="40" y2="48" stroke="#171A1F" strokeWidth="1.4" />
+        <line x1="34" y1="36" x2="34" y2="48" stroke="#171A1F" strokeWidth="1.4" />
+        <line x1="46" y1="36" x2="46" y2="48" stroke="#171A1F" strokeWidth="1.4" />
+      </svg>
+    );
+    const MR_A = () => {
+      const cardBase = {
+        background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER,
+        borderRadius: 16, padding: 20, position: 'relative', overflow: 'hidden',
+        minHeight: 152,
+      };
+      return (
+        <PagePad>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div style={cardBase}>
+              <div style={{ ...T.meta, color: 'rgba(0,0,0,0.5)' }}>AUTOPAY</div>
+              <div style={{ ...T.h2, marginTop: 6, lineHeight: '28px' }}>3 Upcoming</div>
+              <div style={{ position: 'absolute', right: 12, bottom: 12 }}>
+                <AutopayGlyph />
+              </div>
+            </div>
+            <div style={cardBase}>
+              <div style={{ ...T.meta, color: 'rgba(0,0,0,0.5)' }}>CREDIT SCORE</div>
+              <div style={{ ...T.h2, marginTop: 6, lineHeight: '28px' }}>778</div>
+              <div style={{ position: 'absolute', right: 8, bottom: 8 }}>
+                <CreditScoreGlyph />
+              </div>
+            </div>
+          </div>
+        </PagePad>
+      );
+    };
 
     const MR_B = () => (
       <>
