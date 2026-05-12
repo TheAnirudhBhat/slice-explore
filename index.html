@@ -2441,44 +2441,52 @@
     };
 
     /* RW_G — Fire-game hero card + Spark/Monies 2-up below.
-       Hero matches Figma 9792:10201: title + rank badge + leaderboard pip on
-       the left, fire-stack illustration on the right, "Play now" CTA at bottom. */
+       Hero matches Figma 9792:10201: two-row layout — header (title + leaderboard +
+       trailing chevron) on top, dashed separator, then fire-stack illustration on
+       the left + outline "Play Now" CTA on the right. */
     const RW_G = () => (
       <>
         <PagePad>
           <button className="tap" style={{
-            width: '100%', padding: 16, borderRadius: 16,
+            width: '100%', padding: 20, borderRadius: 16,
             background: '#FFFFFF', border: CARD_BORDER, boxShadow: CARD_SHADOW,
-            display: 'flex', alignItems: 'stretch', gap: 12,
+            display: 'flex', flexDirection: 'column', gap: 12,
             textAlign: 'left', cursor: 'pointer', position: 'relative', overflow: 'hidden',
-            minHeight: 172,
           }}>
-            <div style={{
-              flex: 1, minWidth: 0,
-              display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-            }}>
-              <div>
+            {/* Header row */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ ...T.h4, color: 'rgba(0,0,0,0.9)' }}>Play &amp; win</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 4 }}>
                   <img src="./assets/rank_badge_1.png" width={17} height={17} alt="" style={{ display: 'block' }} />
                   <span style={{ ...T.caption, color: 'rgba(0,0,0,0.7)' }}>Aman leading with</span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
-                    <img src="./assets/fire_sparkle.png" width={14} height={14} alt="" />
-                    <span style={{ ...T.caption, color: 'rgba(0,0,0,0.9)', fontWeight: 500 }}>240</span>
+                    <span style={{ ...T.caption, color: 'rgba(0,0,0,0.9)', fontWeight: 500 }}>₹4,657</span>
                   </span>
                 </div>
               </div>
-              <div style={{
-                display: 'inline-flex', alignSelf: 'flex-start',
-                padding: '8px 16px', height: 36, borderRadius: 100,
-                background: 'rgba(211,10,215,0.08)',
-                ...T.btnSm, color: '#D30AD7', alignItems: 'center',
-              }}>Play now</div>
+              <Chevron />
             </div>
-            <img src="./assets/fire_stack.png" alt="" style={{
-              flexShrink: 0, width: 140, height: 'auto', objectFit: 'contain',
-              alignSelf: 'center', display: 'block',
-            }} />
+            {/* Dashed separator */}
+            <div style={{ borderTop: '1px dashed rgba(0,0,0,0.12)' }} />
+            {/* Bottom row — illustration + CTA, vertically centered */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, paddingTop: 4 }}>
+              <img src="./assets/fire_stack.png" alt="" style={{
+                width: 132, height: 'auto', flexShrink: 0,
+                objectFit: 'contain', display: 'block',
+                marginBottom: -20, /* let the illustration kiss the card bottom */
+                marginLeft: -8,
+              }} />
+              <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  padding: '8px 24px', height: 40, borderRadius: 100,
+                  background: 'transparent',
+                  border: '1px solid #D30AD7',
+                  ...T.btnNm, color: '#D30AD7',
+                }}>Play Now</div>
+              </div>
+            </div>
           </button>
         </PagePad>
         <Spacer h={16} />
