@@ -2151,21 +2151,17 @@
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
           <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 16 }}>
-            <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>Credit score</div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginTop: 4 }}>
-              <span style={T.h2}>785</span>
-              <span style={{ ...T.btnSm, color: '#00A63E' }}>+12</span>
+            <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>Cashback earned</div>
+            <div style={{ ...T.h2, marginTop: 4, color: '#00A63E' }}>₹2,840</div>
+            <div style={{ ...T.caption, marginTop: 12, lineHeight: '18px' }}>
+              Till date
             </div>
-            <div style={{ height: 4, background: '#EAEBED', borderRadius: 2, marginTop: 12, overflow: 'hidden' }}>
-              <div style={{ width: '70%', height: '100%', background: '#00A63E', borderRadius: 2 }} />
-            </div>
-            <div style={{ ...T.caption, marginTop: 8 }}>On track for 800+</div>
           </div>
           <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 16 }}>
-            <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>Autopay</div>
-            <div style={{ ...T.h2, marginTop: 4 }}>1 active</div>
+            <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>Interest earned</div>
+            <div style={{ ...T.h2, marginTop: 4, color: '#00A63E' }}>₹1,267</div>
             <div style={{ ...T.caption, marginTop: 12, lineHeight: '18px' }}>
-              Next: ₹239<br />on 8 May
+              On savings & FDs
             </div>
           </div>
         </div>
@@ -2178,12 +2174,13 @@
           title="May spends" subtitle="↓ 18% vs Apr"
           trailing={<div style={T.h4}>₹12,487</div>} />
         <DividerInset />
-        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphChart color="#00A63E" />}
-          title="Credit score" subtitle="Updated 5 May"
-          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>785</div>} />
+        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />}
+          title="Cashback earned" subtitle="Till date"
+          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>₹2,840</div>} />
         <DividerInset />
-        <ListItemAvatar bg="#E6EDF9" glyph={<GlyphBolt color="#2B6ACF" />}
-          title="Autopay" subtitle="1 mandate active" />
+        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphChart color="#00A63E" />}
+          title="Interest earned" subtitle="On savings & FDs"
+          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>₹1,267</div>} />
         <DividerInset />
         <ListItemAvatar bg="#F0F4F7" glyph={<GlyphMore />} title="View full report" />
       </>
@@ -2226,12 +2223,13 @@
           </div>
         </PagePad>
         <Spacer h={12} />
-        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphChart color="#00A63E" />}
-          title="Credit score" subtitle="Updated 5 May"
-          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>785</div>} />
+        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />}
+          title="Cashback earned" subtitle="Till date"
+          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>₹2,840</div>} />
         <DividerInset />
-        <ListItemAvatar bg="#E6EDF9" glyph={<GlyphBolt color="#2B6ACF" />}
-          title="Autopay" subtitle="1 active" />
+        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphChart color="#00A63E" />}
+          title="Interest earned" subtitle="On savings & FDs"
+          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>₹1,267</div>} />
       </>
     );
 
@@ -2251,12 +2249,13 @@
           </div>
         </PagePad>
         <Spacer h={12} />
-        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphChart color="#00A63E" />}
-          title="Credit score" subtitle="Updated 5 May"
-          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>785</div>} />
+        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />}
+          title="Cashback earned" subtitle="Till date"
+          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>₹2,840</div>} />
         <DividerInset />
-        <ListItemAvatar bg="#E6EDF9" glyph={<GlyphBolt color="#2B6ACF" />}
-          title="Autopay" subtitle="1 mandate active" />
+        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphChart color="#00A63E" />}
+          title="Interest earned" subtitle="On savings & FDs"
+          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>₹1,267</div>} />
       </>
     );
 
@@ -2282,50 +2281,46 @@
       return <C isInCard={isInCard} />;
     };
 
-    /* ----- More: A:simple-list(kept) B:list+subtitles(was D,kept) C/D/E:NEW ----- */
+    /* ----- More: VAS landing zone. Phase-1 content: AutoPay + CIBIL.
+       Future products (insurance, gift cards) launch here before graduating
+       into their own section. ----- */
 
     const MR_A = () => (
       <>
-        <ListItemAvatar bg="#F0F4F7" glyph={<GlyphSettings />} title="Settings" />
+        <ListItemAvatar bg="#E6EDF9" glyph={<GlyphBolt color="#2B6ACF" />}
+          title="AutoPay" subtitle="1 mandate active" />
         <DividerInset />
-        <ListItemAvatar bg="#F0F4F7" glyph={<GlyphHelp />} title="Help & support" />
-        <DividerInset />
-        <ListItemAvatar bg="#F0F4F7" glyph={<GlyphInfo />} title="About slice" />
+        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphChart color="#00A63E" />}
+          title="CIBIL score" subtitle="Updated 5 May"
+          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>785</div>} />
       </>
     );
 
     const MR_B = () => (
       <>
-        <ListItemAvatar bg="#F0F4F7" glyph={<GlyphSettings />} title="Settings"
-          subtitle="Profile, security, notifications" />
+        <ListItemAvatar bg="#E6EDF9" glyph={<GlyphBolt color="#2B6ACF" />}
+          title="AutoPay" subtitle="1 mandate active · next ₹239 on 8 May" />
         <DividerInset />
-        <ListItemAvatar bg="#F0F4F7" glyph={<GlyphHelp />} title="Help & support"
-          subtitle="FAQs, chat with us" />
-        <DividerInset />
-        <ListItemAvatar bg="#F0F4F7" glyph={<GlyphShield />} title="Privacy & data"
-          subtitle="Permissions, ad preferences" />
-        <DividerInset />
-        <ListItemAvatar bg="#F0F4F7" glyph={<GlyphInfo />} title="About slice"
-          subtitle="Version, terms, licenses" />
+        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphChart color="#00A63E" />}
+          title="CIBIL score" subtitle="+12 this month · on track for 800+"
+          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>785</div>} />
       </>
     );
 
-    /* C — Compact 2-column tile rows (NEW) */
+    /* C — Compact 2-column tile rows */
     const MR_C = () => (
       <PagePad>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {[
-            { glyph: <GlyphSettings />, label: 'Settings', sub: 'Profile, security' },
-            { glyph: <GlyphHelp />, label: 'Help', sub: 'FAQs, chat' },
-            { glyph: <GlyphShield />, label: 'Privacy', sub: 'Data, ads' },
-            { glyph: <GlyphInfo />, label: 'About', sub: 'Version, terms' },
+            { glyph: <GlyphBolt color="#2B6ACF" />, bg: '#E6EDF9', label: 'AutoPay', sub: '1 mandate active' },
+            { glyph: <GlyphChart color="#00A63E" />, bg: '#E0F4E8', label: 'CIBIL', sub: '785 · +12' },
           ].map((m, i) => (
             <button key={i} className="tap" style={{
               background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 12,
               padding: 12, display: 'flex', alignItems: 'center', gap: 10,
               cursor: 'pointer', textAlign: 'left',
             }}>
-              <Avatar size={36} bg="#F0F4F7" glyph={m.glyph} />
+              <Avatar size={36} bg={m.bg} glyph={m.glyph} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={T.bodySm}>{m.label}</div>
                 <div style={{ ...T.caption, marginTop: 2 }}>{m.sub}</div>
@@ -2336,35 +2331,27 @@
       </PagePad>
     );
 
-    /* D — Grouped sub-headers + lists (NEW) */
+    /* D — Grouped sub-headers + lists */
     const MR_D = () => (
       <>
-        <div style={{ padding: '0 24px 4px', ...T.meta }}>Account</div>
-        <ListItemAvatar bg="#F0F4F7" glyph={<GlyphSettings />} title="Settings"
-          subtitle="Profile, security, notifications" />
-        <DividerInset />
-        <ListItemAvatar bg="#F0F4F7" glyph={<GlyphShield />} title="Privacy & data"
-          subtitle="Permissions, ad preferences" />
+        <div style={{ padding: '0 24px 4px', ...T.meta }}>Payments</div>
+        <ListItemAvatar bg="#E6EDF9" glyph={<GlyphBolt color="#2B6ACF" />}
+          title="AutoPay" subtitle="1 mandate active · next ₹239 on 8 May" />
         <Spacer h={16} />
-        <div style={{ padding: '0 24px 4px', ...T.meta }}>Support</div>
-        <ListItemAvatar bg="#F0F4F7" glyph={<GlyphHelp />} title="Help & support"
-          subtitle="FAQs, chat with us" />
-        <DividerInset />
-        <ListItemAvatar bg="#F0F4F7" glyph={<GlyphInfo />} title="About slice"
-          subtitle="Version, terms, licenses" />
+        <div style={{ padding: '0 24px 4px', ...T.meta }}>Credit</div>
+        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphChart color="#00A63E" />}
+          title="CIBIL score" subtitle="+12 this month"
+          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>785</div>} />
       </>
     );
 
-    /* E — Condensed text-only rows (NEW, ultra-minimal) */
+    /* E — Condensed text-only rows */
     const MR_E = () => (
       <PagePad>
         <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, overflow: 'hidden' }}>
           {[
-            { label: 'Settings', danger: false },
-            { label: 'Help & support', danger: false },
-            { label: 'Privacy & data', danger: false },
-            { label: 'About slice', danger: false },
-            { label: 'Logout', danger: true },
+            { label: 'AutoPay', value: '1 active' },
+            { label: 'CIBIL score', value: '785' },
           ].map((row, i) => (
             <button key={i} className="tap" style={{
               width: '100%', padding: '14px 16px',
@@ -2373,8 +2360,11 @@
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               cursor: 'pointer', textAlign: 'left',
             }}>
-              <span style={{ ...T.body, color: row.danger ? '#CE1D26' : 'rgba(0,0,0,0.9)' }}>{row.label}</span>
-              {!row.danger && <Chevron />}
+              <span style={{ ...T.body, color: 'rgba(0,0,0,0.9)' }}>{row.label}</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>{row.value}</span>
+                <Chevron />
+              </span>
             </button>
           ))}
         </div>
@@ -2398,10 +2388,8 @@
           </div>
           <div style={{ padding: '8px 16px 16px' }}>
             {[
-              { label: 'Settings', danger: false, glyph: <GlyphSettings /> },
-              { label: 'Help & support', danger: false, glyph: <GlyphHelp /> },
-              { label: 'Privacy & data', danger: false, glyph: <GlyphShield /> },
-              { label: 'Logout', danger: true, glyph: null },
+              { label: 'AutoPay', sub: '1 mandate active', glyph: <GlyphBolt color="#2B6ACF" />, value: null },
+              { label: 'CIBIL score', sub: '+12 this month', glyph: <GlyphChart color="#00A63E" />, value: '785' },
             ].map((row, i) => (
               <button key={i} className="tap" style={{
                 width: '100%', padding: '12px 8px',
@@ -2409,9 +2397,13 @@
                 display: 'flex', alignItems: 'center', gap: 12,
                 cursor: 'pointer', textAlign: 'left',
               }}>
-                {row.glyph && <div style={{ color: 'rgba(0,0,0,0.5)' }}>{row.glyph}</div>}
-                <span style={{ ...T.body, color: row.danger ? '#CE1D26' : 'rgba(0,0,0,0.9)', flex: 1 }}>{row.label}</span>
-                {!row.danger && <Chevron />}
+                <Avatar size={36} bg="#F0F4F7" glyph={row.glyph} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={T.body}>{row.label}</div>
+                  <div style={{ ...T.caption, marginTop: 2 }}>{row.sub}</div>
+                </div>
+                {row.value && <div style={{ ...T.h4, color: '#00A63E' }}>{row.value}</div>}
+                <Chevron />
               </button>
             ))}
           </div>
