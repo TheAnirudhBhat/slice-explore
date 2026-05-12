@@ -1338,14 +1338,20 @@
        Scroll-snap → cards latch on swipe so vertical-card layouts feel clean. */
     const HScroll = ({ children, gap = 16 }) => (
       <div style={{
-        overflowX: 'auto', paddingLeft: 24, paddingRight: 24,
+        overflowX: 'auto', paddingLeft: 24, paddingRight: 0,
         paddingTop: 24, paddingBottom: 48,
         marginTop: -24, marginBottom: -48,
         scrollSnapType: 'x proximity',
         scrollPaddingLeft: 24, scrollPaddingRight: 24,
         overscrollBehaviorX: 'contain',
       }} className="scrollbar-hide">
-        <div style={{ display: 'flex', gap, paddingRight: 24 }}>{children}</div>
+        <div style={{ display: 'flex', gap }}>
+          {children}
+          {/* Trailing sentinel — browsers ignore padding-right on flex scroll content,
+              so a real 24px-wide spacer guarantees the last card never hugs the
+              right edge when fully scrolled. */}
+          <div style={{ flex: '0 0 24px', alignSelf: 'stretch' }} aria-hidden="true" />
+        </div>
       </div>
     );
 
