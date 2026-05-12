@@ -2720,24 +2720,36 @@
       );
     };
 
-    /* ----- Footer — invite-driven closer at the bottom of the page.
-       Edge-to-edge band (no PagePad) so it spans the full screen width like the
-       Figma source. Inner content stays inset 24px to keep typography readable. ----- */
+    /* ----- Footer — invite-driven closer (Figma 9774:9628 match).
+       Specs: 360×326 frame, bg #F4F7FA, padding 42 0 60 (top/sides/bottom),
+       inner header 32px side padding, 12px gap between title/sub/button.
+       Title 32/40 Medium · Sub 12/16 Regular · Button #D30AD7 36-high radius-64. ----- */
     const FT_A = () => (
       <div style={{
-        background: '#F6F9FC', padding: '32px 24px', position: 'relative', overflow: 'hidden',
+        background: '#F4F7FA', padding: '42px 0 60px',
       }}>
-        <div style={{ ...T.h2, color: 'rgba(0,0,0,0.9)', maxWidth: 240 }}>
-          Invite & earn up to ₹500
+        <div style={{
+          padding: '0 32px', display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-start',
+        }}>
+          <div style={{
+            fontFamily: 'Rubik', fontSize: 32, fontWeight: 500, lineHeight: '40px',
+            color: 'rgba(0,0,0,0.9)',
+          }}>
+            Invite & earn up<br/>to ₹500
+          </div>
+          <div style={{
+            fontFamily: 'Rubik', fontSize: 12, fontWeight: 400, lineHeight: '16px', letterSpacing: '0.24px',
+            color: 'rgba(0,0,0,0.7)',
+          }}>
+            Win a fire when they make their first transaction on slice.
+          </div>
+          <button className="tap" style={{
+            marginTop: 0, height: 36, padding: '0 16px',
+            background: '#D30AD7', border: 'none', borderRadius: 64,
+            fontFamily: 'Rubik', fontSize: 14, fontWeight: 500, lineHeight: '20px', letterSpacing: '0.28px',
+            color: '#FFFFFF', cursor: 'pointer',
+          }}>Send link</button>
         </div>
-        <div style={{ ...T.bodySm, color: 'rgba(0,0,0,0.5)', marginTop: 8, maxWidth: 280 }}>
-          Win a fire when they make their first transaction on slice.
-        </div>
-        <button className="tap" style={{
-          marginTop: 20, padding: '8px 16px',
-          background: '#D30AD7', border: 'none', borderRadius: 100,
-          ...T.btnSm, color: '#FFFFFF', cursor: 'pointer',
-        }}>Send link</button>
       </div>
     );
     const FooterSection = ({ variant }) => ({ A: FT_A }[variant] || FT_A)();
