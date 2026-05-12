@@ -362,7 +362,7 @@
       50%      { filter: drop-shadow(0 8px 18px rgba(211, 10, 215, 0.18)); }
     }
 
-    .swipe-up-zone,
+    .nav-center-tap,
     .debug-backdrop {
       display: none;
     }
@@ -434,23 +434,23 @@
       }
 
       /* Edit tab — subtle left-edge handle, low contrast and slim */
-      /* Swipe-up zone — invisible band over the bottom nav. An upward drag opens
-         the editor drawer. Sits above the iOS home-indicator safe area so the
-         OS-level swipe-to-close gesture isn't intercepted. */
-      .swipe-up-zone {
+      /* Tap target over the slice logo at the center of the bottom nav.
+         Opens the editor drawer. Sits above the iOS home-indicator safe area. */
+      .nav-center-tap {
         display: block;
         position: fixed;
-        left: 0;
-        right: 0;
-        bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
-        height: 96px;
-        z-index: 55;
-        touch-action: pan-y;
+        left: 50%;
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+        transform: translateX(-50%);
+        width: 72px;
+        height: 72px;
+        border-radius: 100px;
         background: transparent;
+        border: none;
+        cursor: pointer;
+        z-index: 55;
+        padding: 0;
       }
-      /* Hint pill is hidden in the dismissed state — swipe is discoverable
-         without visual chrome cluttering the nav. */
-      .swipe-up-hint { display: none; }
 
       /* Edit popup — dark editing surface, clearly distinct from the white phone shell above. */
       .debug-drawer {
@@ -1013,13 +1013,6 @@
         <path d="M4 19h16M6 14l3-4 4 3 5-7" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     );
-    const GlyphAi = ({ color = '#D30AD7' }) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <path d="M12 3 14 8 19 10 14 12 12 17 10 12 5 10 10 8z" fill={color} />
-        <circle cx="18.5" cy="5.5" r="1.5" fill={color} />
-        <circle cx="5.5" cy="18.5" r="1" fill={color} />
-      </svg>
-    );
     const GlyphMore = ({ color = 'rgba(0,0,0,0.7)' }) => (
       <svg width="20" height="20" viewBox="0 0 24 24" fill={color}>
         <circle cx="6" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="18" cy="12" r="2" />
@@ -1080,52 +1073,6 @@
     );
     /* Bill-category glyphs — single-stroke line icons matching Figma fix #2's icon
        language. Used inside BillAvatar (grey #F8F8F9 circle, 54×54). */
-    const GlyphFastag = ({ color = 'rgba(0,0,0,0.85)' }) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="6" width="18" height="12" rx="2" />
-        <path d="M3 10h18 M7 14h3" />
-      </svg>
-    );
-    const GlyphInsurance = ({ color = 'rgba(0,0,0,0.85)' }) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6l8-3z" />
-        <path d="M9 12l2 2 4-4" />
-      </svg>
-    );
-    const GlyphBroadband = ({ color = 'rgba(0,0,0,0.85)' }) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M1.4 9a16 16 0 0 1 21.2 0" />
-        <path d="M5 12.5a11 11 0 0 1 14 0" />
-        <path d="M8.5 16a6 6 0 0 1 7 0" />
-        <circle cx="12" cy="19.5" r="1.1" fill={color} stroke="none" />
-      </svg>
-    );
-    const GlyphDTH = ({ color = 'rgba(0,0,0,0.85)' }) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 16a10 10 0 0 1 16 0" />
-        <path d="M9 20h6 M12 16v4" />
-        <circle cx="12" cy="11" r="2.5" />
-      </svg>
-    );
-    const GlyphWater = ({ color = 'rgba(0,0,0,0.85)' }) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 2.5C8 8 6 11 6 14.5a6 6 0 0 0 12 0c0-3.5-2-6.5-6-12z" />
-      </svg>
-    );
-    const GlyphGas = ({ color = 'rgba(0,0,0,0.85)' }) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M7 21V8a5 5 0 0 1 10 0v13z" />
-        <path d="M7 12h10" />
-        <path d="M10 5V3h4v2" />
-      </svg>
-    );
-    const GlyphLoan = ({ color = 'rgba(0,0,0,0.85)' }) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="9" />
-        <path d="M9 14c0 1.5 1.3 2 3 2s3-.7 3-2-1-1.7-3-2-3-.5-3-2 1.3-2 3-2 3 .5 3 2" />
-        <path d="M12 7v2 M12 15v2" />
-      </svg>
-    );
 
     /* List items */
     const ListItemAvatar = ({ asset, bg, glyph, title, subtitle, trailing }) => (
@@ -1582,55 +1529,6 @@
       return [ref, idx, progress];
     };
 
-    /* Shared autoscroll + index tracking hook for For You carousels.
-       Returns [ref, idx, setIdx, progress]. Autoscrolls every 4s with smooth behaviour. */
-    const useFYCarousel = (slideCount, slidePct = 100) => {
-      const ref = React.useRef(null);
-      const [idx, setIdx] = useState(0);
-      const [progress, setProgress] = useState(0);
-      const touchRef = React.useRef(false);
-
-      React.useEffect(() => {
-        const el = ref.current;
-        if (!el) return;
-        const update = () => {
-          const cw = el.offsetWidth;
-          const step = cw * (slidePct / 100);
-          const ratio = step > 0 ? el.scrollLeft / step : 0;
-          setProgress(ratio);
-          setIdx(Math.round(ratio));
-        };
-        update();
-        el.addEventListener('scroll', update, { passive: true });
-        /* Detect user touch to pause autoscroll temporarily */
-        const onDown = () => { touchRef.current = true; };
-        const onUp = () => { setTimeout(() => { touchRef.current = false; }, 3000); };
-        el.addEventListener('pointerdown', onDown);
-        el.addEventListener('pointerup', onUp);
-        return () => {
-          el.removeEventListener('scroll', update);
-          el.removeEventListener('pointerdown', onDown);
-          el.removeEventListener('pointerup', onUp);
-        };
-      }, [slidePct]);
-
-      /* Autoscroll timer */
-      React.useEffect(() => {
-        const el = ref.current;
-        if (!el) return;
-        const t = setInterval(() => {
-          if (touchRef.current) return;
-          const cw = el.offsetWidth;
-          const step = cw * (slidePct / 100);
-          const nextIdx = (idx + 1) % slideCount;
-          el.scrollTo({ left: nextIdx * step, behavior: 'smooth' });
-        }, 4000);
-        return () => clearInterval(t);
-      }, [idx, slideCount, slidePct]);
-
-      return [ref, idx, setIdx, progress];
-    };
-
     /* Dot indicators — quiet pill: thinner inactive dots, slate-toned active. */
     const CarouselDots = ({ count, activeIdx, bottom = 14 }) => (
       <div style={{
@@ -1724,7 +1622,7 @@
        illustration above text. Infinite scroll via cloned edge slides. */
     const FY_F = () => {
       const PAD_TOP_CSS = 'calc(var(--bar-overlap, 118px) + 4px)';
-      const MIN_H = 200;
+      const MIN_H = 220;
       const SLIDE_PCT = 100;
       const slideBg = (s) => {
         return `linear-gradient(to bottom, #FFFFFF 0%, ${s[0]} 35%, ${s[1]} 60%, #FFFFFF 100%)`;
@@ -1920,161 +1818,7 @@
       );
     };
 
-    /* FY_C — Multiple L0/Medium cards, one at a time, with autoscroll. Padded carousel. */
-    const FY_C = () => {
-      const cards = [
-        { title: 'Pay ₹1,240 by Mon', caption: 'Tata Power · Electricity bill · Avoid ₹50 late fee', cta: 'Pay now', glyph: <GlyphBolt color="#D30AD7" /> },
-        { title: 'New rewards dropped', caption: 'Spin the wheel for up to ₹100 cashback', cta: 'Play now', glyph: <GlyphSpark color="#D30AD7" /> },
-        { title: 'Spending up 22%', caption: 'You spent ₹18K last month — higher than usual', cta: 'See report', glyph: <GlyphChart color="#D30AD7" /> },
-      ];
-      const ref = React.useRef(null);
-      const [idx, setIdx] = useState(0);
 
-      /* Each scroll step = card width + gap. Read it from the live DOM so the math stays
-         correct if card width / gap change. */
-      const stepPx = () => {
-        const el = ref.current;
-        if (!el || !el.firstChild) return el ? el.offsetWidth : 0;
-        const gap = parseFloat(getComputedStyle(el).columnGap || getComputedStyle(el).gap) || 0;
-        return el.firstChild.offsetWidth + gap;
-      };
-
-      React.useEffect(() => {
-        const el = ref.current;
-        if (!el) return;
-        const update = () => {
-          const step = stepPx();
-          const ratio = step > 0 ? el.scrollLeft / step : 0;
-          setIdx(Math.round(ratio));
-        };
-        update();
-        el.addEventListener('scroll', update, { passive: true });
-        return () => el.removeEventListener('scroll', update);
-      }, []);
-
-      /* Autoscroll */
-      React.useEffect(() => {
-        const el = ref.current;
-        if (!el) return;
-        let paused = false;
-        const onDown = () => { paused = true; };
-        const onUp = () => { setTimeout(() => { paused = false; }, 3000); };
-        el.addEventListener('pointerdown', onDown);
-        el.addEventListener('pointerup', onUp);
-        const t = setInterval(() => {
-          if (paused) return;
-          const step = stepPx();
-          const nextIdx = (idx + 1) % cards.length;
-          el.scrollTo({ left: nextIdx * step, behavior: 'smooth' });
-        }, 4000);
-        return () => {
-          clearInterval(t);
-          el.removeEventListener('pointerdown', onDown);
-          el.removeEventListener('pointerup', onUp);
-        };
-      }, [idx]);
-
-      return (
-        <div>
-          <div ref={ref} style={{
-            display: 'flex', alignItems: 'stretch', overflowX: 'auto',
-            scrollSnapType: 'x mandatory', overscrollBehavior: 'none',
-            paddingLeft: 24, paddingRight: 24, gap: 12,
-            scrollPaddingLeft: 24, scrollPaddingRight: 24,
-          }} className="scrollbar-hide">
-            {cards.map((c, i) => (
-              <div key={i} style={{
-                flex: '0 0 86%', scrollSnapAlign: 'start',
-                display: 'flex', alignItems: 'stretch',
-              }}>
-                <L0CardMedium title={c.title} caption={c.caption} ctaText={c.cta}
-                  illustrationGlyph={c.glyph} />
-              </div>
-            ))}
-          </div>
-          {/* Pagination dots below the cards */}
-          <div style={{
-            display: 'flex', justifyContent: 'center', gap: 6,
-            paddingLeft: 24, paddingRight: 24, marginTop: 12,
-          }}>
-            {cards.map((_, i) => (
-              <div key={i} style={{
-                width: i === idx ? 18 : 5, height: 5, borderRadius: 3,
-                background: i === idx ? '#D30AD7' : 'rgba(0,0,0,0.15)',
-                transition: 'width 200ms, background 200ms',
-              }} />
-            ))}
-          </div>
-        </div>
-      );
-    };
-
-    const FY_D = () => (
-      <PagePad>
-        <L0CardLarge
-          label="DUE IN 2 DAYS"
-          amount="₹1,240"
-          insightText="Electricity bill · Tata Power"
-          ctaTitle="Pay now to avoid late fee"
-          ctaSubtitle="Auto-debit available"
-          ctaText="Pay now" />
-      </PagePad>
-    );
-
-    const FY_E = () => (
-      <PagePad>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          <ExploreSmall subtext="Pay bill" title="₹1,240"
-            trailing={<TagSubtle intent="negative">Mon</TagSubtle>} />
-          <ExploreSmall subtext="Spin" title="Win ₹50"
-            trailing={<TagSubtle intent="main">Live</TagSubtle>} />
-        </div>
-      </PagePad>
-    );
-
-    /* FY_S — Search-at-bottom hero variant (Figma "image 58" ref).
-       Single banner card with brand-gradient bg + headline + illustration tucked
-       right, plus a persistent rounded search input docked at the bottom with a
-       scan icon trailing. Bottom search invites engagement without forcing taps. */
-    const FY_S = () => (
-      <PagePad>
-        <div style={{
-          position: 'relative', borderRadius: 16, overflow: 'hidden',
-          background: 'linear-gradient(135deg, #FAE2FA 0%, #FFE6E0 100%)',
-          boxShadow: CARD_SHADOW,
-        }}>
-          <div style={{ padding: '24px 24px 16px', position: 'relative', zIndex: 1, maxWidth: '70%' }}>
-            <div style={{ ...T.h3, color: 'rgba(0,0,0,0.9)' }}>
-              Explore rewards & bills
-            </div>
-            <div style={{ ...T.bodySm, color: 'rgba(0,0,0,0.7)', marginTop: 4 }}>
-              Personalized for you
-            </div>
-          </div>
-          <img src="./assets/fire_sparkle.png" alt="" style={{
-            position: 'absolute', right: 12, top: 12, width: 84, height: 84,
-            objectFit: 'contain', zIndex: 0,
-          }} />
-          <div style={{ padding: '0 16px 16px' }}>
-            <div className="tap" style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '12px 16px', background: '#FFFFFF',
-              border: '1px solid rgba(0,0,0,0.05)', borderRadius: 100,
-              cursor: 'text',
-            }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.4)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="7" />
-                <line x1="20" y1="20" x2="16.65" y2="16.65" />
-              </svg>
-              <span style={{ ...T.bodySm, color: 'rgba(0,0,0,0.5)', flex: 1 }}>Search bills, rewards, more…</span>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.5)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 7V5a2 2 0 0 1 2-2h2 M17 3h2a2 2 0 0 1 2 2v2 M21 17v2a2 2 0 0 1-2 2h-2 M7 21H5a2 2 0 0 1-2-2v-2" />
-              </svg>
-            </div>
-          </div>
-        </div>
-      </PagePad>
-    );
 
     /* FY_V — vertical-card horizontal-scroll variant (Figma L0 ref).
        Clean white cards with strengthened shadow + no border. Each card carries
@@ -2114,61 +1858,10 @@
       </div>
     );
 
-    /* FY_Z — Full Banner Variant (AI generated banners with baked-in text) */
-    const FY_Z = () => {
-      const OVERLAP = 126;
-      const [ref, idx, , progress] = useFYCarousel(FY_SLIDES.length, 100);
-
-      const bgColors = [
-        '#FCE3FC', // Bill
-        '#E0F4E0', // Drop
-        '#FFE7CC', // Spends
-      ];
-
-      const p   = Math.max(0, Math.min(bgColors.length - 1, progress));
-      const lo  = Math.floor(p);
-      const hi  = Math.min(bgColors.length - 1, lo + 1);
-      const t   = p - lo;
-      const schemeBg = lerpHex(bgColors[lo], bgColors[hi], t);
-
-      return (
-        <div style={{ position: 'relative', marginTop: 'calc(-1 * var(--bar-overlap, 118px))', marginBottom: 24, background: schemeBg }}>
-          <div ref={ref} style={{
-            display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
-            overscrollBehavior: 'none',
-          }} className="scrollbar-hide">
-            {FY_SLIDES.map((s, i) => (
-              <div key={i} style={{
-                flex: '0 0 100%', scrollSnapAlign: 'start', position: 'relative',
-              }}>
-                <img src={`./assets/${s.bannerImg}`} alt="" style={{
-                  width: '100%', height: 'auto', aspectRatio: '1 / 1', objectFit: 'cover',
-                  display: 'block', pointerEvents: 'none',
-                  maskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
-                  WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%)',
-                }} />
-              </div>
-            ))}
-          </div>
-          {/* Bottom fade blending the carousel color into the page background */}
-          <div style={{
-            position: 'absolute', bottom: 0, left: 0, right: 0, height: 48,
-            background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 40%, rgba(255,255,255,0.8) 75%, #FFFFFF 100%)',
-            pointerEvents: 'none', zIndex: 1
-          }} />
-          <CarouselDots count={FY_SLIDES.length} activeIdx={idx} bottom={10} />
-        </div>
-      );
-    };
 
     const ForYouSection = ({ variant }) => {
-      if (variant === 'A') return <FY_A />;
-      if (variant === 'C') return <FY_C />;
-      if (variant === 'F') return <FY_F />;
-      if (variant === 'Z') return <FY_Z />;
-      if (variant === 'V') return <FY_V />;
-      if (variant === 'S') return <FY_S />;
-      return ({ B: FY_B, D: FY_D, E: FY_E }[variant])();
+      const C = { A: FY_A, B: FY_B, F: FY_F, V: FY_V }[variant] || FY_A;
+      return <C />;
     };
 
     /* ----- AI Banker — all 5 are inline-input variants (extends previous E) ----- */
@@ -3107,7 +2800,7 @@
       const isInCard = headerStyle === 'None';
       const isActive = (k) => activeSection === k;
       return (
-        <ScreenShell transparentAppBar={(sections.forYou === 'A' || sections.forYou === 'F' || sections.forYou === 'Z')}>
+        <ScreenShell transparentAppBar={(sections.forYou === 'A' || sections.forYou === 'F')}>
           <SectionAnchor id="forYou" />
           <SectionBlock id="forYou" active={isActive('forYou')}>
             <SectionWrap title="For you" headerStyle="None" isFirst>
@@ -3122,7 +2815,7 @@
                     them); add another 12px so the dots-to-search-bar gap totals 28px.
                     B and V are card variants without dots — those already include their
                     own paddingBottom, so no extra spacer. */}
-                {(sections.forYou === 'A' || sections.forYou === 'F' || sections.forYou === 'Z') && <Spacer h={12} />}
+                {(sections.forYou === 'A' || sections.forYou === 'F') && <Spacer h={12} />}
                 <SectionWrap title="AI banker" headerStyle="None" isFirst>
                   <AiBankerSection variant={sections.aiBanker} />
                 </SectionWrap>
@@ -3133,16 +2826,18 @@
           <SectionBlock id="bills" active={isActive('bills')}>
             {sections.aiBanker === 'None' ? (
               <>
-                <Spacer h={23} />
+                <Spacer h={20} />
                 <SectionWrap title="Bills & Recharges" headerStyle={headerStyle} isFirst>
                   <BillsSection variant={sections.bills} isInCard={isInCard} />
                   {headerStyle === 'Bold' && <Spacer h={8} />}
+              {headerStyle === 'List' && <Spacer h={4} />}
                 </SectionWrap>
               </>
             ) : (
               <SectionWrap title="Bills & Recharges" headerStyle={headerStyle}>
                 <BillsSection variant={sections.bills} isInCard={isInCard} />
                 {headerStyle === 'Bold' && <Spacer h={8} />}
+              {headerStyle === 'List' && <Spacer h={4} />}
               </SectionWrap>
             )}
           </SectionBlock>
@@ -3492,35 +3187,17 @@
       );
     };
 
-    /* Invisible swipe-up zone over the bottom-nav area. On upward drag the editor
-       drawer opens. Threshold: 30px upward travel, <30px horizontal drift. */
-    const SwipeUpZone = ({ onOpen, disabled }) => {
-      const start = React.useRef(null);
-      const onTouchStart = (e) => {
-        const t = e.touches[0];
-        start.current = { x: t.clientX, y: t.clientY, fired: false };
-      };
-      const onTouchMove = (e) => {
-        if (!start.current || start.current.fired) return;
-        const t = e.touches[0];
-        const dy = start.current.y - t.clientY;
-        const dx = Math.abs(t.clientX - start.current.x);
-        if (dy > 30 && dx < 30) {
-          start.current.fired = true;
-          onOpen();
-        }
-      };
-      const onTouchEnd = () => { start.current = null; };
+    /* Tap target centered over the bottom-nav slice logo. A tap opens the editor
+       drawer. Replaces the previous swipe-up gesture so it doesn't conflict with
+       the iOS home-indicator swipe. */
+    const NavCenterTap = ({ onOpen, disabled }) => {
       if (disabled) return null;
       return (
-        <div
-          className="swipe-up-zone"
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
-          aria-hidden="true">
-          <div className="swipe-up-hint" />
-        </div>
+        <button
+          className="nav-center-tap"
+          onClick={onOpen}
+          aria-label="Open editor"
+        />
       );
     };
 
@@ -3623,7 +3300,7 @@
                     </svg>
                   </button>
                 </div>
-                <SwipeUpZone onOpen={() => setDrawerOpen(true)} disabled={drawerOpen} />
+                <NavCenterTap onOpen={() => setDrawerOpen(true)} disabled={drawerOpen} />
               </React.Fragment>
             ) : debugPanel}
           </div>
