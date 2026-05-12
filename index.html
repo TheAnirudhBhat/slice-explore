@@ -1264,11 +1264,14 @@
     );
 
     /* Bills shortcut grid */
+    /* Bill tiles use the same PNG icons as variant D — circular grey
+       background + line glyph, baked into the export. Shared across all
+       Bills variants for a unified icon language (Figma fix #2). */
     const BILL_ICONS = [
-      { glyph: <GlyphMobile color="rgba(0,0,0,0.85)" />, t: 'Mobile' },
-      { glyph: <GlyphBolt color="rgba(0,0,0,0.85)" />, t: 'Electricity' },
-      { glyph: <GlyphCard color="rgba(0,0,0,0.85)" />, t: 'Credit card' },
-      { glyph: <GlyphPlus color="rgba(0,0,0,0.85)" />, t: 'More' },
+      { src: 'bill_mobile', t: 'Mobile' },
+      { src: 'bill_electric', t: 'Electricity' },
+      { src: 'bill_credit', t: 'Credit card' },
+      { src: 'bill_more', t: 'More' },
     ];
 
     const BillsCompositeCard = () => (
@@ -1280,7 +1283,7 @@
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginTop: 20 }}>
           {BILL_ICONS.map((b, i) => (
             <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <BillAvatar>{b.glyph}</BillAvatar>
+              <img src={`./assets/${b.src}.png`} width={54} height={54} alt="" style={{ display: 'block' }} />
               <div style={{ ...T.caption, textAlign: 'center', marginTop: 8, whiteSpace: 'pre-line', color: 'rgba(0,0,0,0.7)' }}>
                 {b.t}
               </div>
@@ -1317,7 +1320,7 @@
             background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
             display: 'flex', flexDirection: 'column', alignItems: 'center',
           }}>
-            <BillAvatar>{b.glyph}</BillAvatar>
+            <img src={`./assets/${b.src}.png`} width={54} height={54} alt="" style={{ display: 'block' }} />
             <div style={{ ...T.caption, textAlign: 'center', marginTop: 8, whiteSpace: 'pre-line', color: 'rgba(0,0,0,0.7)' }}>
               {b.t}
             </div>
@@ -2826,7 +2829,7 @@
       },
       {
         key: 'bills', label: 'Bills & Recharges', variants: {
-          A: 'Grid', B: 'Grid in card', D: 'Two-row grid',
+          A: 'Grid', B: 'Grid in card',
         }
       },
       {
@@ -2842,7 +2845,7 @@
       },
       {
         key: 'more', label: 'More', variants: {
-          F: 'In-card Header (Premium)', A: 'List rows', B: 'List rows w/ subtitles', E: 'Condensed text-only',
+          A: 'List rows', B: 'List rows w/ subtitles', E: 'Condensed text-only',
         }
       },
       {
