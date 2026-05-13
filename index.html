@@ -12,7 +12,12 @@
        status bar still renders white — accepted PWA-only trade-off. -->
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#FFFFFF" />
-  <meta name="color-scheme" content="light only" />
+  <!-- `only light` is the spec-correct syntax (the previous `light only` is
+       silently ignored by Chrome). With this set, Android Chrome's "Force
+       dark mode" / WebView dark theme leaves the page alone — without it, the
+       browser inverts the palette and the proto loads as a near-black mess
+       on PM devices. -->
+  <meta name="color-scheme" content="only light" />
   <meta name="supported-color-schemes" content="light" />
   <title>explore — slice modular iterations</title>
   <link rel="icon" type="image/png" href="./assets/slice_icon.png" />
@@ -36,6 +41,10 @@
     #root {
       height: 100%;
       background: #FFFFFF;
+      /* Defensive CSS-level color-scheme declaration matched to the meta tag.
+         Belt-and-braces against Android Chrome "Force dark mode" — meta alone
+         is sometimes ignored if the page is loaded via in-app WebView. */
+      color-scheme: only light;
     }
 
     body {
@@ -190,6 +199,11 @@
 
     .tap {
       transition: transform .12s ease, opacity .12s;
+    }
+
+    @keyframes splashDot {
+      0%, 80%, 100% { opacity: 0.3; transform: scale(0.75); }
+      40% { opacity: 1; transform: scale(1); }
     }
 
     .tap:active {
@@ -3429,7 +3443,49 @@
       );
     };
 
+    /* Every-load splash. Three-dot loader pulsing in slice Valentino over a
+       white surface. Always plays — user wants the "Upgrading Explore"
+       beat on every webapp open, not just first visit. */
+    const Splash = ({ onDone }) => {
+      const [fading, setFading] = useState(false);
+      React.useEffect(() => {
+        const showFor = 1800;
+        const fadeFor = 450;
+        const fadeTimer = setTimeout(() => setFading(true), showFor);
+        const doneTimer = setTimeout(onDone, showFor + fadeFor);
+        return () => { clearTimeout(fadeTimer); clearTimeout(doneTimer); };
+      }, [onDone]);
+      return (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          background: '#FFFFFF',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          opacity: fading ? 0 : 1,
+          transition: 'opacity 450ms ease',
+          pointerEvents: fading ? 'none' : 'auto',
+        }}>
+          <div style={{
+            fontFamily: 'Rubik', fontWeight: 500,
+            fontSize: 28, lineHeight: '32px', letterSpacing: '0.32px',
+            color: 'rgba(0,0,0,0.9)', marginBottom: 28,
+            textAlign: 'center',
+          }}>Upgrading<br />Explore</div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {[0, 1, 2].map(i => (
+              <div key={i} style={{
+                width: 8, height: 8, borderRadius: '50%',
+                background: '#D30AD7',
+                animation: `splashDot 1200ms ease-in-out ${i * 150}ms infinite`,
+              }} />
+            ))}
+          </div>
+        </div>
+      );
+    };
+
     const App = () => {
+      const [showSplash, setShowSplash] = useState(true);
       const [useOriginal, setUseOriginal] = useState(false);
       const [sections, setSections] = useState(PRESETS.V1.sections);
       const [headerStyle, setHeaderStyle] = useState(PRESETS.V1.headerStyle);
@@ -3494,6 +3550,7 @@
 
       return (
         <SpacingCtx.Provider value={{ ...spacing, highlight }}>
+          {showSplash && isMobile && <Splash onDone={() => setShowSplash(false)} />}
           <div className="app-stage">
             <div className="phone-frame" style={{ flexShrink: 0 }}>
               <div className="btn-left btn-action" />
