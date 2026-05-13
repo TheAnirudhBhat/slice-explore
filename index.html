@@ -5,7 +5,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <!-- `black-translucent` is the only iOS PWA mode that lets page content
+       paint THROUGH the status bar (text/icons render in white over whatever
+       is below). Needed for FY_D's full-bleed gradient to reach the top edge
+       when the proto is added to the home screen. In normal Safari tabs the
+       status bar still renders white — accepted PWA-only trade-off. -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="theme-color" content="#FFFFFF" />
   <meta name="color-scheme" content="light only" />
   <meta name="supported-color-schemes" content="light" />
@@ -1638,8 +1643,9 @@
 
     /* For You D — same mechanics as FY_A but the slide background starts in
        the scheme colour at the very top (under the transparent app bar)
-       instead of fading down from white. Bottom still resolves to white so
-       the rest of the page lifts cleanly off the colored band. */
+       instead of fading down from white. In PWA mode (apple-mobile-web-app-
+       status-bar-style: black-translucent) the gradient paints THROUGH the
+       iOS status bar; in regular Safari the status bar is still white. */
     const FY_D = () => {
       const TEXT_TOP_CSS = 'calc(var(--bar-overlap, 118px) + 24px)';
       const MIN_H = 220;
@@ -1908,6 +1914,10 @@
                     background: th.bg, border: 'none',
                     boxShadow: CARD_SHADOW,
                     scrollSnapAlign: 'center',
+                    /* Explicit pan-x so iOS treats a touch-and-drag on the
+                       button as a horizontal scroll gesture instead of a
+                       held-down tap. Quick single taps still register. */
+                    touchAction: 'pan-x',
                     display: 'flex', flexDirection: 'column', justifyContent: 'space-between', textAlign: 'left',
                     position: 'relative', overflow: 'hidden',
                   }}>
@@ -3141,7 +3151,7 @@
     const SECTION_META = [
       {
         key: 'forYou', label: 'For You', variants: {
-          A: 'Full-bleed carousel', D: 'Full-bleed (top-tinted)', F: 'Centered carousel', B: 'Horizontal strip', C: 'Compact dark strip',
+          A: 'Full-bleed carousel', D: 'Full-bleed (top-tinted, PWA)', F: 'Centered carousel', B: 'Horizontal strip', C: 'Compact dark strip',
         }
       },
       {
