@@ -422,6 +422,11 @@
         padding: 0 !important;
         background: #FFFFFF !important;
         overflow: hidden;
+        /* Strip the base box-shadow stack (drop shadow + inset bezel edges +
+           a 2px dark inset at the bottom). On desktop those tints sell the
+           phone-frame illusion; on mobile the bezel IS the viewport so the
+           bottom dark inset reads as a stray drop shadow under the nav. */
+        box-shadow: none !important;
       }
 
       /* App-style proportional scaling: design renders at a logical 392px base width,
@@ -831,11 +836,20 @@
     const BottomNavGradient = () => (
       <div style={{
         position: 'absolute', left: 0, right: 0, bottom: 0,
-        background: 'linear-gradient(to bottom, transparent 0%, #FFFFFF 34%)',
+        /* No gradient fade — the previous `transparent → white 34%` created a
+           soft white halo above the nav that read as a drop shadow on mobile
+           (where it spans the full viewport width). Container is transparent;
+           the page bg meets the nav PNG directly. */
+        background: 'transparent',
         zIndex: 5, pointerEvents: 'none',
       }}>
         <img src="./assets/bottom_nav_v2.png" alt="" style={{ width: '100%', display: 'block' }} />
-        <div style={{ height: 12, background: '#FFFFFF' }} />
+        {/* Explicit white strip below the nav PNG to cover the iOS home-
+            indicator safe area in PWA standalone mode. */}
+        <div style={{
+          height: 'calc(12px + env(safe-area-inset-bottom, 0px))',
+          background: '#FFFFFF',
+        }} />
       </div>
     );
 
@@ -3215,7 +3229,7 @@
       V1: {
         label: 'Exploration',
         headerStyle: 'List',
-        sections: { forYou: 'A', aiBanker: 'A', bills: 'C', rewards: 'G', stats: 'G', more: 'A', footer: 'A' },
+        sections: { forYou: 'D', aiBanker: 'A', bills: 'C', rewards: 'G', stats: 'G', more: 'A', footer: 'A' },
       },
     };
 
