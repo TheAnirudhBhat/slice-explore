@@ -385,6 +385,15 @@
       50%      { filter: drop-shadow(0 8px 18px rgba(211, 10, 215, 0.18)); }
     }
 
+    /* Spark brand stack: each logo enters from the right with a soft slide+fade
+       and SETTLES — animation runs once, fill-mode forwards holds the final
+       state. Items get staggered animation-delay so they appear one-after-
+       another (right → left). */
+    @keyframes spark-brand-in {
+      from { opacity: 0; transform: translateX(10px) scale(0.92); }
+      to   { opacity: 1; transform: translateX(0)    scale(1); }
+    }
+
     .nav-center-tap,
     .debug-backdrop {
       display: none;
@@ -459,6 +468,15 @@
 
       .screen-scroll {
         padding-bottom: calc(120px + var(--sheet-pad, 0px) + env(safe-area-inset-bottom, 0px)) !important;
+      }
+
+      /* Drawer covers the bottom ~50% of the viewport. When it's open we add
+         extra scroll headroom below the content so when a section variant
+         changes (especially the last one — More), scrollToSection can land
+         the affected section in the upper half (still visible above the
+         drawer). Padding reverts as soon as the drawer closes. */
+      .phone-screen.editor-open .screen-scroll {
+        padding-bottom: calc(60dvh + 120px + env(safe-area-inset-bottom, 0px)) !important;
       }
 
       /* Edit tab — subtle left-edge handle, low contrast and slim */
@@ -844,17 +862,32 @@
       );
     });
 
-    const BottomNavGradient = () => (
-      <div style={{
-        position: 'absolute', left: 0, right: 0, bottom: 0,
-        background: 'transparent',
-        zIndex: 5, pointerEvents: 'none',
-      }}>
-        <img src="./assets/bottom_nav_v3.png" alt="" style={{
-          width: '100%', display: 'block', mixBlendMode: 'darken',
-        }} />
-      </div>
-    );
+    const BottomNavGradient = () => {
+      /* Click anywhere on the nav image opens the debug drawer. We dispatch
+         a window event so this component doesn't have to be wired with a prop
+         through every parent that uses ScreenShell. */
+      const openDebug = () => window.dispatchEvent(new CustomEvent('open-debug-drawer'));
+      return (
+        <div style={{
+          position: 'absolute', left: 0, right: 0, bottom: 0,
+          background: 'transparent',
+          zIndex: 5, pointerEvents: 'none',
+        }}>
+          {/* white band sits behind the icon row + 12px safe area below.
+              Kept short so it doesn't bleed into the PNG's transparent
+              fade at the top. */}
+          <div style={{
+            position: 'absolute', left: 0, right: 0, bottom: 0,
+            height: 48, background: 'white',
+          }} />
+          <img src="./assets/bottom_nav_v3.png" alt="" onClick={openDebug} style={{
+            width: '100%', display: 'block',
+            position: 'relative', marginBottom: 12,
+            pointerEvents: 'auto', cursor: 'pointer',
+          }} />
+        </div>
+      );
+    };
 
     const ScreenShell = ({ children, transparentAppBar }) => {
       const barRef = React.useRef(null);
@@ -1230,6 +1263,71 @@
             ))}
           </span>
         </span>
+      );
+    };
+
+    /* Spark brand stack: 4 circular brand logos appear right → left, one after
+       another, with a small slide+fade entry and a slight stagger overlap.
+       Items overlap visually (negative margin-left) to mimic the avatar-stack
+       look. `brands` is in animate order (first entry animates first AND ends
+       up rightmost); we render the reversed array in normal row direction so
+       the negative margin behaves predictably, and use z-index so the leftmost
+       (last to animate in) sits on top — classic avatar-stack stacking.
+
+       Each logo is wrapped in a fixed-size circle slot (`overflow: hidden`,
+       border-radius 50%) so logos with different intrinsic aspect ratios all
+       render as identical circles → equal spacing.
+
+       Animation only starts once the stack is on-screen (IntersectionObserver)
+       with a 100ms delay, so the user sees a clean entry every time. */
+    const SparkBrandStack = ({
+      brands = ['brand_a.png', 'brand_b.png', 'brand_c.png', 'brand_d.png'],
+      size = 32,
+      overlap = 10,
+      durationMs = 500,
+      staggerMs = 180,
+      startDelayMs = 100,
+    }) => {
+      const rootRef = React.useRef(null);
+      const [play, setPlay] = React.useState(false);
+      React.useEffect(() => {
+        const el = rootRef.current;
+        if (!el) return;
+        const obs = new IntersectionObserver(([entry]) => {
+          if (entry.isIntersecting) {
+            const t = setTimeout(() => setPlay(true), startDelayMs);
+            obs.disconnect();
+            return () => clearTimeout(t);
+          }
+        }, { threshold: 0.2 });
+        obs.observe(el);
+        return () => obs.disconnect();
+      }, [startDelayMs]);
+      const display = [...brands].reverse();
+      return (
+        <div ref={rootRef} style={{
+          display: 'flex', flexDirection: 'row', alignItems: 'center',
+        }}>
+          {display.map((src, di) => {
+            const animI = display.length - 1 - di;
+            return (
+              <div key={src} style={{
+                width: size, height: size, borderRadius: '50%',
+                overflow: 'hidden',
+                marginLeft: di === 0 ? 0 : -overlap,
+                zIndex: display.length - di,
+                boxShadow: '0 0 0 2px #fff',
+                opacity: 0,
+                animation: play ? `spark-brand-in ${durationMs}ms ease-out forwards 1` : 'none',
+                animationDelay: play ? `${animI * staggerMs}ms` : '0ms',
+              }}>
+                <img src={`./assets/${src}`} alt="" style={{
+                  width: '100%', height: '100%', objectFit: 'cover', display: 'block',
+                }} />
+              </div>
+            );
+          })}
+        </div>
       );
     };
 
@@ -2613,10 +2711,7 @@
             <ExploreMedium
               subtext="Spark"
               title="5 live"
-              icon={<RollingStack height={48} items={[
-                <img src="./assets/spark_icon.png" width={48} height={48} alt="" style={{ display: 'block' }} />,
-                <img src="./assets/spark_brands.png" alt="" style={{ height: 32, width: 'auto', display: 'block' }} />,
-              ]} />} />
+              icon={<SparkBrandStack />} />
             <ExploreMedium subtext="Monies" title="₹240"
               icon={<img src="./assets/monies_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
           </div>
@@ -3113,7 +3208,13 @@
               {!separateMore && (
                 <>
                   <Spacer h={isInCard ? 20 : 16} />
-                  <MoreSection variant={sections.more} isInCard={isInCard} />
+                  {/* Anchor + nested SectionBlock so a More-variant change still
+                      gets the pulse highlight and a working scroll target even
+                      when More is rendered inside the Stats section. */}
+                  <SectionAnchor id="more" />
+                  <SectionBlock id="more" active={isActive('more')}>
+                    <MoreSection variant={sections.more} isInCard={isInCard} />
+                  </SectionBlock>
                 </>
               )}
             </SectionWrap>
@@ -3508,13 +3609,37 @@
       const [drawerOpen, setDrawerOpen] = useState(false);
       const [separateMore, setSeparateMore] = useState(false);
       const [activeSection, setActiveSection] = useState(null);
+      /* True once the user has changed a More variant while the drawer is
+         open. Adds extra bottom scroll-room so scrollToSection('more') can
+         land the section in the upper half (above the drawer). Auto-clears
+         when the drawer closes, so the spacing reverts. */
+      const [moreScrollPad, setMoreScrollPad] = useState(false);
       const isMobile = useIsMobile();
       useAppScale();
+
+      /* Bottom-nav image taps open the debug drawer. The event is dispatched
+         from BottomNavGradient deep in the tree — listening at the App level
+         keeps the wiring out of every intermediate prop. */
+      React.useEffect(() => {
+        const onOpen = () => setDrawerOpen(true);
+        window.addEventListener('open-debug-drawer', onOpen);
+        return () => window.removeEventListener('open-debug-drawer', onOpen);
+      }, []);
+
+      /* Reset the extra-scroll flag any time the drawer closes — by any path
+         (backdrop, drag, close button). */
+      React.useEffect(() => {
+        if (!drawerOpen) setMoreScrollPad(false);
+      }, [drawerOpen]);
 
       const pulseTimer = React.useRef(null);
       const updateSection = (key, v) => {
         setUseOriginal(false);
         setSections(prev => ({ ...prev, [key]: v }));
+        /* Trigger the extra scroll-room only when the user edits the More
+           section while the drawer is open. Other sections are far enough up
+           that they don't need this. */
+        if (key === 'more' && drawerOpen) setMoreScrollPad(true);
         /* Clear-then-set so the CSS animation restarts even when the user re-pulses
            the same section. Timer clears the active class after the pulse completes. */
         setActiveSection(null);
@@ -3572,7 +3697,7 @@
               <div className="btn-right btn-power" />
               <div className="phone-shell">
                 <div className="phone-bezel">
-                  <div className="phone-screen">
+                  <div className={'phone-screen' + (moreScrollPad ? ' editor-open' : '')}>
                     <div className="dynamic-island" />
                     {useOriginal
                       ? <OriginalExplore />
