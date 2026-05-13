@@ -1877,11 +1877,24 @@
       return (
         <div style={{ paddingTop: 16, paddingBottom: 40 }}>
           <div ref={ref} style={{
-            overflowX: 'auto', overflowY: 'visible',
+            /* overflowY MUST be explicit `hidden` — pairing `auto` with
+               `visible` silently promotes both axes to `auto` on mobile and
+               steals vertical touch gestures. */
+            overflowX: 'auto', overflowY: 'hidden',
+            /* Confine touch tracking to the horizontal axis so vertical page
+               scroll + card taps still register on mobile. Without this the
+               scroll-snap engine grabs every touch and blocks the tap. */
+            touchAction: 'pan-x',
+            WebkitOverflowScrolling: 'touch',
             paddingLeft: 'calc((100% - 280px) / 2)',
             paddingRight: 'calc((100% - 280px) / 2)',
-            paddingTop: 24, paddingBottom: 48,
-            marginTop: -24, marginBottom: -48,
+            /* Card shadow is `0 2px 32px` — give it room INSIDE the scroller's
+               clip box (vertical padding) then visually undo the height bump
+               with negative margins so adjacent sections sit at the same
+               cadence. Without this, overflow-y:hidden clips the shadow at
+               the scroller edges. */
+            paddingTop: 24, paddingBottom: 40,
+            marginTop: -24, marginBottom: -40,
             scrollSnapType: 'x mandatory',
             overscrollBehaviorX: 'contain',
           }} className="scrollbar-hide">
