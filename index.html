@@ -72,11 +72,11 @@
       border-radius: 62px;
       background: linear-gradient(135deg, #2A2D31 0%, #16181B 45%, #1F2125 100%);
       padding: 6px;
-      box-shadow:
-        0 40px 80px -30px rgba(0, 0, 0, 0.5),
-        0 0 0 0.5px rgba(255, 255, 255, 0.05) inset,
-        0 2px 0 rgba(255, 255, 255, 0.08) inset,
-        0 -2px 0 rgba(0, 0, 0, 0.5) inset;
+      /* All shadows stripped — the outer drop shadow read as elevation under
+         the phone, and the `0 -2px 0 inset` painted a 2px dark band at the
+         bottom edge of the phone frame that ALSO read as elevation/shadow.
+         The metallic gradient bg alone sells the bezel material. */
+      box-shadow: none;
     }
 
     .phone-bezel {
@@ -494,12 +494,19 @@
         z-index: 70;
         border-radius: 20px 20px 0 0 !important;
         transform: translateY(100%);
-        transition: transform 280ms cubic-bezier(0.32, 0.72, 0, 1);
+        transition: transform 280ms cubic-bezier(0.32, 0.72, 0, 1), box-shadow 280ms ease;
         overflow: hidden !important;
         padding: 0 !important;
-        box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.25);
+        /* Shadow only when OPEN. When closed (translateY 100% off-screen),
+           its upward `0 -12px 40px` shadow extends 28px ABOVE its top edge
+           into the visible viewport — which reads as a stray dark shadow
+           band at the bottom of the screen on mobile. */
+        box-shadow: none;
         background: #171A1F;
         color: rgba(255, 255, 255, 0.9);
+      }
+      .debug-drawer.open {
+        box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.25);
       }
       .drawer-scroll {
         height: 100%;
@@ -840,24 +847,17 @@
     const BottomNavGradient = () => (
       <div style={{
         position: 'absolute', left: 0, right: 0, bottom: 0,
-        /* No gradient fade — the previous `transparent → white 34%` created a
-           soft white halo above the nav that read as a drop shadow on mobile
-           (where it spans the full viewport width). Container is transparent;
-           the page bg meets the nav PNG directly. */
         background: 'transparent',
         zIndex: 5, pointerEvents: 'none',
       }}>
-        {/* mix-blend-mode: darken collapses the PNG's white halos / center-
-            button glow into the page bg (since darken keeps the darker of
-            source/destination, white ≈ transparent). Only the actual icon
-            strokes remain visible, killing the elevation/floating look. */}
         <img src="./assets/bottom_nav_v2.png" alt="" style={{
           width: '100%', display: 'block', mixBlendMode: 'darken',
         }} />
-        {/* Explicit white strip below the nav PNG to cover the iOS home-
-            indicator safe area in PWA standalone mode. */}
+        {/* 16px white spacer below the nav. Extends through env(safe-area-
+            inset-bottom) so the iOS home-indicator zone in PWA standalone
+            mode stays white instead of showing the page bg behind it. */}
         <div style={{
-          height: 'calc(12px + env(safe-area-inset-bottom, 0px))',
+          height: 'calc(16px + env(safe-area-inset-bottom, 0px))',
           background: '#FFFFFF',
         }} />
       </div>
@@ -3481,33 +3481,26 @@
       }, [onDone]);
       return (
         <div style={{
-          position: 'fixed', inset: 0, zIndex: 9999,
+          /* White base — matches the page's starting white so the fade-out
+             transitions seamlessly into the rendered page. A subtle grey
+             sweep slides across it for the loading motion. */
+          position: 'absolute', inset: 0, zIndex: 9999,
           background: '#FFFFFF',
-          display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center',
+          overflow: 'hidden',
           opacity: fading ? 0 : 1,
           transition: 'opacity 450ms ease',
           pointerEvents: fading ? 'none' : 'auto',
         }}>
+          {/* Wider-than-screen layer so the diagonal band has room to sweep
+              fully across the viewport without exposing its tilted edges. */}
           <div style={{
-            fontFamily: 'Rubik', fontWeight: 500,
-            fontSize: 28, lineHeight: '32px', letterSpacing: '0.32px',
-            color: 'rgba(0,0,0,0.9)', marginBottom: 28,
-            textAlign: 'center',
-          }}>Upgrading<br />Explore</div>
-          {/* Simple shimmer bar — Slate-50 base with a brighter sweep that
-              loops left-to-right every 1.4s. Replaces the three pulsing dots. */}
-          <div style={{
-            width: 140, height: 6, borderRadius: 100,
-            background: '#EAEBED',
-            overflow: 'hidden', position: 'relative',
-          }}>
-            <div style={{
-              position: 'absolute', inset: 0,
-              background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.85) 50%, transparent 100%)',
-              animation: 'splashShimmer 1400ms ease-in-out infinite',
-            }} />
-          </div>
+            position: 'absolute', top: 0, bottom: 0, left: '-50%', right: '-50%',
+            /* 120deg = bands tilted 30° off vertical (leaning up-right).
+               Soft grey peak in the middle fades to transparent at edges so
+               the sweep reads as a moving diagonal highlight. */
+            background: 'linear-gradient(120deg, transparent 35%, rgba(0,0,0,0.06) 50%, transparent 65%)',
+            animation: 'splashShimmer 2000ms ease-in-out infinite',
+          }} />
         </div>
       );
     };
@@ -3578,7 +3571,6 @@
 
       return (
         <SpacingCtx.Provider value={{ ...spacing, highlight }}>
-          {showSplash && isMobile && <Splash onDone={() => setShowSplash(false)} />}
           <div className="app-stage">
             <div className="phone-frame" style={{ flexShrink: 0 }}>
               <div className="btn-left btn-action" />
@@ -3592,6 +3584,11 @@
                     {useOriginal
                       ? <OriginalExplore />
                       : <ExplorePage sections={sections} headerStyle={headerStyle} activeSection={activeSection} separateMore={separateMore} />}
+                    {/* Splash sits INSIDE phone-screen so it inherits the
+                        transform: scale used on mobile — proportions match the
+                        rendered page exactly instead of being misaligned at
+                        viewport-pixel scale. */}
+                    {showSplash && isMobile && <Splash onDone={() => setShowSplash(false)} />}
                   </div>
                 </div>
               </div>
