@@ -846,23 +846,12 @@
 
     const BottomNavGradient = () => (
       <div style={{
-        /* bottom: 0 + overflow hidden so we can negative-margin the PNG to
-           crop its baked-in transparent bottom band. Without the crop, the
-           PNG's own ~20% bottom padding stacks with the iOS safe-area zone
-           and creates a big visible gap between the icons and the home
-           indicator. */
         position: 'absolute', left: 0, right: 0, bottom: 0,
         background: 'transparent',
         zIndex: 5, pointerEvents: 'none',
-        overflow: 'hidden',
       }}>
         <img src="./assets/bottom_nav_v2.png" alt="" style={{
           width: '100%', display: 'block', mixBlendMode: 'darken',
-          /* PNG is 720×200 with ~20% transparent bottom padding baked in.
-             marginBottom: -5.56% (= 20% × 200/720) pulls that padding below
-             the wrapper's clip line in PNG-aspect terms, so icons end flush
-             with the wrapper bottom which IS the viewport bottom. */
-          marginBottom: '-5.56%',
         }} />
       </div>
     );
