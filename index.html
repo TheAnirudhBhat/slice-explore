@@ -846,19 +846,17 @@
 
     const BottomNavGradient = () => (
       <div style={{
+        /* bottom: 0 so the nav extends through the iOS safe-area-inset-bottom
+           zone instead of leaving it as a visible blank strip below the nav.
+           The icons themselves stay visually above the home indicator because
+           the PNG has transparent padding at its bottom — that padding now
+           sits inside the safe-area zone where the indicator lives. */
         position: 'absolute', left: 0, right: 0, bottom: 0,
         background: 'transparent',
         zIndex: 5, pointerEvents: 'none',
       }}>
         <img src="./assets/bottom_nav_v2.png" alt="" style={{
           width: '100%', display: 'block', mixBlendMode: 'darken',
-        }} />
-        {/* 16px white spacer below the nav. Extends through env(safe-area-
-            inset-bottom) so the iOS home-indicator zone in PWA standalone
-            mode stays white instead of showing the page bg behind it. */}
-        <div style={{
-          height: 'calc(16px + env(safe-area-inset-bottom, 0px))',
-          background: '#FFFFFF',
         }} />
       </div>
     );
