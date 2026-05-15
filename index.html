@@ -1942,130 +1942,22 @@
       }}>{children}</span>
     );
 
-    /* Lighter card shadow used by FY_G/FY_I — the 32px-blur CARD_SHADOW
-       reads too heavy on stacked cards. */
+    /* Lighter card shadow used by the stacked-deck variants — the 32px-blur
+       CARD_SHADOW reads too heavy on closely stacked cards. */
     const STACK_CARD_SHADOW = '0 2px 12px rgba(0, 0, 0, 0.06)';
 
-    /* FY_G — Expandable card stack. Same 3 notifications as the gradient
-       variants (FY_SLIDES: bill / spark / spends). Collapsed: top card
-       visible, others peek 14px behind with slight scale-down. Tap →
-       backdrop fades in over the rest of the page and the cards fan out
-       to a vertical list ON TOP, without extending the layout. Tap any
-       card or the backdrop to collapse. Card height stays constant so
-       the opening reads as a layout shift, not a growth. */
-    const FY_G = () => {
-      const items = FY_SLIDES;
-      const N = items.length;
-      const [expanded, setExpanded] = React.useState(false);
-      /* Track the phone-screen DOM node so the overlay can be portaled into
-         it — this confines the fade to the device viewport instead of the
-         whole page (the desktop debug panel was getting dimmed before). */
-      const [phoneScreen, setPhoneScreen] = React.useState(null);
-      React.useEffect(() => {
-        setPhoneScreen(document.querySelector('.phone-screen'));
-      }, []);
-      const CARD_H = 76;
-      const PEEK = 14;
-      const GAP = 12;
-      const collapsedHeight = CARD_H + (N - 1) * PEEK + 4;
-      const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
-      return (
-        <>
-          <PagePad>
-            {/* paddingTop gives the top card's drop shadow visual room. */}
-            <div style={{ paddingTop: 20 }}>
-              <div style={{
-                position: 'relative',
-                height: collapsedHeight,
-              }}>
-                {items.map((it, i) => {
-                  const collapsedTop = i * PEEK;
-                  const collapsedScale = 1 - i * 0.04;
-                  const expandedTop = i * (CARD_H + GAP);
-                  /* Stagger: bottom card moves last when fanning out, first
-                     when tucking back in. Reads more natural than lockstep. */
-                  const delayMs = expanded ? i * 50 : (N - 1 - i) * 35;
-                  return (
-                    <button
-                      key={i}
-                      className="tap"
-                      onClick={(e) => { e.stopPropagation(); setExpanded(v => !v); }}
-                      aria-expanded={expanded}
-                      style={{
-                        position: 'absolute', left: 0, right: 0, top: 0,
-                        height: CARD_H,
-                        transform: expanded
-                          ? `translateY(${expandedTop}px) scale(1)`
-                          : `translateY(${collapsedTop}px) scale(${collapsedScale})`,
-                        transformOrigin: 'top center',
-                        transition: `transform 560ms ${EASE} ${delayMs}ms`,
-                        /* Lift above the backdrop only when expanded;
-                           collapsed cards stay in normal flow. */
-                        zIndex: expanded ? (1000 - i) : (N - i),
-                        background: '#FFFFFF',
-                        boxShadow: STACK_CARD_SHADOW,
-                        border: CARD_BORDER,
-                        borderRadius: 16,
-                        padding: '12px 16px',
-                        textAlign: 'left',
-                        display: 'flex', alignItems: 'center', gap: 12,
-                        cursor: 'pointer', overflow: 'hidden',
-                      }}>
-                      <img src={`./assets/${it.heroImg}`} width={44} height={44} alt=""
-                        style={{ display: 'block', borderRadius: 12, flexShrink: 0, objectFit: 'contain' }} />
-                      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <div style={{
-                          ...T.h4,
-                          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                        }}>{it.title}</div>
-                        <div style={{
-                          ...T.caption, color: 'rgba(0,0,0,0.7)',
-                          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                        }}>{it.sub}</div>
-                      </div>
-                      {/* CTA fades in only when expanded. Width transition
-                          + opacity makes it feel like it grows out of the
-                          card edge, no layout jump. */}
-                      <span style={{
-                        padding: expanded ? '6px 14px' : '6px 0',
-                        borderRadius: 100,
-                        border: expanded ? '1px solid rgba(0,0,0,0.1)' : '1px solid transparent',
-                        background: 'transparent',
-                        ...T.btnSm, color: 'rgba(0,0,0,0.9)',
-                        whiteSpace: 'nowrap', flexShrink: 0,
-                        opacity: expanded ? 1 : 0,
-                        maxWidth: expanded ? 120 : 0,
-                        marginLeft: expanded ? 8 : 0,
-                        overflow: 'hidden',
-                        transition: `opacity 240ms ease ${expanded ? 320 : 0}ms, max-width 320ms ${EASE} ${expanded ? 280 : 0}ms, margin-left 320ms ${EASE} ${expanded ? 280 : 0}ms`,
-                        pointerEvents: expanded ? 'auto' : 'none',
-                      }}>{it.cta}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </PagePad>
-          {/* Overlay portaled into .phone-screen so it's confined to the
-              device viewport. Fully white, smooth fade. Click dismisses. */}
-          {phoneScreen && ReactDOM.createPortal(
-            <div
-              onClick={() => setExpanded(false)}
-              style={{
-                position: 'absolute',
-                inset: 0,
-                background: '#FFFFFF',
-                zIndex: 80,
-                opacity: expanded ? 1 : 0,
-                pointerEvents: expanded ? 'auto' : 'none',
-                transition: 'opacity 420ms ease',
-              }}
-            />,
-            phoneScreen
-          )}
-        </>
-      );
-    };
+    /* Monies — in-app currency users earn from fire games and other
+       reward mechanics. Rendered inline as an SVG glyph so it can sit
+       alongside the amount the way the rupee symbol normally would.
+       `currentColor` lets the glyph inherit the surrounding text color. */
+    const MoniesGlyph = ({ size = 14, color = 'currentColor' }) => (
+      <svg width={size} height={size} viewBox="0 0 10 10" fill="none"
+        style={{ display: 'inline-block', verticalAlign: '-0.14em', flexShrink: 0 }}
+        aria-hidden="true">
+        <path d="M3.76864 7.50822L4.8883 7.54262C5.62653 7.54262 6.33541 7.25939 6.88585 6.74455C7.41751 6.24002 7.7121 5.56694 7.7121 4.84111C7.7121 4.11528 7.41634 3.4422 6.88585 2.93767C6.34949 2.43314 5.63592 2.15451 4.87304 2.15451C3.54917 2.15451 2.41777 2.99615 2.12202 4.19325L2.10206 4.29874C2.06803 4.4673 2.10206 4.64045 2.20065 4.78951C2.29454 4.92367 2.44125 5.01999 2.61377 5.05439C2.64781 5.06356 2.69241 5.06356 2.73231 5.06356C2.97878 5.06356 3.20999 4.92367 3.31796 4.70351L3.43063 4.46271C3.76982 3.79422 4.27214 3.43876 4.88243 3.43876C5.28617 3.43876 5.65939 3.58782 5.9352 3.8527C6.2157 4.12216 6.36827 4.48221 6.36827 4.85716C6.36827 5.23212 6.2157 5.58758 5.9352 5.85704C5.63944 6.1265 5.27091 6.27557 4.88713 6.27557H2.67832C2.31919 6.27557 2.0293 6.56452 2.0293 6.91999C2.0293 7.64123 2.31919 8.3189 2.85554 8.82343C3.37195 9.32337 4.10548 9.60659 4.86366 9.60659H5.05027C5.4094 9.60659 5.69929 9.31763 5.69929 8.96217C5.69929 8.60671 5.4094 8.31775 5.05027 8.31775H4.88243C4.4787 8.31775 4.08553 8.18818 3.82967 7.90381C3.75925 7.82584 3.70761 7.72379 3.6724 7.64238C3.64541 7.57816 3.69588 7.50707 3.76747 7.50936L3.76864 7.50822Z" fill={color} />
+        <path d="M3.0433 1.39428H6.68513C7.05953 1.39428 7.35881 1.11106 7.35881 0.764768C7.35881 0.41848 7.05366 0.135257 6.68513 0.135257H3.0433C2.66891 0.134111 2.36846 0.417333 2.36846 0.763622C2.36846 1.10991 2.6736 1.39313 3.04213 1.39313L3.0433 1.39428Z" fill={color} />
+      </svg>
+    );
 
     /* FY_I — Shuffle deck. Drag the top card any direction; release past
        threshold deals it to the bottom of the stack.
@@ -2082,7 +1974,7 @@
           leaving card from its drop position back to the rear-stack
           slot. The card visually starts at the drop point, then slides
           down/back into the deck. */
-    const FY_I = () => {
+    const FY_I = ({ autoScroll }) => {
       const items = FY_SLIDES;
       const N = items.length;
       const [order, setOrder] = React.useState(() => items.map((_, i) => i));
@@ -2090,8 +1982,19 @@
       const [dragging, setDragging] = React.useState(false);
       const start = React.useRef({ x: 0, y: 0 });
       const cardRefs = React.useRef({});
-      const COMMIT_DIST = 100;
-      const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
+      /* Lower commit threshold so a small flick triggers the deal-back.
+         Was 100px — too far. 55 reads as a definite gesture but doesn't
+         demand a full screen pull. */
+      const COMMIT_DIST = 55;
+      /* Bounded drag region so the card can't be pulled all the way to
+         the screen edges. Card stays inside a centred zone — tight on
+         Y to feel constrained, slightly looser on X for the swipe feel. */
+      const DRAG_LIMIT_X = 130;
+      const DRAG_LIMIT_Y = 70;
+      /* ease-out-expo — punchy at start, long quiet tail. Combined with a
+         longer duration (820ms) the deal-back reads as a smooth settle
+         rather than a quick snap. */
+      const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)';
       const CARD_H = 76;
       const PEEK = 14;
       const stackHeight = CARD_H + (N - 1) * PEEK + 4;
@@ -2100,6 +2003,80 @@
         const el = cardRefs.current[origIdx];
         if (el && el.getAnimations) el.getAnimations().forEach(a => a.cancel());
       };
+
+      /* Auto-cycle physics — two phases so the leaving card visibly
+         lifts ON TOP first, then drops behind the deck while the others
+         rise. Doing both in one animation (with order already rotated)
+         puts the leaving card behind from frame 0, which the user
+         correctly identified as wrong — there's no "behind" reveal.
+
+         Phase 1 (lift): order unchanged → leaving card has top z-index.
+                         WAAPI lifts it up ~32px. Stays in front.
+         Phase 2 (settle): rotate order → leaving card now at stackPos
+                           N-1, z drops to 1, so it visually moves
+                           BEHIND the other cards as it animates down
+                           to the rear slot. Simultaneously the cards
+                           that were below it animate UP to their new
+                           positions. Coherent, synchronized motion. */
+      React.useEffect(() => {
+        if (!autoScroll || dragging) return;
+        const id = setTimeout(() => {
+          const topId = order[0];
+          const topEl = cardRefs.current[topId];
+          if (!topEl || !topEl.animate) return;
+          const LIFT_DIST = 28;
+          const LIFT_MS = 280;
+          const SETTLE_MS = 480;
+          const AUTO_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
+          /* Lift the card above the app bar (z=30) for the duration of
+             the lift phase so the rising portion isn't clipped by the
+             opaque bar. React's next render (after order rotates) will
+             overwrite this inline z-index with the new stackPos value
+             (1, lowest), which is what we want for the settle phase. */
+          topEl.style.zIndex = '35';
+          /* Phase 1: lift while still on top. fill: forwards so the
+             element holds at the lifted position until phase 2 starts. */
+          const liftAnim = topEl.animate(
+            [
+              { transform: 'translate(0px, 0px) scale(1) rotate(0deg)' },
+              { transform: `translate(0px, ${-LIFT_DIST}px) scale(1) rotate(0deg)` },
+            ],
+            { duration: LIFT_MS, easing: AUTO_EASE, fill: 'forwards' }
+          );
+          liftAnim.onfinish = () => {
+            /* Snapshot positions BEFORE rotating order so phase 2's
+               keyframe[0] anchors at the visual present. */
+            const startStates = order.map((origIdx, pos) => ({
+              origIdx,
+              y: pos === 0 ? -LIFT_DIST : pos * PEEK,
+              scale: pos === 0 ? 1 : (1 - pos * 0.04),
+            }));
+            const newOrder = [...order.slice(1), order[0]];
+            setOrder(newOrder);
+            requestAnimationFrame(() => {
+              startStates.forEach((s) => {
+                const el = cardRefs.current[s.origIdx];
+                if (!el || !el.animate) return;
+                const newPos = newOrder.indexOf(s.origIdx);
+                const toY = newPos * PEEK;
+                const toScale = 1 - newPos * 0.04;
+                el.animate(
+                  [
+                    { transform: `translate(0px, ${s.y}px) scale(${s.scale}) rotate(0deg)` },
+                    { transform: `translate(0px, ${toY}px) scale(${toScale}) rotate(0deg)` },
+                  ],
+                  { duration: SETTLE_MS, easing: AUTO_EASE, fill: 'none' }
+                );
+              });
+              /* Drop the lift's forward-fill now that phase 2 is driving
+                 the element. Without this, after phase 2's `fill: none`
+                 the element would snap back to the lifted position. */
+              try { liftAnim.cancel(); } catch (_) {}
+            });
+          };
+        }, 6000);
+        return () => clearTimeout(id);
+      }, [autoScroll, dragging, order]);
 
       const onPointerDown = (e) => {
         if (dragging) return;
@@ -2114,7 +2091,14 @@
       };
       const onPointerMove = (e) => {
         if (!dragging) return;
-        setDrag({ x: e.clientX - start.current.x, y: e.clientY - start.current.y });
+        /* Clamp to the centred drag zone so the card can't be flung to
+           the corners of the screen. Past the limit the finger keeps
+           moving but the card stops. */
+        const rawX = e.clientX - start.current.x;
+        const rawY = e.clientY - start.current.y;
+        const x = Math.max(-DRAG_LIMIT_X, Math.min(DRAG_LIMIT_X, rawX));
+        const y = Math.max(-DRAG_LIMIT_Y, Math.min(DRAG_LIMIT_Y, rawY));
+        setDrag({ x, y });
       };
       const endDrag = () => {
         if (!dragging) return;
@@ -2126,25 +2110,37 @@
         const topId = order[0];
 
         if (commit) {
-          /* Update state synchronously: order rotates, drag clears. The
-             card we just released is now at stackPos N-1 → lowest z-index
-             → already visually behind. After the next paint we play the
-             WAAPI keyframe that animates it from drop → back-slot. */
-          setOrder(o => [...o.slice(1), o[0]]);
+          /* Coherence: drive EVERY card's motion through WAAPI with the
+             same duration + easing so the leaving card going behind and
+             the other cards rising up move as one synchronised system.
+             Mixing CSS transition + WAAPI was causing the cards to
+             pop/scale on a different timeline than the leaving card. */
+          const startStates = order.map((origIdx, pos) => ({
+            origIdx,
+            x: pos === 0 ? fromX : 0,
+            y: pos === 0 ? fromY : pos * PEEK,
+            scale: pos === 0 ? 1 : (1 - pos * 0.04),
+            rot: pos === 0 ? fromRot : 0,
+          }));
+          const newOrder = [...order.slice(1), order[0]];
+          setOrder(newOrder);
           setDrag({ x: 0, y: 0 });
           setDragging(false);
           requestAnimationFrame(() => {
-            const el = cardRefs.current[topId];
-            if (!el || !el.animate) return;
-            const backY = (N - 1) * PEEK;
-            const backScale = 1 - (N - 1) * 0.04;
-            el.animate(
-              [
-                { transform: `translate(${fromX}px, ${fromY}px) scale(1) rotate(${fromRot}deg)` },
-                { transform: `translate(0px, ${backY}px) scale(${backScale}) rotate(0deg)` },
-              ],
-              { duration: 620, easing: EASE, fill: 'none' }
-            );
+            startStates.forEach((s) => {
+              const el = cardRefs.current[s.origIdx];
+              if (!el || !el.animate) return;
+              const newPos = newOrder.indexOf(s.origIdx);
+              const toY = newPos * PEEK;
+              const toScale = 1 - newPos * 0.04;
+              el.animate(
+                [
+                  { transform: `translate(${s.x}px, ${s.y}px) scale(${s.scale}) rotate(${s.rot}deg)` },
+                  { transform: `translate(0px, ${toY}px) scale(${toScale}) rotate(0deg)` },
+                ],
+                { duration: 820, easing: EASE, fill: 'none' }
+              );
+            });
           });
         } else {
           /* Snap back to the top slot. WAAPI from drop → (0,0). */
@@ -2158,7 +2154,7 @@
                 { transform: `translate(${fromX}px, ${fromY}px) scale(1) rotate(${fromRot}deg)` },
                 { transform: `translate(0px, 0px) scale(1) rotate(0deg)` },
               ],
-              { duration: 380, easing: EASE, fill: 'none' }
+              { duration: 480, easing: EASE, fill: 'none' }
             );
           });
         }
@@ -2198,13 +2194,16 @@
                       height: CARD_H,
                       transform,
                       transformOrigin: 'center center',
-                      /* Non-top cards animate via CSS transition when their
-                         stackPos changes (rising as the deck rotates). The
-                         top card follows the finger without smoothing; its
-                         deal-back motion is driven by WAAPI keyframes that
-                         override CSS for the duration of the animation. */
-                      transition: isTop ? 'none' : `transform 520ms ${EASE}`,
-                      zIndex: N - stackPos,
+                      /* No CSS transition — every card's motion is driven
+                         by WAAPI keyframes with a shared duration so the
+                         rising cards and the leaving card move on the
+                         same timeline. CSS at a different duration was
+                         racing with the WAAPI and making the deck pop. */
+                      transition: 'none',
+                      /* Lift the dragged top card above the app bar (z=30)
+                         so an upward drag visually escapes the bar. Stays
+                         below the status bar (z=40). */
+                      zIndex: isTop && dragging ? 35 : N - stackPos,
                       background: '#FFFFFF',
                       boxShadow: STACK_CARD_SHADOW,
                       border: CARD_BORDER,
@@ -2215,6 +2214,245 @@
                       cursor: isTop ? 'grab' : 'default',
                       userSelect: 'none',
                       touchAction: 'none',
+                    }}>
+                    <img src={`./assets/${it.heroImg}`} width={44} height={44} alt=""
+                      style={{ display: 'block', borderRadius: 12, flexShrink: 0, objectFit: 'contain', pointerEvents: 'none' }} />
+                    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <div style={{
+                        ...T.h4,
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                      }}>{it.title}</div>
+                      <div style={{
+                        ...T.caption, color: 'rgba(0,0,0,0.7)',
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                      }}>{it.sub}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </PagePad>
+      );
+    };
+
+    /* FY_J — Scroll-stack. Starts identical to FY_I (3 stacked cards) but
+       interaction is different: instead of dragging behind, the top card
+       moves UP and fades OUT, then reappears at the back of the stack with
+       a fade-IN. Loops infinitely on scroll/drag-up. Feels like a vertical
+       feed running through a deck.
+
+       Pointer drag UP: card translates up + fades proportionally. On
+       release past threshold, WAAPI runs a four-keyframe sequence:
+       (1) finish moving up + fade to 0, (2) teleport (invisible) to the
+       rear stack slot, (3) fade back in at that slot. Wheel up triggers
+       the same cycle for trackpad/mouse users. */
+    const FY_J = ({ autoScroll }) => {
+      const items = FY_SLIDES;
+      const N = items.length;
+      const [order, setOrder] = React.useState(() => items.map((_, i) => i));
+      const [dy, setDy] = React.useState(0);
+      const [dragging, setDragging] = React.useState(false);
+      const animating = React.useRef(false);
+      const start = React.useRef(0);
+      const cardRefs = React.useRef({});
+      const COMMIT_DIST = 50;
+      const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)';
+      const CARD_H = 76;
+      const PEEK = 14;
+      const stackHeight = CARD_H + (N - 1) * PEEK + 4;
+
+      /* Auto-cycle: subtle ambient stack update every ~6s when enabled.
+         Reuses the same WAAPI fade-up-teleport-fadein keyframes as a
+         user gesture (with fromDy=0). Pauses during user drag. */
+      React.useEffect(() => {
+        if (!autoScroll || dragging) return;
+        const id = setTimeout(() => {
+          if (animating.current) return;
+          cycle(0, true);
+        }, 6000);
+        return () => clearTimeout(id);
+      // eslint-disable-next-line
+      }, [autoScroll, dragging, order]);
+
+      const cycle = (fromDy, isAuto) => {
+        if (animating.current) return;
+        animating.current = true;
+        const topId = order[0];
+        setOrder(o => [...o.slice(1), o[0]]);
+        setDy(0);
+        requestAnimationFrame(() => {
+          const el = cardRefs.current[topId];
+          if (!el || !el.animate) { animating.current = false; return; }
+          const backY = (N - 1) * PEEK;
+          const backScale = 1 - (N - 1) * 0.04;
+          const startOpacity = Math.max(0, 1 + fromDy / CARD_H);
+          /* Auto-cycle gets shorter/gentler timing — "quick and gentle"
+             per design feedback. Manual gesture stays at 880ms. */
+          const duration = isAuto ? 880 : 880;
+          const easing = isAuto ? 'cubic-bezier(0.22, 1, 0.36, 1)' : EASE;
+          /* Spread the upward lift across most of the animation (~65% of
+             duration) so it doesn't feel rushed. Teleport happens in a
+             narrow invisible window, then the fade-in completes. */
+          /* During the lift portion, push z above the app bar (30) so
+             the rising card isn't clipped. The teleport happens while
+             the card is at opacity 0, so we can safely drop z back to
+             1 at that point — the fade-in at the rear slot then sits
+             behind the other cards naturally. */
+          if (isAuto) {
+            el.style.zIndex = '35';
+            /* Restore the card's natural rear-slot z-index right when it
+               goes invisible (offset ~0.62), so the fade-in at the back
+               sits below the other cards. */
+            setTimeout(() => { el.style.zIndex = '1'; }, duration * 0.62);
+          }
+          const anim = el.animate(
+            [
+              { transform: `translate(0px, ${fromDy}px) scale(1)`, opacity: startOpacity, offset: 0 },
+              { transform: `translate(0px, ${-(CARD_H * 0.55)}px) scale(0.98)`, opacity: 0.35, offset: 0.45 },
+              { transform: `translate(0px, ${-(CARD_H * 0.9)}px) scale(0.96)`, opacity: 0, offset: 0.62 },
+              { transform: `translate(0px, ${backY}px) scale(${backScale})`, opacity: 0, offset: 0.72 },
+              { transform: `translate(0px, ${backY}px) scale(${backScale})`, opacity: 1, offset: 1 },
+            ],
+            { duration, easing, fill: 'none' }
+          );
+          anim.onfinish = () => { animating.current = false; };
+          anim.oncancel = () => { animating.current = false; };
+        });
+      };
+
+      const snapBack = (fromDy) => {
+        const topId = order[0];
+        setDy(0);
+        requestAnimationFrame(() => {
+          const el = cardRefs.current[topId];
+          if (!el || !el.animate) return;
+          const startOpacity = Math.max(0, 1 + fromDy / CARD_H);
+          el.animate(
+            [
+              { transform: `translate(0px, ${fromDy}px) scale(1)`, opacity: startOpacity },
+              { transform: `translate(0px, 0px) scale(1)`, opacity: 1 },
+            ],
+            { duration: 380, easing: EASE, fill: 'none' }
+          );
+        });
+      };
+
+      const onPointerDown = (e) => {
+        if (dragging || animating.current) return;
+        const el = cardRefs.current[order[0]];
+        if (el && el.getAnimations) el.getAnimations().forEach(a => a.cancel());
+        start.current = e.clientY;
+        setDy(0);
+        setDragging(true);
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+      };
+      const onPointerMove = (e) => {
+        if (!dragging) return;
+        const raw = e.clientY - start.current;
+        /* Only react to upward drag — downward is a no-op so vertical
+           page scroll can still take over if the user really meant that. */
+        setDy(Math.min(0, raw));
+      };
+      const endDrag = () => {
+        if (!dragging) return;
+        const fromDy = dy;
+        setDragging(false);
+        if (-fromDy > COMMIT_DIST) cycle(fromDy);
+        else snapBack(fromDy);
+      };
+
+      /* Trackpad / mouse wheel: each significant downward (forward) wheel
+         tick advances the deck one card. Only fires when the user is
+         hovering the stack. */
+      const onWheel = (e) => {
+        if (dragging || animating.current) return;
+        if (e.deltaY > 40) {
+          e.preventDefault();
+          cycle(0);
+        }
+      };
+
+      /* Drag distance at which the rising cards are fully in their NEW
+         stack positions (i.e., card #2 has reached the top slot, card #3
+         the second slot). Below this, cards are part-way; at/above this
+         they're visually committed. */
+      const DRAG_RANGE = CARD_H;
+
+      return (
+        <PagePad>
+          <div style={{ paddingTop: 20 }}>
+            {/* Pointer handlers live on the WHOLE stack wrapper, not just
+                the top card. A drag started on any card (or in the gap
+                between them) advances the stack. */}
+            <div
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={endDrag}
+              onPointerCancel={endDrag}
+              onWheel={onWheel}
+              style={{
+                position: 'relative', height: stackHeight,
+                touchAction: 'none', userSelect: 'none',
+                cursor: 'grab',
+              }}>
+              {order.map((origIdx, stackPos) => {
+                const it = items[origIdx];
+                const isTop = stackPos === 0;
+                const restY = stackPos * PEEK;
+                const restScale = 1 - stackPos * 0.04;
+                const upY = (stackPos - 1) * PEEK;
+                const upScale = 1 - (stackPos - 1) * 0.04;
+                /* Progress 0..1 based on upward drag. The cards behind the
+                   top interpolate FROM their current stack slot TOWARD the
+                   slot one above (their post-cycle position). They don't
+                   lift above their rest and settle back — they smoothly
+                   move into the place they'll be after the top card cycles
+                   out. */
+                const progress = dragging ? Math.min(1, Math.max(0, -dy / DRAG_RANGE)) : 0;
+                let transform;
+                let opacity = 1;
+                if (isTop) {
+                  if (dragging) {
+                    transform = `translate(0px, ${dy}px) scale(1)`;
+                    opacity = Math.max(0, 1 + dy / CARD_H);
+                  } else {
+                    transform = `translate(0px, ${restY}px) scale(${restScale})`;
+                  }
+                } else {
+                  const y = restY + (upY - restY) * progress;
+                  const sc = restScale + (upScale - restScale) * progress;
+                  transform = `translate(0px, ${y}px) scale(${sc})`;
+                }
+                return (
+                  <div
+                    key={origIdx}
+                    ref={(el) => {
+                      if (el) cardRefs.current[origIdx] = el;
+                      else delete cardRefs.current[origIdx];
+                    }}
+                    aria-hidden={!isTop}
+                    style={{
+                      position: 'absolute', left: 0, right: 0, top: 0,
+                      height: CARD_H,
+                      transform,
+                      transformOrigin: 'center center',
+                      /* During drag: live follow (no transition). After
+                         release: smooth settle into new (or old) rest. */
+                      transition: dragging ? 'none' : `transform 520ms ${EASE}`,
+                      opacity,
+                      /* Top card lifts above the app bar (z=30) during drag. */
+                      zIndex: isTop && dragging ? 35 : N - stackPos,
+                      background: '#FFFFFF',
+                      boxShadow: STACK_CARD_SHADOW,
+                      border: CARD_BORDER,
+                      borderRadius: 16,
+                      padding: '12px 16px',
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      /* Pointer events disabled on the cards themselves —
+                         the wrapper handles all gestures so they can start
+                         anywhere on the stack. */
+                      pointerEvents: 'none',
                     }}>
                     <img src={`./assets/${it.heroImg}`} width={44} height={44} alt=""
                       style={{ display: 'block', borderRadius: 12, flexShrink: 0, objectFit: 'contain', pointerEvents: 'none' }} />
@@ -2352,8 +2590,12 @@
                scroll-snap engine grabs every touch and blocks the tap. */
             touchAction: 'pan-x',
             WebkitOverflowScrolling: 'touch',
-            paddingLeft: 'calc((100% - 280px) / 2)',
-            paddingRight: 'calc((100% - 280px) / 2)',
+            /* Left-aligned to the page horizontal padding (24px) so the
+               first card sits flush with section content above and below.
+               scrollPaddingLeft makes snap targets land at that 24px inset. */
+            paddingLeft: 24,
+            paddingRight: 24,
+            scrollPaddingLeft: 24,
             /* Card shadow is `0 2px 32px` — give it room INSIDE the scroller's
                clip box (vertical padding) then visually undo the height bump
                with negative margins so adjacent sections sit at the same
@@ -2373,7 +2615,7 @@
                     flex: `0 0 ${CARD_W}px`, minHeight: 136, borderRadius: 16, padding: 24,
                     background: th.bg, border: 'none',
                     boxShadow: CARD_SHADOW,
-                    scrollSnapAlign: 'center',
+                    scrollSnapAlign: 'start',
                     /* Explicit pan-x so iOS treats a touch-and-drag on the
                        button as a horizontal scroll gesture instead of a
                        held-down tap. Quick single taps still register. */
@@ -2510,9 +2752,11 @@
         <div style={{ paddingTop: 16, paddingBottom: 24 }}>
           <div ref={ref} style={{
             overflowX: 'auto', overflowY: 'visible',
-            /* Center the active card so peek of next/prev shows symmetrically. */
-            paddingLeft: 'calc((100% - 296px) / 2)',
-            paddingRight: 'calc((100% - 296px) / 2)',
+            /* Left-aligned to the page horizontal padding (24px) so the
+               first card sits flush with section content above and below. */
+            paddingLeft: 24,
+            paddingRight: 24,
+            scrollPaddingLeft: 24,
             scrollSnapType: 'x mandatory',
             overscrollBehaviorX: 'contain',
           }} className="scrollbar-hide">
@@ -2524,7 +2768,7 @@
                      Title baseline ~76px from top, sub at ~100px. */
                   padding: '0 24px 24px 24px',
                   background: s.bg, border: 'none',
-                  scrollSnapAlign: 'center',
+                  scrollSnapAlign: 'start',
                   display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
                   textAlign: 'left', cursor: 'pointer',
                 }}>
@@ -2547,9 +2791,9 @@
     };
 
 
-    const ForYouSection = ({ variant }) => {
-      const C = { A: FY_A, B: FY_B, C: FY_C, D: FY_D, F: FY_F, G: FY_G, I: FY_I }[variant] || FY_G;
-      return <C />;
+    const ForYouSection = ({ variant, autoScroll }) => {
+      const C = { A: FY_A, B: FY_B, C: FY_C, D: FY_D, F: FY_F, I: FY_I, J: FY_J }[variant] || FY_I;
+      return <C autoScroll={autoScroll} />;
     };
 
     /* ----- AI Banker — all 5 are inline-input variants (extends previous E) ----- */
@@ -2829,7 +3073,8 @@
             icon={<img src="./assets/fire_sparkle.png" width={54} height={54} alt="" />} />
         </div>
         <div style={{ flex: '0 0 200px' }}>
-          <ExploreMedium subtext="Monies" title="₹240"
+          <ExploreMedium subtext="Monies"
+            title={<><MoniesGlyph size={18} /> 240</>}
             icon={<img src="./assets/monies_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
         </div>
       </HScroll>
@@ -2846,7 +3091,7 @@
           title="Fire games" subtitle="5 fires · spin to claim 2x" />
         <DividerInset />
         <ListItemAvatar bg="#E0F4E8" glyph={<GlyphSpark color="#00A63E" />}
-          title="Monies ₹240" subtitle="Earn 1% on every CC bill · redeem now" />
+          title={<>Monies <MoniesGlyph size={14} /> 240</>} subtitle="Earn 1% on every CC bill · redeem now" />
       </>
     );
 
@@ -2875,7 +3120,8 @@
             icon={<img src="./assets/fire_sparkle.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
         </div>
         <div style={{ flex: '0 0 200px', scrollSnapAlign: 'start' }}>
-          <ExploreMedium subtext="Monies" title="₹240"
+          <ExploreMedium subtext="Monies"
+            title={<><MoniesGlyph size={18} /> 240</>}
             icon={<img src="./assets/monies_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
         </div>
       </HScroll>
@@ -2905,7 +3151,8 @@
               icon={<img src="./assets/spark_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
           </div>
           <div style={{ flex: '0 0 200px' }}>
-            <ExploreMedium subtext="Monies" title="₹240"
+            <ExploreMedium subtext="Monies"
+              title={<><MoniesGlyph size={18} /> 240</>}
               icon={<img src="./assets/monies_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
           </div>
         </HScroll>
@@ -2975,7 +3222,8 @@
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
           <ExploreMedium subtext="Fire games" title="5 fires"
             icon={<img src="./assets/fire_sparkle.png" width={54} height={54} alt="" />} />
-          <ExploreMedium subtext="Monies" title="₹240"
+          <ExploreMedium subtext="Monies"
+            title={<><MoniesGlyph size={18} /> 240</>}
             icon={<img src="./assets/monies_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
         </div>
       );
@@ -3008,7 +3256,7 @@
                   <img src="./assets/rank_badge_1.png" width={17} height={17} alt="" style={{ display: 'block' }} />
                   <span style={{ ...T.caption, color: 'rgba(0,0,0,0.7)' }}>Aman leading with</span>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
-                    <span style={{ ...T.caption, color: 'rgba(0,0,0,0.9)', fontWeight: 500 }}>₹4,657</span>
+                    <span style={{ ...T.caption, color: 'rgba(0,0,0,0.9)', fontWeight: 500 }}><MoniesGlyph size={12} /> 4,657</span>
                   </span>
                 </div>
               </div>
@@ -3043,7 +3291,104 @@
               subtext="Spark"
               title="5 live"
               icon={<SparkBrandStack />} />
-            <ExploreMedium subtext="Monies" title="₹240"
+            <ExploreMedium subtext="Monies"
+              title={<><MoniesGlyph size={18} /> 240</>}
+              icon={<img src="./assets/monies_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
+          </div>
+        </PagePad>
+      </>
+    );
+
+    /* RW_H — Compact one-line fire row. Drops the dashed-separator hero +
+       fire-stack illustration in favour of a tight tile: small icon, single
+       title, single sub line, single outline CTA. Same Spark/Monies 2-up
+       beneath. PM rationale: title was "Play & win" + button "Play Now"
+       (redundant "Play"). Leaderboard ("Aman leading with ₹4,657") tells
+       the user someone else is winning, not what's at stake for them.
+       Replaced with "Win up to ₹X" so the line motivates the user. */
+    const RW_H = ({ isInCard }) => (
+      <>
+        <PagePad>
+          <button className="tap" style={{
+            width: '100%', padding: '16px 20px', borderRadius: 16,
+            background: '#FFFFFF', border: CARD_BORDER, boxShadow: CARD_SHADOW,
+            display: 'flex', alignItems: 'center', gap: 14,
+            textAlign: 'left', cursor: 'pointer',
+          }}>
+            <img src="./assets/fire_sparkle.png" width={44} height={44} alt=""
+              style={{ display: 'block', flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ ...T.h4 }}>Fire games</div>
+              <div style={{ ...T.caption, color: 'rgba(0,0,0,0.7)', marginTop: 2 }}>
+                Win up to <span style={{ color: 'rgba(0,0,0,0.9)', fontWeight: 500 }}><MoniesGlyph size={12} /> 4,657</span>
+              </div>
+            </div>
+            <div style={{
+              padding: '6px 14px', borderRadius: 100,
+              background: 'transparent', border: '1px solid rgba(0,0,0,0.2)',
+              ...T.btnSm, color: '#D30AD7', whiteSpace: 'nowrap', flexShrink: 0,
+            }}>Play</div>
+          </button>
+        </PagePad>
+        <Spacer h={isInCard ? 20 : 16} />
+        <PagePad>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <ExploreMedium subtext="Spark" title="5 live" icon={<SparkBrandStack />} />
+            <ExploreMedium subtext="Monies"
+              title={<><MoniesGlyph size={18} /> 240</>}
+              icon={<img src="./assets/monies_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
+          </div>
+        </PagePad>
+      </>
+    );
+
+    /* RW_I — Balanced fire hero. Keeps the illustration prominent but
+       fixes the spacing issues in RW_G: even 20px padding on all sides,
+       no negative margins on the fire-stack image (it no longer bleeds
+       off the bottom), and the CTA sits inline with the title block
+       instead of being flung to the right edge.
+       Copy: drops the leaderboard, replaces with "Win up to ₹X". */
+    const RW_I = ({ isInCard }) => (
+      <>
+        <PagePad>
+          <button className="tap" style={{
+            width: '100%', padding: 20, borderRadius: 16,
+            background: '#FFFFFF', border: CARD_BORDER, boxShadow: CARD_SHADOW,
+            display: 'flex', alignItems: 'center', gap: 20,
+            textAlign: 'left', cursor: 'pointer',
+          }}>
+            {/* Illustration centered in its own square slot so padding
+                around it is symmetric to the card edges. */}
+            <div style={{
+              width: 92, height: 92, flexShrink: 0,
+              display: 'grid', placeItems: 'center',
+            }}>
+              <img src="./assets/fire_stack.png" alt="" style={{
+                width: 92, height: 92, objectFit: 'contain', display: 'block',
+              }} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ ...T.h4 }}>Fire games</div>
+              <div style={{ ...T.caption, color: 'rgba(0,0,0,0.7)', marginTop: 4 }}>
+                Win up to <span style={{ color: 'rgba(0,0,0,0.9)', fontWeight: 500 }}><MoniesGlyph size={12} /> 4,657</span>
+              </div>
+              <div style={{ marginTop: 12 }}>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  padding: '6px 16px', borderRadius: 100,
+                  background: 'transparent', border: '1px solid rgba(0,0,0,0.2)',
+                  ...T.btnSm, color: '#D30AD7', whiteSpace: 'nowrap',
+                }}>Play now</span>
+              </div>
+            </div>
+          </button>
+        </PagePad>
+        <Spacer h={isInCard ? 20 : 16} />
+        <PagePad>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <ExploreMedium subtext="Spark" title="5 live" icon={<SparkBrandStack />} />
+            <ExploreMedium subtext="Monies"
+              title={<><MoniesGlyph size={18} /> 240</>}
               icon={<img src="./assets/monies_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
           </div>
         </PagePad>
@@ -3051,7 +3396,7 @@
     );
 
     const RewardsSection = ({ variant, isInCard }) => {
-      const C = { A: RW_A, B: RW_B, D: RW_D, E: RW_E, F: RW_F, G: RW_G }[variant] || RW_F;
+      const C = { A: RW_A, B: RW_B, D: RW_D, E: RW_E, F: RW_F, G: RW_G, H: RW_H, I: RW_I }[variant] || RW_F;
       return <C isInCard={isInCard} />;
     };
 
@@ -3284,9 +3629,65 @@
       );
     };
 
+    /* Top categories driving total May spends. Used by ST_K and the
+       Analytics page so the two surfaces tell a consistent story. */
+    const SPEND_CATEGORIES = [
+      { label: 'Food & drinks', sub: '24 txns', amount: '₹4,820', bg: '#FFF3E3', color: '#C27511', glyph: '🍔' },
+      { label: 'Shopping',      sub: '7 txns',  amount: '₹3,140', bg: '#FAE2FA', color: '#A008A3', glyph: '🛍️' },
+      { label: 'Travel',        sub: '4 txns',  amount: '₹2,860', bg: '#E6EDF9', color: '#2B6ACF', glyph: '🚕' },
+    ];
+
+    /* ST_K — Headline + bar chart + top-3 spends categories. Same visual
+       lineage as ST_A (white card, headline + delta, bar chart) extended
+       with a category breakdown below a hairline. Tapping anywhere on
+       the card opens the Analytics page. */
+    const ST_K = () => (
+      <PagePad>
+        <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+            <div>
+              <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>May spends</div>
+              <div style={{ ...T.display, marginTop: 4 }}>₹12,487</div>
+            </div>
+            <TagSubtle intent="positive">↓ 18% vs Apr</TagSubtle>
+          </div>
+          <SpendBarChart />
+          <div style={{
+            marginTop: 20, paddingTop: 16,
+            borderTop: '1px solid rgba(0,0,0,0.05)',
+            display: 'flex', flexDirection: 'column', gap: 12,
+          }}>
+            <div style={{ ...T.meta }}>Top spends</div>
+            {SPEND_CATEGORIES.map(c => (
+              <div key={c.label} style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+              }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 100, flexShrink: 0,
+                  background: c.bg, display: 'grid', placeItems: 'center',
+                  fontSize: 16,
+                }}>{c.glyph}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ ...T.bodySm, fontWeight: 500 }}>{c.label}</div>
+                  <div style={{ ...T.caption, color: 'rgba(0,0,0,0.5)', marginTop: 2 }}>{c.sub}</div>
+                </div>
+                <div style={{ ...T.bodySm, fontWeight: 500 }}>{c.amount}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </PagePad>
+    );
+
     const StatsSection = ({ variant, isInCard }) => {
-      const C = { A: ST_A, B: ST_B, C: ST_C, D: ST_D, E: ST_E, F: ST_F, G: ST_G, I: ST_I }[variant];
-      return <C isInCard={isInCard} />;
+      const C = { A: ST_A, B: ST_B, C: ST_C, D: ST_D, E: ST_E, F: ST_F, G: ST_G, I: ST_I, K: ST_K }[variant];
+      /* Whole stats card is a tap target — opens the Analytics page. */
+      const openAnalytics = () => window.dispatchEvent(new CustomEvent('open-analytics'));
+      return (
+        <div onClick={openAnalytics} style={{ cursor: 'pointer' }}>
+          <C isInCard={isInCard} />
+        </div>
+      );
     };
 
     /* ----- More: VAS landing zone. Phase-1 content: AutoPay + CIBIL.
@@ -3481,17 +3882,17 @@
       </div>
     );
 
-    const ExplorePage = ({ sections, headerStyle, activeSection, separateMore }) => {
+    const ExplorePage = ({ sections, headerStyle, activeSection, separateMore, autoScroll }) => {
       const isInCard = headerStyle === 'None';
       const isActive = (k) => activeSection === k;
       const isGradientFY = sections.forYou === 'D' || sections.forYou === 'F';
-      const isUtilityFY = sections.forYou === 'G' || sections.forYou === 'I';
+      const isUtilityFY = sections.forYou === 'I' || sections.forYou === 'J';
       return (
         <ScreenShell transparentAppBar={isGradientFY}>
           <SectionAnchor id="forYou" />
           <SectionBlock id="forYou" active={isActive('forYou')}>
             <SectionWrap title="For you" headerStyle="None" isFirst>
-              <ForYouSection variant={sections.forYou} />
+              <ForYouSection variant={sections.forYou} autoScroll={autoScroll} />
             </SectionWrap>
           </SectionBlock>
           {/* Utility FY variants finish flush against the next section. Add
@@ -3619,7 +4020,7 @@
     const SECTION_META = [
       {
         key: 'forYou', label: 'For You', variants: {
-          G: 'Card stack · expandable', I: 'Card stack · shuffle',
+          I: 'Card stack · shuffle', J: 'Card stack · scroll',
           D: 'Full-bleed (top-tinted, PWA)', F: 'Centered carousel', B: 'Horizontal strip', C: 'Compact dark strip',
         }
       },
@@ -3640,7 +4041,7 @@
       },
       {
         key: 'stats', label: 'Statistics', variants: {
-          A: 'Bar chart', D: 'Sparkline card', G: 'Analytics widget', I: 'Card-style spends',
+          K: 'Bar + top categories', A: 'Bar chart', D: 'Sparkline card', G: 'Analytics widget', I: 'Card-style spends',
         }
       },
       {
@@ -3670,7 +4071,7 @@
       V1: {
         label: 'Exploration',
         headerStyle: 'List',
-        sections: { forYou: 'D', aiBanker: 'A', bills: 'C', rewards: 'G', stats: 'G', more: 'A', footer: 'A' },
+        sections: { forYou: 'I', aiBanker: 'A', bills: 'C', rewards: 'G', stats: 'G', more: 'A', footer: 'A' },
       },
     };
 
@@ -3698,6 +4099,7 @@
       onSectionChange, onHeaderChange, onPresetApply,
       spacing, highlight, onSpacingChange, onHighlightToggle,
       separateMore, onSeparateMoreToggle,
+      autoScroll, onAutoScrollToggle,
     }) => {
       const activePreset = useOriginal
         ? 'V0'
@@ -3754,6 +4156,26 @@
               }}>
               <span style={{
                 position: 'absolute', top: 2, left: separateMore ? 18 : 2,
+                width: 16, height: 16, borderRadius: 100, background: 'white',
+                transition: 'left 160ms',
+              }} />
+            </button>
+          </div>
+
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            marginTop: 12,
+          }}>
+            <span style={{ ...T.meta }}>Auto scroll (I & J)</span>
+            <button
+              onClick={onAutoScrollToggle}
+              style={{
+                width: 36, height: 20, borderRadius: 100, position: 'relative',
+                background: autoScroll ? '#D30AD7' : 'rgba(0,0,0,0.15)',
+                border: 'none', cursor: 'pointer', transition: 'background 160ms',
+              }}>
+              <span style={{
+                position: 'absolute', top: 2, left: autoScroll ? 18 : 2,
                 width: 16, height: 16, borderRadius: 100, background: 'white',
                 transition: 'left 160ms',
               }} />
@@ -3901,6 +4323,94 @@
     /* Every-load splash. Three-dot loader pulsing in slice Valentino over a
        white surface. Always plays — user wants the "Upgrading Explore"
        beat on every webapp open, not just first visit. */
+    /* AnalyticsPage — slides in from the right when the May spends card
+       is tapped. Lives at phone-screen scope (sibling of the main page)
+       so the slide-in only covers the phone, not the desktop layout.
+       Back button slides it back out to the right. */
+    const AnalyticsPage = ({ open, onClose }) => {
+      return (
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: '#FFFFFF',
+          zIndex: 50,
+          transform: open ? 'translateX(0)' : 'translateX(100%)',
+          transition: 'transform 380ms cubic-bezier(0.16, 1, 0.3, 1)',
+          display: 'flex', flexDirection: 'column',
+          overflow: 'hidden',
+        }}>
+          {/* Top bar: back chevron + title. Sits above the dynamic island
+              zone to mimic a stacked navigation feel. */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 12,
+            paddingTop: 54, paddingLeft: 16, paddingRight: 24,
+            height: 54 + 64, flexShrink: 0,
+            background: '#FFFFFF',
+          }}>
+            <button onClick={onClose} className="tap" style={{
+              width: 44, height: 44, borderRadius: 100,
+              background: 'transparent', border: 'none',
+              display: 'grid', placeItems: 'center', cursor: 'pointer',
+            }}>
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                <path d="M14 4 L7 11 L14 18" stroke="rgba(0,0,0,0.9)"
+                  strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            <div style={{ ...T.h3 }}>Analytics</div>
+          </div>
+          {/* Scrollable content */}
+          <div style={{
+            flex: 1, overflowY: 'auto',
+            paddingBottom: 40,
+          }} className="scrollbar-hide">
+            <PagePad>
+              <div style={{ paddingTop: 8 }}>
+                <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>May spends</div>
+                <div style={{ ...T.display, marginTop: 4 }}>₹12,487</div>
+                <div style={{ marginTop: 8 }}>
+                  <TagSubtle intent="positive">↓ 18% vs Apr</TagSubtle>
+                </div>
+              </div>
+            </PagePad>
+            <PagePad>
+              <div style={{ marginTop: 24, background: '#FFFFFF', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 24 }}>
+                <div style={{ ...T.meta, marginBottom: 8 }}>Weekly pattern</div>
+                <SpendBarChart />
+              </div>
+            </PagePad>
+            <PagePad>
+              <div style={{ marginTop: 16, background: '#FFFFFF', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ ...T.meta }}>Top categories</div>
+                  <div style={{ ...T.caption, color: 'rgba(0,0,0,0.5)' }}>This month</div>
+                </div>
+                {SPEND_CATEGORIES.map(c => (
+                  <div key={c.label} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{
+                      width: 44, height: 44, borderRadius: 100, flexShrink: 0,
+                      background: c.bg, display: 'grid', placeItems: 'center',
+                      fontSize: 20,
+                    }}>{c.glyph}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ ...T.h4 }}>{c.label}</div>
+                      <div style={{ ...T.caption, color: 'rgba(0,0,0,0.5)', marginTop: 2 }}>{c.sub}</div>
+                    </div>
+                    <div style={{ ...T.h4 }}>{c.amount}</div>
+                  </div>
+                ))}
+              </div>
+            </PagePad>
+            <PagePad>
+              <div style={{ marginTop: 16, background: '#FFFFFF', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 24 }}>
+                <div style={{ ...T.meta, marginBottom: 12 }}>Insights</div>
+                <div style={{ ...T.bodySm }}>You spent ₹1,820 less than April. Food &amp; drinks is your biggest category this month.</div>
+              </div>
+            </PagePad>
+          </div>
+        </div>
+      );
+    };
+
     const Splash = ({ onDone }) => {
       const [fading, setFading] = useState(false);
       React.useEffect(() => {
@@ -3945,6 +4455,8 @@
       const [highlight, setHighlight] = useState(false);
       const [drawerOpen, setDrawerOpen] = useState(false);
       const [separateMore, setSeparateMore] = useState(false);
+      const [autoScroll, setAutoScroll] = useState(false);
+      const [analyticsOpen, setAnalyticsOpen] = useState(false);
       const [activeSection, setActiveSection] = useState(null);
       /* True once the user has changed a More variant while the drawer is
          open. Adds extra bottom scroll-room so scrollToSection('more') can
@@ -3961,6 +4473,15 @@
         const onOpen = () => setDrawerOpen(true);
         window.addEventListener('open-debug-drawer', onOpen);
         return () => window.removeEventListener('open-debug-drawer', onOpen);
+      }, []);
+
+      /* Tapping the May spends card anywhere in the page dispatches
+         'open-analytics' — listened here so the analytics page can mount
+         at the phone-screen level. */
+      React.useEffect(() => {
+        const onOpen = () => setAnalyticsOpen(true);
+        window.addEventListener('open-analytics', onOpen);
+        return () => window.removeEventListener('open-analytics', onOpen);
       }, []);
 
       /* Reset the extra-scroll flag any time the drawer closes — by any path
@@ -4021,7 +4542,9 @@
           onSpacingChange={updateSpacing}
           onHighlightToggle={() => setHighlight(h => !h)}
           separateMore={separateMore}
-          onSeparateMoreToggle={() => setSeparateMore(s => !s)} />
+          onSeparateMoreToggle={() => setSeparateMore(s => !s)}
+          autoScroll={autoScroll}
+          onAutoScrollToggle={() => setAutoScroll(a => !a)} />
       );
 
       return (
@@ -4038,7 +4561,8 @@
                     <div className="dynamic-island" />
                     {useOriginal
                       ? <OriginalExplore />
-                      : <ExplorePage sections={sections} headerStyle={headerStyle} activeSection={activeSection} separateMore={separateMore} />}
+                      : <ExplorePage sections={sections} headerStyle={headerStyle} activeSection={activeSection} separateMore={separateMore} autoScroll={autoScroll} />}
+                    <AnalyticsPage open={analyticsOpen} onClose={() => setAnalyticsOpen(false)} />
                     {/* Splash sits INSIDE phone-screen so it inherits the
                         transform: scale used on mobile — proportions match the
                         rendered page exactly instead of being misaligned at
