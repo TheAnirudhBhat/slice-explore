@@ -1906,6 +1906,337 @@
       );
     };
 
+    /* Utility-driven For You content. PM brief: A & D feel like marketing
+       banners; bills are surfaced in the Bills section, not here. So this
+       array carries personalised STATUS items only — what changed for the
+       user this week, with real numbers, no marketing slides. Bills are
+       intentionally absent. */
+    const FY_UTILITY_ITEMS = [
+      { meta: 'SPENDS · MAY',          title: '₹18,420 spent this month',
+        sub:  '22% higher than your usual', cta: 'Insights',
+        icon: 'may_spends.png' },
+      { meta: 'SPARK · 2 DAYS LEFT',   title: '5 sparks live for you',
+        sub:  'Avg ₹40 cashback per spark',  cta: 'View',
+        icon: 'spark_icon.png' },
+      { meta: 'CREDIT SCORE',          title: '785 → 792',
+        sub:  'On-time payments lifted it',  cta: 'Check',
+        icon: 'credit_score_icon.png' },
+    ];
+
+    /* Small chip rendering for the metadata label. The plain T.meta style
+       is too low-contrast on a busy card; a brand-tinted chip gives the
+       tag the visual weight it needs to function as the leading hierarchy
+       marker. Valentino-50 fill + Valentino-600 text per DLS. */
+    const MetaChip = ({ children }) => (
+      <span style={{
+        display: 'inline-block',
+        padding: '2px 8px',
+        borderRadius: 4,
+        background: '#FAE2FA',
+        color: '#A008A3',
+        fontSize: 10,
+        lineHeight: '14px',
+        fontWeight: 500,
+        letterSpacing: '0.4px',
+        textTransform: 'uppercase',
+      }}>{children}</span>
+    );
+
+    /* Lighter card shadow used by FY_G/FY_I — the 32px-blur CARD_SHADOW
+       reads too heavy on stacked cards. */
+    const STACK_CARD_SHADOW = '0 2px 12px rgba(0, 0, 0, 0.06)';
+
+    /* FY_G — Expandable card stack. Same 3 notifications as the gradient
+       variants (FY_SLIDES: bill / spark / spends). Collapsed: top card
+       visible, others peek 14px behind with slight scale-down. Tap →
+       backdrop fades in over the rest of the page and the cards fan out
+       to a vertical list ON TOP, without extending the layout. Tap any
+       card or the backdrop to collapse. Card height stays constant so
+       the opening reads as a layout shift, not a growth. */
+    const FY_G = () => {
+      const items = FY_SLIDES;
+      const N = items.length;
+      const [expanded, setExpanded] = React.useState(false);
+      /* Track the phone-screen DOM node so the overlay can be portaled into
+         it — this confines the fade to the device viewport instead of the
+         whole page (the desktop debug panel was getting dimmed before). */
+      const [phoneScreen, setPhoneScreen] = React.useState(null);
+      React.useEffect(() => {
+        setPhoneScreen(document.querySelector('.phone-screen'));
+      }, []);
+      const CARD_H = 76;
+      const PEEK = 14;
+      const GAP = 12;
+      const collapsedHeight = CARD_H + (N - 1) * PEEK + 4;
+      const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
+      return (
+        <>
+          <PagePad>
+            {/* paddingTop gives the top card's drop shadow visual room. */}
+            <div style={{ paddingTop: 20 }}>
+              <div style={{
+                position: 'relative',
+                height: collapsedHeight,
+              }}>
+                {items.map((it, i) => {
+                  const collapsedTop = i * PEEK;
+                  const collapsedScale = 1 - i * 0.04;
+                  const expandedTop = i * (CARD_H + GAP);
+                  /* Stagger: bottom card moves last when fanning out, first
+                     when tucking back in. Reads more natural than lockstep. */
+                  const delayMs = expanded ? i * 50 : (N - 1 - i) * 35;
+                  return (
+                    <button
+                      key={i}
+                      className="tap"
+                      onClick={(e) => { e.stopPropagation(); setExpanded(v => !v); }}
+                      aria-expanded={expanded}
+                      style={{
+                        position: 'absolute', left: 0, right: 0, top: 0,
+                        height: CARD_H,
+                        transform: expanded
+                          ? `translateY(${expandedTop}px) scale(1)`
+                          : `translateY(${collapsedTop}px) scale(${collapsedScale})`,
+                        transformOrigin: 'top center',
+                        transition: `transform 560ms ${EASE} ${delayMs}ms`,
+                        /* Lift above the backdrop only when expanded;
+                           collapsed cards stay in normal flow. */
+                        zIndex: expanded ? (1000 - i) : (N - i),
+                        background: '#FFFFFF',
+                        boxShadow: STACK_CARD_SHADOW,
+                        border: CARD_BORDER,
+                        borderRadius: 16,
+                        padding: '12px 16px',
+                        textAlign: 'left',
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        cursor: 'pointer', overflow: 'hidden',
+                      }}>
+                      <img src={`./assets/${it.heroImg}`} width={44} height={44} alt=""
+                        style={{ display: 'block', borderRadius: 12, flexShrink: 0, objectFit: 'contain' }} />
+                      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <div style={{
+                          ...T.h4,
+                          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                        }}>{it.title}</div>
+                        <div style={{
+                          ...T.caption, color: 'rgba(0,0,0,0.7)',
+                          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                        }}>{it.sub}</div>
+                      </div>
+                      {/* CTA fades in only when expanded. Width transition
+                          + opacity makes it feel like it grows out of the
+                          card edge, no layout jump. */}
+                      <span style={{
+                        padding: expanded ? '6px 14px' : '6px 0',
+                        borderRadius: 100,
+                        border: expanded ? '1px solid rgba(0,0,0,0.1)' : '1px solid transparent',
+                        background: 'transparent',
+                        ...T.btnSm, color: 'rgba(0,0,0,0.9)',
+                        whiteSpace: 'nowrap', flexShrink: 0,
+                        opacity: expanded ? 1 : 0,
+                        maxWidth: expanded ? 120 : 0,
+                        marginLeft: expanded ? 8 : 0,
+                        overflow: 'hidden',
+                        transition: `opacity 240ms ease ${expanded ? 320 : 0}ms, max-width 320ms ${EASE} ${expanded ? 280 : 0}ms, margin-left 320ms ${EASE} ${expanded ? 280 : 0}ms`,
+                        pointerEvents: expanded ? 'auto' : 'none',
+                      }}>{it.cta}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </PagePad>
+          {/* Overlay portaled into .phone-screen so it's confined to the
+              device viewport. Fully white, smooth fade. Click dismisses. */}
+          {phoneScreen && ReactDOM.createPortal(
+            <div
+              onClick={() => setExpanded(false)}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                background: '#FFFFFF',
+                zIndex: 80,
+                opacity: expanded ? 1 : 0,
+                pointerEvents: expanded ? 'auto' : 'none',
+                transition: 'opacity 420ms ease',
+              }}
+            />,
+            phoneScreen
+          )}
+        </>
+      );
+    };
+
+    /* FY_I — Shuffle deck. Drag the top card any direction; release past
+       threshold deals it to the bottom of the stack.
+
+       Animation uses the Web Animations API (`Element.animate()`) instead
+       of CSS transitions so we get an explicit, deterministic keyframe
+       sequence — no React batching or transition-trigger races.
+
+       Sequence on commit:
+       1. State updates immediately: order rotates, drag resets. React
+          re-renders. The leaving card is now at stackPos N-1, so its
+          z-index drops to lowest — it's already "behind" the others.
+       2. In the next animation frame we run a WAAPI keyframe on the
+          leaving card from its drop position back to the rear-stack
+          slot. The card visually starts at the drop point, then slides
+          down/back into the deck. */
+    const FY_I = () => {
+      const items = FY_SLIDES;
+      const N = items.length;
+      const [order, setOrder] = React.useState(() => items.map((_, i) => i));
+      const [drag, setDrag] = React.useState({ x: 0, y: 0 });
+      const [dragging, setDragging] = React.useState(false);
+      const start = React.useRef({ x: 0, y: 0 });
+      const cardRefs = React.useRef({});
+      const COMMIT_DIST = 100;
+      const EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
+      const CARD_H = 76;
+      const PEEK = 14;
+      const stackHeight = CARD_H + (N - 1) * PEEK + 4;
+
+      const cancelInProgress = (origIdx) => {
+        const el = cardRefs.current[origIdx];
+        if (el && el.getAnimations) el.getAnimations().forEach(a => a.cancel());
+      };
+
+      const onPointerDown = (e) => {
+        if (dragging) return;
+        /* Cancel any lingering deal-back animation on the top card so the
+           new drag starts from a clean state. */
+        const topId = order[0];
+        cancelInProgress(topId);
+        start.current = { x: e.clientX, y: e.clientY };
+        setDrag({ x: 0, y: 0 });
+        setDragging(true);
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+      };
+      const onPointerMove = (e) => {
+        if (!dragging) return;
+        setDrag({ x: e.clientX - start.current.x, y: e.clientY - start.current.y });
+      };
+      const endDrag = () => {
+        if (!dragging) return;
+        const fromX = drag.x;
+        const fromY = drag.y;
+        const fromRot = Math.max(-10, Math.min(10, fromX * 0.05));
+        const dist = Math.hypot(fromX, fromY);
+        const commit = dist > COMMIT_DIST;
+        const topId = order[0];
+
+        if (commit) {
+          /* Update state synchronously: order rotates, drag clears. The
+             card we just released is now at stackPos N-1 → lowest z-index
+             → already visually behind. After the next paint we play the
+             WAAPI keyframe that animates it from drop → back-slot. */
+          setOrder(o => [...o.slice(1), o[0]]);
+          setDrag({ x: 0, y: 0 });
+          setDragging(false);
+          requestAnimationFrame(() => {
+            const el = cardRefs.current[topId];
+            if (!el || !el.animate) return;
+            const backY = (N - 1) * PEEK;
+            const backScale = 1 - (N - 1) * 0.04;
+            el.animate(
+              [
+                { transform: `translate(${fromX}px, ${fromY}px) scale(1) rotate(${fromRot}deg)` },
+                { transform: `translate(0px, ${backY}px) scale(${backScale}) rotate(0deg)` },
+              ],
+              { duration: 620, easing: EASE, fill: 'none' }
+            );
+          });
+        } else {
+          /* Snap back to the top slot. WAAPI from drop → (0,0). */
+          setDrag({ x: 0, y: 0 });
+          setDragging(false);
+          requestAnimationFrame(() => {
+            const el = cardRefs.current[topId];
+            if (!el || !el.animate) return;
+            el.animate(
+              [
+                { transform: `translate(${fromX}px, ${fromY}px) scale(1) rotate(${fromRot}deg)` },
+                { transform: `translate(0px, 0px) scale(1) rotate(0deg)` },
+              ],
+              { duration: 380, easing: EASE, fill: 'none' }
+            );
+          });
+        }
+      };
+
+      return (
+        <PagePad>
+          <div style={{ paddingTop: 20 }}>
+            <div style={{ position: 'relative', height: stackHeight }}>
+              {order.map((origIdx, stackPos) => {
+                const it = items[origIdx];
+                const isTop = stackPos === 0;
+                const stackY = stackPos * PEEK;
+                const stackScale = 1 - stackPos * 0.04;
+                /* Rest transform = stack-position. Top while dragging
+                   overrides via inline style with drag offset. WAAPI
+                   keyframes override transform during their run. */
+                let transform = `translate(0px, ${stackY}px) scale(${stackScale}) rotate(0deg)`;
+                if (isTop && dragging) {
+                  const rot = Math.max(-10, Math.min(10, drag.x * 0.05));
+                  transform = `translate(${drag.x}px, ${drag.y}px) scale(1) rotate(${rot}deg)`;
+                }
+                return (
+                  <div
+                    key={origIdx}
+                    ref={(el) => {
+                      if (el) cardRefs.current[origIdx] = el;
+                      else delete cardRefs.current[origIdx];
+                    }}
+                    onPointerDown={isTop ? onPointerDown : undefined}
+                    onPointerMove={isTop ? onPointerMove : undefined}
+                    onPointerUp={isTop ? endDrag : undefined}
+                    onPointerCancel={isTop ? endDrag : undefined}
+                    aria-hidden={!isTop}
+                    style={{
+                      position: 'absolute', left: 0, right: 0, top: 0,
+                      height: CARD_H,
+                      transform,
+                      transformOrigin: 'center center',
+                      /* Non-top cards animate via CSS transition when their
+                         stackPos changes (rising as the deck rotates). The
+                         top card follows the finger without smoothing; its
+                         deal-back motion is driven by WAAPI keyframes that
+                         override CSS for the duration of the animation. */
+                      transition: isTop ? 'none' : `transform 520ms ${EASE}`,
+                      zIndex: N - stackPos,
+                      background: '#FFFFFF',
+                      boxShadow: STACK_CARD_SHADOW,
+                      border: CARD_BORDER,
+                      borderRadius: 16,
+                      padding: '12px 16px',
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      pointerEvents: isTop ? 'auto' : 'none',
+                      cursor: isTop ? 'grab' : 'default',
+                      userSelect: 'none',
+                      touchAction: 'none',
+                    }}>
+                    <img src={`./assets/${it.heroImg}`} width={44} height={44} alt=""
+                      style={{ display: 'block', borderRadius: 12, flexShrink: 0, objectFit: 'contain', pointerEvents: 'none' }} />
+                    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <div style={{
+                        ...T.h4,
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                      }}>{it.title}</div>
+                      <div style={{
+                        ...T.caption, color: 'rgba(0,0,0,0.7)',
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                      }}>{it.sub}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </PagePad>
+      );
+    };
+
     /* FY_B — HScroll banner carousel themed with slice DLS palette.
        Per-slide visual identity:
          · Bill due  → Valentino-50 (#FAE2FA) — urgency in slice's signature pink
@@ -2217,7 +2548,7 @@
 
 
     const ForYouSection = ({ variant }) => {
-      const C = { A: FY_A, B: FY_B, C: FY_C, D: FY_D, F: FY_F }[variant] || FY_A;
+      const C = { A: FY_A, B: FY_B, C: FY_C, D: FY_D, F: FY_F, G: FY_G, I: FY_I }[variant] || FY_G;
       return <C />;
     };
 
@@ -3153,14 +3484,19 @@
     const ExplorePage = ({ sections, headerStyle, activeSection, separateMore }) => {
       const isInCard = headerStyle === 'None';
       const isActive = (k) => activeSection === k;
+      const isGradientFY = sections.forYou === 'D' || sections.forYou === 'F';
+      const isUtilityFY = sections.forYou === 'G' || sections.forYou === 'I';
       return (
-        <ScreenShell transparentAppBar={(sections.forYou === 'A' || sections.forYou === 'D' || sections.forYou === 'F')}>
+        <ScreenShell transparentAppBar={isGradientFY}>
           <SectionAnchor id="forYou" />
           <SectionBlock id="forYou" active={isActive('forYou')}>
             <SectionWrap title="For you" headerStyle="None" isFirst>
               <ForYouSection variant={sections.forYou} />
             </SectionWrap>
           </SectionBlock>
+          {/* Utility FY variants finish flush against the next section. Add
+              clear vertical air so AI banker / Bills don't feel crammed. */}
+          {isUtilityFY && <Spacer h={20} />}
           {sections.aiBanker !== 'None' && (
             <>
               <SectionAnchor id="aiBanker" />
@@ -3169,7 +3505,7 @@
                     them); add another 12px so the dots-to-search-bar gap totals 28px.
                     B and V are card variants without dots — those already include their
                     own paddingBottom, so no extra spacer. */}
-                {(sections.forYou === 'A' || sections.forYou === 'D' || sections.forYou === 'F') && <Spacer h={12} />}
+                {isGradientFY && <Spacer h={12} />}
                 <SectionWrap title="AI banker" headerStyle="None" isFirst>
                   <AiBankerSection variant={sections.aiBanker} />
                 </SectionWrap>
@@ -3283,7 +3619,8 @@
     const SECTION_META = [
       {
         key: 'forYou', label: 'For You', variants: {
-          A: 'Full-bleed carousel', D: 'Full-bleed (top-tinted, PWA)', F: 'Centered carousel', B: 'Horizontal strip', C: 'Compact dark strip',
+          G: 'Card stack · expandable', I: 'Card stack · shuffle',
+          D: 'Full-bleed (top-tinted, PWA)', F: 'Centered carousel', B: 'Horizontal strip', C: 'Compact dark strip',
         }
       },
       {
