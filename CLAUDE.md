@@ -1,40 +1,41 @@
-# explore-base
+# explore-react
 
-Base version of the slice Explore page — web proto for the redesign track. Parent `slice/CLAUDE.md` covers DLS 2.0, brand voice, tokens, and proto conventions. This file is project-specific only.
+React + Vite port of the slice Explore page proto. Direct successor to `../explore-base/` (single-file React 18 + Tailwind CDN). Migrated 2026-05-16 to enable Agentation 2.0 integration and component-level isolation.
 
 ## Run
 ```
-python3 -m http.server 8765
-# http://localhost:8765
+npm install
+npm run dev       # http://localhost:8765
+npm run build     # production bundle into dist/
 ```
 
 ## Stack
-Single-file `index.html`, React 18 + Tailwind + Babel via CDN. No build step. DLS 2.0 tokens inlined.
+- Vite 6 + React 18 + Tailwind 3 (PostCSS)
+- All proto code currently lives in `src/App.jsx` (one big file, ported 1:1 from `explore-base/index.html`). To-do: split into per-section component files.
+- Global styles in `src/index.css` (Tailwind directives + the slice DLS CSS that was inline in `<style>`).
+- Assets in `public/assets/` — served from `/assets/...` paths.
 
-## Files
-- `index.html` — the proto
-- `recovery.js` — snapshot/backup of prior working state; do not import or edit unless restoring
-- `remove_bg.py`, `check_alpha.py` — asset helpers for the `assets/` PNGs
-- `assets/` — Figma-exported PNGs (icons, illustrations, bottom nav)
-- `screenshot-current.png` — latest visual reference
+## Stack vs `explore-base`
+| | explore-base | explore-react (this) |
+|---|---|---|
+| Build step | None (Babel CDN) | Vite build |
+| React | UMD CDN | npm module |
+| Tailwind | CDN script | PostCSS build |
+| Asset paths | `./assets/foo.png` | `/assets/foo.png` |
+| File layout | 1 × `index.html` (5k LOC) | `src/App.jsx` + `src/index.css` (same content, properly split) |
 
-## Current screen (top → bottom)
-1. App bar L0 — "Explore" + avatar
-2. Composite Recharge & bills card (icon grid + reward row)
-3. 2 × Medium cards — Play & win, May spends
-4. 1 × Medium + 2 × Small stack — Invite & earn, Credit score, Autopay
-5. Bottom nav (PNG, not the DLS component yet)
+## Migration notes
+- `const { useState } = React;` → `import React, { useState } from 'react'` at top of App.jsx.
+- `ReactDOM.createRoot(...).render(<App />)` lives in `src/main.jsx` now.
+- Tailwind utility classes used in the proto need to be referenced from `src/App.jsx` for the JIT to pick them up — `tailwind.config.js` `content` covers this.
+- `ReactDOM` import kept for any legacy calls (TODO: audit + remove if unused).
 
-## Status
-Base from which we iterate. Missing vs redesign brief: For You, AI Banker, Rewards & Benefits section, Statistics section, More.
+## Agentation integration
 
-## Project-specific decisions
-- Bottom nav is currently a PNG — replacing with DLS Bottom nav component is a known TODO, don't silently swap mid-task
-- Original PNG icons (`flame_orange.png`, `fire_sparkle.png`) read as on-brand pink/sparkle — keep them, don't replace with synthesized glyphs
-- Get assured row uses card-footer pattern: `buttonSmall` medium, brand `#D30AD7`
-- Inside-card row separators are solid dividers, not dashed
-- Phone shell tuned to iPhone-realistic (Dynamic Island, titanium frame, side buttons) — keep this when re-rendering the shell
+`agentation@3.0.2` is wired into `src/main.jsx` as a top-level sibling of `<App />`. The toolbar appears in the bottom-right corner. Click → activate → click any element on the page → annotate → copy structured markdown.
 
-## Known issues
-- Recharge & bills card duplicates the Bills section (anti-redundancy concern from brief — flag before adding more bill entry points)
-- No section structure yet (no Section headers / Divider/Big)
+Currently using callback-only mode (`onAnnotationAdd`, `onSubmit` log to console). To enable Agent Sync with a local server, add `endpoint="http://localhost:4747"` to the `<Agentation />` props. Available callbacks live in `src/main.jsx`.
+
+## Still pending after migration
+- Split `App.jsx` into per-section modules: `src/sections/ForYou/*`, `src/sections/Rewards/*`, etc. Right now it's a 4k-line file.
+- Decide whether to delete `../explore-base/` once parity is verified, or keep it as the no-build reference.

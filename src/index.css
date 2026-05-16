@@ -1,0 +1,849 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+    :root {
+      color-scheme: light;
+    }
+
+    html,
+    body,
+    #root {
+      height: 100%;
+      background: #FFFFFF;
+      /* Defensive CSS-level color-scheme declaration matched to the meta tag.
+         Belt-and-braces against Android Chrome "Force dark mode" — meta alone
+         is sometimes ignored if the page is loaded via in-app WebView. */
+      color-scheme: only light;
+    }
+
+    body {
+      font-family: 'Rubik', system-ui, sans-serif;
+      background: #FFFFFF;
+      color: rgba(0, 0, 0, 0.9);
+      margin: 0;
+      -webkit-font-smoothing: antialiased;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      overscroll-behavior: none;
+    }
+
+    .phone-frame {
+      position: relative;
+      width: 392px;
+      height: 812px;
+    }
+
+    .phone-shell {
+      position: absolute;
+      inset: 0;
+      border-radius: 62px;
+      background: linear-gradient(135deg, #2A2D31 0%, #16181B 45%, #1F2125 100%);
+      padding: 6px;
+      /* All shadows stripped — the outer drop shadow read as elevation under
+         the phone, and the `0 -2px 0 inset` painted a 2px dark band at the
+         bottom edge of the phone frame that ALSO read as elevation/shadow.
+         The metallic gradient bg alone sells the bezel material. */
+      box-shadow: none;
+    }
+
+    .phone-bezel {
+      width: 100%;
+      height: 100%;
+      border-radius: 56px;
+      background: #000;
+      padding: 4px;
+    }
+
+    .phone-screen {
+      width: 372px;
+      height: 792px;
+      border-radius: 52px;
+      overflow: hidden;
+      position: relative;
+      background: white;
+    }
+
+    .dynamic-island {
+      position: absolute;
+      top: 11px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 124px;
+      height: 35px;
+      background: #000;
+      border-radius: 20px;
+      z-index: 40;
+      box-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.04);
+    }
+
+    .btn-left,
+    .btn-right {
+      position: absolute;
+      background: linear-gradient(90deg, #0A0B0D 0%, #2A2D31 50%, #0A0B0D 100%);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+
+    .btn-left {
+      left: -2px;
+      width: 3px;
+      border-radius: 2px 0 0 2px;
+    }
+
+    .btn-right {
+      right: -2px;
+      width: 3px;
+      border-radius: 0 2px 2px 0;
+    }
+
+    .btn-action {
+      top: 130px;
+      height: 32px;
+    }
+
+    .btn-vol-up {
+      top: 175px;
+      height: 56px;
+    }
+
+    .btn-vol-dn {
+      top: 245px;
+      height: 56px;
+    }
+
+    .btn-power {
+      top: 175px;
+      height: 96px;
+    }
+
+    .status-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 40px 0 36px;
+      /* Sits above the Analytics slide-in (z:50) so the time + icons
+         stay anchored across page transitions instead of getting
+         covered or sliding with the panel. */
+      z-index: 60;
+      pointer-events: none;
+    }
+
+    .sb-time {
+      font-family: -apple-system, 'SF Pro Display', system-ui, sans-serif;
+      font-weight: 600;
+      font-size: 17px;
+      letter-spacing: -0.2px;
+      line-height: 1;
+      min-width: 70px;
+    }
+
+    .sb-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: -apple-system, system-ui, sans-serif;
+    }
+
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+
+    .scrollbar-hide {
+      scrollbar-width: none;
+    }
+
+    /* Bars (top app-bar = sticky inside, bottom nav = absolute outside) are visually
+       fixed; only the inner content scrolls. Use `overscroll-behavior: none` on
+       both the phone-screen scroller AND the document body so neither the phone
+       view nor the outer page rubber-bands at the edges — both in desktop
+       proto-view and on real mobile / PWA standalone. */
+    .screen-scroll {
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: none;
+      overflow-x: hidden;
+    }
+
+    html, body {
+      overscroll-behavior: none;
+    }
+
+    .tap {
+      transition: transform .12s ease, opacity .12s;
+    }
+
+    @keyframes splashShimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .tap:active {
+      transform: scale(0.97);
+      opacity: 0.9;
+    }
+
+
+    .debug-panel {
+      width: 360px;
+      flex-shrink: 0;
+      padding: 24px;
+      background: white;
+      border-radius: 16px;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      box-shadow: 0 2px 32px rgba(0, 0, 0, 0.05);
+    }
+
+    .var-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .var-row:last-child {
+      border-bottom: none;
+    }
+
+    .var-pick {
+      display: flex;
+      gap: 4px;
+    }
+
+    .var-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .var-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      background: white;
+      cursor: pointer;
+      font-family: 'Rubik';
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.7);
+      transition: background 100ms, border-color 100ms, color 100ms;
+    }
+
+    .var-btn:hover {
+      background: #F6F9FC;
+    }
+
+    .var-btn.active {
+      background: #FAE2FA;
+      border-color: #D30AD7;
+      color: #D30AD7;
+    }
+
+    /* Panel divider — DLS Outline/Subtle hairline. Class-based so the
+       dark drawer can swap to white-alpha. */
+    .panel-divider {
+      height: 1px;
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    /* Section row + label — class-based for clean dark drawer overrides. */
+    .section-row {
+      border-top: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    .section-row:first-of-type {
+      border-top: none;
+    }
+    .section-row-label {
+      color: rgba(0, 0, 0, 0.9);
+    }
+
+    /* Variant-keys segmented control — one chassis per section row,
+       matches the .seg-pick pattern used by Preset/Header style above.
+       Slate-10 outer pill, each variant button is a small pill inside.
+       Active = white pill + Card-elevation hint + Valentino-500 label.
+       Dark drawer overrides further down. */
+    .var-pills {
+      display: inline-flex;
+      align-items: center;
+      background: #F6F9FC;
+      border-radius: 10px;
+      padding: 3px;
+      gap: 2px;
+    }
+    .var-key {
+      min-width: 28px;
+      height: 26px;
+      padding: 0 8px;
+      border-radius: 7px;
+      border: none;
+      background: transparent;
+      color: rgba(0, 0, 0, 0.7);
+      font-family: 'Rubik';
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.26px;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: background 160ms, color 160ms, box-shadow 160ms;
+    }
+    .var-key:hover:not(.active) {
+      background: rgba(0, 0, 0, 0.04);
+    }
+    .var-key.active {
+      background: #FFFFFF;
+      color: #D30AD7;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+
+    .preset-tag {
+      font-family: 'Rubik';
+      font-size: 8px;
+      font-weight: 600;
+      line-height: 1;
+      padding: 2px 4px;
+      border-radius: 3px;
+      letter-spacing: 0.3px;
+    }
+
+    .preset-tag.v0 {
+      background: #E0F4E8;
+      color: #00A63E;
+    }
+
+    .preset-tag.v1 {
+      background: #FAE2FA;
+      color: #D30AD7;
+    }
+
+    .seg-pick {
+      display: flex;
+      gap: 4px;
+      padding: 4px;
+      background: #F6F9FC;
+      border-radius: 10px;
+    }
+
+    .seg-btn {
+      flex: 1;
+      padding: 6px 10px;
+      border: none;
+      background: transparent;
+      border-radius: 7px;
+      cursor: pointer;
+      font-family: 'Rubik';
+      font-size: 12px;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.7);
+      transition: background 100ms, color 100ms;
+    }
+
+    .seg-btn.active {
+      background: white;
+      color: #D30AD7;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+
+    .preset-btn {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      background: white;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: 'Rubik';
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.9);
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      transition: background 100ms, border-color 100ms;
+    }
+
+    .preset-btn:hover {
+      background: #F6F9FC;
+    }
+
+    .preset-btn.active {
+      background: #FAE2FA;
+      border-color: #D30AD7;
+    }
+
+    .preset-btn.active .preset-label {
+      color: #D30AD7;
+    }
+
+    /* ============= MOBILE: app-like fullscreen + slide-in debug drawer ============= */
+    .app-stage {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: stretch;
+      padding: 0;
+      background: linear-gradient(135deg, #F6F9FC 0%, #EAEBED 100%);
+      --bar-overlap: 118px;
+    }
+
+    /* Desktop: phone-frame in the left half, debug panel in the right half.
+       Each half manages its own internal layout. */
+    .app-stage > .phone-frame {
+      justify-self: center;
+      align-self: center;
+    }
+    .app-stage > .debug-panel {
+      align-self: stretch;
+      max-height: 100dvh;
+      overflow-y: auto;
+      width: 100%;
+      /* No max-width or justify-self: the panel fills the entire right
+         half of the grid so there's no empty gutter against the page
+         edge. Inner content keeps DLS Page padding (32 on desktop). */
+      margin: 0;
+      padding: 32px;
+      border-radius: 0;
+      border-left: 1px solid rgba(0,0,0,0.05);
+      box-shadow: none;
+      background: #FFFFFF;
+    }
+
+
+    /* When a section's variant is changed, a single subtle pulse draws the eye and settles.
+       scroll-margin-top lets scrollIntoView land the section just below the app bar. */
+    .section-block {
+      position: relative;
+    }
+    [data-section] {
+      scroll-margin-top: calc(var(--bar-overlap, 118px) + 12px);
+    }
+    .section-block.active {
+      animation: section-pulse 700ms ease both;
+    }
+    @keyframes section-pulse {
+      0%, 100% { filter: drop-shadow(0 0 0 transparent); }
+      50%      { filter: drop-shadow(0 8px 18px rgba(211, 10, 215, 0.18)); }
+    }
+
+    /* Spark brand stack: each logo enters from the right with a soft slide+fade
+       and SETTLES — animation runs once, fill-mode forwards holds the final
+       state. Items get staggered animation-delay so they appear one-after-
+       another (right → left). */
+    @keyframes spark-brand-in {
+      from { opacity: 0; transform: translateX(10px) scale(0.92); }
+      to   { opacity: 1; transform: translateX(0)    scale(1); }
+    }
+
+    .nav-center-tap,
+    .debug-backdrop {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      /* App-like feel on mobile: no text selection, no callout, no tap highlight. */
+      body, .app-stage, .app-stage * {
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .app-stage {
+        padding: 0;
+        gap: 0;
+        background: #FFFFFF;
+        min-height: 100dvh;
+        align-items: stretch;
+        justify-content: stretch;
+        --bar-overlap: calc(env(safe-area-inset-top, 0px) + 64px);
+      }
+
+      .phone-frame {
+        width: 100vw !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+      }
+
+      .phone-shell {
+        border-radius: 0 !important;
+        padding: 0 !important;
+        background: #FFFFFF !important;
+        box-shadow: none !important;
+      }
+
+      .phone-bezel {
+        border-radius: 0 !important;
+        padding: 0 !important;
+        background: #FFFFFF !important;
+        overflow: hidden;
+        /* Strip the base box-shadow stack (drop shadow + inset bezel edges +
+           a 2px dark inset at the bottom). On desktop those tints sell the
+           phone-frame illusion; on mobile the bezel IS the viewport so the
+           bottom dark inset reads as a stray drop shadow under the nav. */
+        box-shadow: none !important;
+      }
+
+      /* App-style proportional scaling: design renders at a logical 392px base width,
+         transform-scale stretches it to fit the actual viewport so spacing/typography
+         stay perfectly proportional across phone sizes. */
+      .phone-screen {
+        width: 392px !important;
+        height: calc(100dvh / var(--app-scale, 1)) !important;
+        border-radius: 0 !important;
+        transform: scale(var(--app-scale, 1));
+        transform-origin: top left;
+      }
+
+      .dynamic-island,
+      .btn-left,
+      .btn-right,
+      .status-bar {
+        display: none !important;
+      }
+
+      /* Collapse the fake-status-bar buffer on mobile; respect device safe areas. */
+      .app-bar-l0 {
+        padding-top: env(safe-area-inset-top, 0px) !important;
+        height: calc(env(safe-area-inset-top, 0px) + 64px) !important;
+      }
+
+      .screen-scroll {
+        padding-bottom: calc(120px + var(--sheet-pad, 0px) + env(safe-area-inset-bottom, 0px)) !important;
+      }
+
+      /* Drawer covers the bottom ~50% of the viewport. When it's open we add
+         extra scroll headroom below the content so when a section variant
+         changes (especially the last one — More), scrollToSection can land
+         the affected section in the upper half (still visible above the
+         drawer). Padding reverts as soon as the drawer closes. */
+      .phone-screen.editor-open .screen-scroll {
+        padding-bottom: calc(60dvh + 120px + env(safe-area-inset-bottom, 0px)) !important;
+      }
+
+      /* Edit tab — subtle left-edge handle, low contrast and slim */
+      /* Tap target over the slice logo at the center of the bottom nav.
+         Opens the editor drawer. Sits above the iOS home-indicator safe area. */
+      .nav-center-tap {
+        display: block;
+        position: fixed;
+        left: 50%;
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 24px);
+        transform: translateX(-50%);
+        width: 72px;
+        height: 72px;
+        border-radius: 100px;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        z-index: 55;
+        padding: 0;
+      }
+
+      /* Edit popup — dark editing surface, clearly distinct from the white phone shell above. */
+      .debug-drawer {
+        position: fixed !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        top: auto !important;
+        width: 100vw !important;
+        max-width: 100vw !important;
+        height: 50dvh;
+        max-height: 50dvh;
+        z-index: 70;
+        border-radius: 20px 20px 0 0 !important;
+        transform: translateY(100%);
+        transition: transform 280ms cubic-bezier(0.32, 0.72, 0, 1), box-shadow 280ms ease;
+        overflow: hidden !important;
+        padding: 0 !important;
+        /* Shadow only when OPEN. When closed (translateY 100% off-screen),
+           its upward `0 -12px 40px` shadow extends 28px ABOVE its top edge
+           into the visible viewport — which reads as a stray dark shadow
+           band at the bottom of the screen on mobile. */
+        box-shadow: none;
+        background: #171A1F;
+        color: rgba(255, 255, 255, 0.9);
+      }
+      .debug-drawer.open {
+        box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.25);
+      }
+      .drawer-scroll {
+        height: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+        overscroll-behavior: none;
+        -webkit-overflow-scrolling: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        padding: 8px 0 max(20px, calc(env(safe-area-inset-bottom, 0px) + 12px));
+      }
+      .drawer-scroll::-webkit-scrollbar { display: none; }
+      .debug-drawer .debug-panel {
+        overflow-x: hidden;
+      }
+      .debug-drawer .var-pick,
+      .debug-drawer .seg-pick {
+        flex-wrap: wrap;
+      }
+
+      /* Grab handle — translucent white on dark */
+      .debug-drawer::before {
+        background: rgba(255, 255, 255, 0.18) !important;
+      }
+
+      /* Force the inner panel to fill the sheet edge-to-edge */
+      .debug-drawer .debug-panel {
+        width: 100% !important;
+        max-width: 100% !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        padding: 8px 16px !important;
+      }
+
+      /* Compact dark controls — DLS chip grouping reinterpreted for the dark surface */
+      .debug-drawer .var-row {
+        padding: 5px 0 !important;
+        border-bottom: none !important;
+      }
+      .debug-drawer .var-btn {
+        width: 24px !important;
+        height: 24px !important;
+        font-size: 11px !important;
+        border-radius: 6px !important;
+        background: rgba(255, 255, 255, 0.06) !important;
+        border-color: transparent !important;
+        color: rgba(255, 255, 255, 0.6) !important;
+      }
+      .debug-drawer .var-btn:hover {
+        background: rgba(255, 255, 255, 0.10) !important;
+      }
+      .debug-drawer .var-btn.active {
+        background: rgba(211, 10, 215, 0.20) !important;
+        border-color: #DE45E1 !important;
+        color: #DE45E1 !important;
+      }
+      .debug-drawer .var-pick { gap: 4px !important; }
+
+      /* Variant-keys segmented control — dark theme. */
+      .debug-drawer .var-pills {
+        background: rgba(255, 255, 255, 0.06) !important;
+        padding: 2px !important;
+      }
+      .debug-drawer .var-key {
+        color: rgba(255, 255, 255, 0.6) !important;
+      }
+      .debug-drawer .var-key:hover:not(.active) {
+        background: rgba(255, 255, 255, 0.08) !important;
+      }
+      .debug-drawer .var-key.active {
+        background: rgba(211, 10, 215, 0.25) !important;
+        color: #FFFFFF !important;
+        box-shadow: none !important;
+      }
+
+      /* Panel divider — white-alpha on dark. Also tightens the
+         vertical rhythm: any PanelDivider in the drawer collapses to
+         16/16 margins instead of the desktop 24/32. */
+      .debug-drawer .panel-divider {
+        background: rgba(255, 255, 255, 0.08) !important;
+        margin-top: 16px !important;
+        margin-bottom: 16px !important;
+      }
+
+      /* Section row separators — visible hairlines between rows on
+         dark. Label colour overridden so the universal white-alpha
+         force doesn't make it too bright. */
+      .debug-drawer .section-row {
+        border-top-color: rgba(255, 255, 255, 0.06) !important;
+        padding-top: 14px !important;
+        padding-bottom: 14px !important;
+      }
+      .debug-drawer .section-row-label {
+        color: rgba(255, 255, 255, 0.92) !important;
+        font-size: 14px !important;
+      }
+
+      /* Segmented controls: subtle inset on dark, brand-tinted active */
+      .debug-drawer .seg-pick {
+        padding: 3px !important;
+        gap: 3px !important;
+        background: rgba(255, 255, 255, 0.06) !important;
+        border: none;
+      }
+      .debug-drawer .seg-btn {
+        padding: 6px 8px !important;
+        font-size: 12px !important;
+        color: rgba(255, 255, 255, 0.55) !important;
+      }
+      .debug-drawer .seg-btn.active {
+        background: rgba(211, 10, 215, 0.20) !important;
+        color: #FFFFFF !important;
+        box-shadow: none !important;
+      }
+      .debug-drawer .preset-tag {
+        display: none !important;
+      }
+
+      /* Force all panel text to white-alpha — inline T.meta/T.bodySm colors are dark and
+         would otherwise be invisible on the dark sheet. Specific overrides below restore
+         button/active-state colors. */
+      .debug-drawer .debug-panel,
+      .debug-drawer .debug-panel * {
+        color: rgba(255, 255, 255, 0.9) !important;
+      }
+
+      /* Tighten label spacing inside the dark sheet */
+      .debug-drawer .debug-panel > div[style*="margin-bottom: 16px"] {
+        margin-bottom: 10px !important;
+      }
+      .debug-drawer .debug-panel > div[style*="margin-bottom: 8px"] {
+        margin-bottom: 6px !important;
+      }
+
+      /* Hide the "Page composition" header — sheet context makes it redundant */
+      .debug-drawer .debug-panel > div:first-child {
+        display: none !important;
+      }
+
+      /* Meta labels (PRESET, HEADER STYLE, SECTION VARIANTS, Highlight spacing) — dim */
+      .debug-drawer .debug-panel div[style*="uppercase"],
+      .debug-drawer .debug-panel span[style*="uppercase"] {
+        color: rgba(255, 255, 255, 0.5) !important;
+        letter-spacing: 0.6px !important;
+      }
+
+      /* Variant-row label text */
+      .debug-drawer .var-row > div:first-child {
+        font-size: 13px !important;
+        line-height: 18px !important;
+        color: rgba(255, 255, 255, 0.85) !important;
+      }
+
+      /* Highlight-spacing toggle separator — white-alpha hairline */
+      .debug-drawer .debug-panel > div[style*="border-top"] {
+        margin-top: 12px !important;
+        padding-top: 12px !important;
+        border-top-color: rgba(255, 255, 255, 0.08) !important;
+      }
+
+      /* Single divider before SECTION VARIANTS group */
+      .debug-drawer .debug-panel > div[style*="margin-bottom: 4px"]:not(:first-of-type) {
+        position: relative;
+        padding-top: 12px;
+        margin-top: 8px !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      /* No dimming backdrop on mobile — the phone stays bright so the section being
+         edited remains visible and "pops" rather than sitting behind a dark overlay. */
+      .debug-backdrop {
+        display: none !important;
+      }
+
+      .debug-drawer.open {
+        transform: translateY(0);
+      }
+
+      /* Grab-handle indicator at the top of the popup */
+      .debug-drawer::before {
+        content: '';
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 40px;
+        height: 4px;
+        border-radius: 100px;
+        background: rgba(255, 255, 255, 0.18);
+        z-index: 3;
+        pointer-events: none;
+      }
+      /* Drag handle hit area — covers the top strip so a downward swipe over the
+         grab pill dismisses the drawer without interfering with content scroll. */
+      .drawer-drag {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 32px;
+        z-index: 4;
+        cursor: grab;
+        touch-action: none;
+      }
+      .drawer-drag:active { cursor: grabbing; }
+      /* Account for the grab handle inside the scroll padding */
+      .drawer-scroll { padding-top: 24px !important; }
+
+      /* Liquid-glass close — pinned to the drawer viewport (above the scroll layer),
+         frosted translucent fill, hairline edge highlight, soft lift shadow. */
+      .drawer-close {
+        position: absolute !important;
+        top: 20px !important;
+        right: 20px !important;
+        width: 36px !important;
+        height: 36px !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: rgba(255, 255, 255, 0.14) !important;
+        backdrop-filter: blur(24px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.22) !important;
+        border-radius: 100px !important;
+        cursor: pointer !important;
+        color: #FFFFFF !important;
+        box-shadow:
+          0 10px 24px rgba(0, 0, 0, 0.35),
+          0 1px 2px rgba(0, 0, 0, 0.25),
+          inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+        z-index: 5 !important;
+      }
+      .drawer-close svg { display: block; }
+      .drawer-close svg path { stroke: #FFFFFF !important; }
+      .drawer-close:active { opacity: 0.85; transform: scale(0.96); }
+
+      .debug-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.3);
+        z-index: 65;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 240ms ease;
+      }
+
+      .debug-backdrop.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .drawer-close {
+        position: sticky;
+        top: 0;
+        margin: -8px -8px 16px auto;
+        display: flex;
+        width: 32px;
+        height: 32px;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        background: rgba(0, 0, 0, 0.04);
+        border-radius: 100px;
+        font-size: 18px;
+        color: rgba(0, 0, 0, 0.7);
+        cursor: pointer;
+      }
+    }
