@@ -1190,7 +1190,12 @@ import ReactDOM from 'react-dom';
        alongside the amount the way the rupee symbol normally would.
        `currentColor` lets the glyph inherit the surrounding text color. */
     const MoniesGlyph = ({ size = 14, color = 'currentColor' }) => (
-      <svg width={size} height={size} viewBox="0 0 10 10" fill="none"
+      /* viewBox tightened to the artwork bounds (path runs ~x:2 → 7.7,
+         y:0.1 → 9.6). The original 0 0 10 10 box left ~2 units of empty
+         space on each side, rendering as visible padding after the
+         glyph — fixed by cropping to "2 0 6 10" and matching width to
+         the new aspect (0.6 × height). */
+      <svg width={size * 0.6} height={size} viewBox="2 0 6 10" fill="none"
         style={{ display: 'inline-block', verticalAlign: '-0.14em', flexShrink: 0 }}
         aria-hidden="true">
         <path d="M3.76864 7.50822L4.8883 7.54262C5.62653 7.54262 6.33541 7.25939 6.88585 6.74455C7.41751 6.24002 7.7121 5.56694 7.7121 4.84111C7.7121 4.11528 7.41634 3.4422 6.88585 2.93767C6.34949 2.43314 5.63592 2.15451 4.87304 2.15451C3.54917 2.15451 2.41777 2.99615 2.12202 4.19325L2.10206 4.29874C2.06803 4.4673 2.10206 4.64045 2.20065 4.78951C2.29454 4.92367 2.44125 5.01999 2.61377 5.05439C2.64781 5.06356 2.69241 5.06356 2.73231 5.06356C2.97878 5.06356 3.20999 4.92367 3.31796 4.70351L3.43063 4.46271C3.76982 3.79422 4.27214 3.43876 4.88243 3.43876C5.28617 3.43876 5.65939 3.58782 5.9352 3.8527C6.2157 4.12216 6.36827 4.48221 6.36827 4.85716C6.36827 5.23212 6.2157 5.58758 5.9352 5.85704C5.63944 6.1265 5.27091 6.27557 4.88713 6.27557H2.67832C2.31919 6.27557 2.0293 6.56452 2.0293 6.91999C2.0293 7.64123 2.31919 8.3189 2.85554 8.82343C3.37195 9.32337 4.10548 9.60659 4.86366 9.60659H5.05027C5.4094 9.60659 5.69929 9.31763 5.69929 8.96217C5.69929 8.60671 5.4094 8.31775 5.05027 8.31775H4.88243C4.4787 8.31775 4.08553 8.18818 3.82967 7.90381C3.75925 7.82584 3.70761 7.72379 3.6724 7.64238C3.64541 7.57816 3.69588 7.50707 3.76747 7.50936L3.76864 7.50822Z" fill={color} />
@@ -2214,45 +2219,6 @@ import ReactDOM from 'react-dom';
       </>
     );
 
-    /* RW_D — Horizontal-scroll carousel of three reward cards.
-       All three share ExploreMedium's spec: 200×148, M radius, padding M,
-       caption top-left, H4 value below, real PNG icon in the bottom-right.
-       Spark is the brand-gradient hero (single chromatic moment); Fire +
-       Monies use the white card recipe. Copy mirrors the rest of the
-       Rewards section (Spark = "5 drops", Fire = "6 fires", Monies = "240")
-       so the section reads with one voice across variants. */
-    const RW_D_SPARK_GRADIENT = 'linear-gradient(135deg, #D30AD7 0%, #2B6ACF 100%)';
-    const RW_D = () => (
-      <HScroll gap={16}>
-        {/* Spark — brand-gradient hero, ExploreMedium-spec dimensions. */}
-        <button className="tap" style={{
-          flex: '0 0 200px', height: 148,
-          padding: 16, borderRadius: 16,
-          background: RW_D_SPARK_GRADIENT,
-          border: 'none', boxShadow: CARD_SHADOW,
-          display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
-          textAlign: 'left', position: 'relative', overflow: 'hidden',
-          cursor: 'pointer', scrollSnapAlign: 'start',
-        }}>
-          <div style={{ ...T.caption, color: 'rgba(255,255,255,0.7)' }}>Spark</div>
-          <div style={{ ...T.h3, color: '#FFFFFF', marginTop: 4 }}>5 drops</div>
-          <img src="/assets/spark_icon.png" width={52} height={52} alt=""
-            style={{ position: 'absolute', right: 16, bottom: 16, display: 'block', pointerEvents: 'none' }} />
-        </button>
-        {/* Fire — white ExploreMedium, fire_sparkle illustration. */}
-        <div style={{ flex: '0 0 200px', scrollSnapAlign: 'start' }}>
-          <ExploreMedium subtext="Fires" title="6 live"
-            icon={<img src="/assets/fire_sparkle.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
-        </div>
-        {/* Monies — white ExploreMedium, monies illustration + glyph. */}
-        <div style={{ flex: '0 0 200px', scrollSnapAlign: 'start' }}>
-          <ExploreMedium subtext="Monies"
-            title={<><MoniesGlyph size={18} /> 240</>}
-            icon={<img src="/assets/monies_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
-        </div>
-      </HScroll>
-    );
-
     /* E — Streak banner + carousel */
     const RW_E = () => (
       <>
@@ -2626,97 +2592,86 @@ import ReactDOM from 'react-dom';
       </PagePad>
     );
 
-    /* RW_L — Spark as the hero, Fire + Monies as a 2-up beneath.
-       PM rationale: Spark drops are the most time-sensitive reward
-       (cashback on visible brands, expires fast). Elevating Spark to
-       hero gives that urgency real visual weight while keeping Fire +
-       Monies discoverable as smaller tiles below. Brand-gradient hero
-       reads like a special offer, not a stat card.
-       State copy on the hero:
-         · default = "5 drops" (browse drops list)
-         · alt     = "1 active" (tap to claim) */
-    const RW_L = ({ isInCard }) => (
-      <>
-        <PagePad>
+    /* RW_N — Bento. Three reward tiles in an asymmetric 2-col grid:
+       Spark hero spans both rows on the left (brand gradient, soft
+       L-radius rounded rectangle); Fire is a pill on the top-right;
+       Monies is a tight rounded square on the bottom-right. Each tile
+       owns a distinct shape character so the trio reads as a curated
+       bento, not three identical tiles.
+         · Spark   → 28px radius (large soft rect, hero scale)
+         · Fire    → 100px radius (full pill / capsule)
+         · Monies  → 16px radius (M, the page's standard card radius)
+       Atom-level styling stays slice DLS: brand gradient on Spark,
+       white card recipe (Outline subtle + Card shadow) on the others. */
+    const RW_N = () => (
+      <PagePad>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '5fr 4fr',
+          gridTemplateRows: '116px 116px',
+          gap: 10,
+        }}>
+          {/* Spark — tall hero, brand gradient, soft rounded rect. */}
           <button className="tap" style={{
-            width: '100%', padding: 24, borderRadius: 16,
+            gridRow: 'span 2',
             background: 'linear-gradient(135deg, #D30AD7 0%, #2B6ACF 100%)',
-            boxShadow: CARD_SHADOW, border: 'none',
-            display: 'flex', alignItems: 'center', gap: 16,
+            borderRadius: 28, border: 'none', boxShadow: CARD_SHADOW,
+            padding: 18,
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'flex-start', justifyContent: 'space-between',
             textAlign: 'left', cursor: 'pointer',
+            overflow: 'hidden',
           }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <img src="/assets/spark_icon.png" width={44} height={44} alt=""
+              style={{ display: 'block' }} />
+            <div>
               <div style={{ ...T.caption, color: 'rgba(255,255,255,0.7)' }}>Spark</div>
               <div style={{ ...T.h3, color: '#FFFFFF', marginTop: 2 }}>5 drops</div>
             </div>
-            {/* Brand-logo stack pinned right, with the right-to-left
-                fade-in animation re-enabled. */}
-            <div style={{ flexShrink: 0 }}><SparkBrandStack animate /></div>
           </button>
-        </PagePad>
-        <Spacer h={16} />
-        <PagePad>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <ExploreMedium subtext="Fire games" title="6 fires"
-              icon={<img src="/assets/fire_sparkle.png" width={54} height={54} alt="" />} />
-            <ExploreMedium subtext="Monies"
-              title={<><MoniesGlyph size={18} /> 240</>}
-              icon={<img src="/assets/monies_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
-          </div>
-        </PagePad>
-      </>
+          {/* Fire — pill. */}
+          <button className="tap" style={{
+            background: '#FFFFFF',
+            borderRadius: 100, border: CARD_BORDER, boxShadow: CARD_SHADOW,
+            padding: '10px 14px',
+            display: 'flex', alignItems: 'center', gap: 10,
+            textAlign: 'left', cursor: 'pointer',
+            overflow: 'hidden',
+          }}>
+            <img src="/assets/fire_sparkle.png" width={36} height={36} alt=""
+              style={{ display: 'block', flexShrink: 0 }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }}>
+              <div style={{ ...T.caption, color: 'rgba(0,0,0,0.5)' }}>Fires</div>
+              <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.9)' }}>6 live</div>
+            </div>
+          </button>
+          {/* Monies — rounded square. */}
+          <button className="tap" style={{
+            background: '#FFFFFF',
+            borderRadius: 16, border: CARD_BORDER, boxShadow: CARD_SHADOW,
+            padding: 14,
+            display: 'flex', alignItems: 'center', gap: 10,
+            textAlign: 'left', cursor: 'pointer',
+            overflow: 'hidden',
+          }}>
+            <img src="/assets/monies_icon.png" width={36} height={36} alt=""
+              style={{ display: 'block', flexShrink: 0 }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }}>
+              <div style={{ ...T.caption, color: 'rgba(0,0,0,0.5)' }}>Monies</div>
+              <div style={{
+                ...T.btnSm, color: 'rgba(0,0,0,0.9)',
+                display: 'inline-flex', alignItems: 'center', gap: 2,
+              }}><MoniesGlyph size={12} /> 240</div>
+            </div>
+          </button>
+        </div>
+      </PagePad>
     );
 
-    /* RW_M — Fire is hero, Spark + Monies are smaller tiles beneath.
-       Simplified Spark tile: caption "Spark" + value ("5 drops" / "1
-       active") + brand icon, no excess copy. Mirrors the spark recipe
-       used in RW_F and RW_K so the Spark identity stays consistent
-       across variants. Fire hero pattern reuses RW_I (the "Win up to"
-       framing that tested best). */
-    const RW_M = ({ isInCard }) => (
-      <>
-        <PagePad>
-          <button className="tap" style={{
-            width: '100%', padding: 20, borderRadius: 16,
-            background: '#FFFFFF', border: CARD_BORDER, boxShadow: CARD_SHADOW,
-            display: 'flex', alignItems: 'center', gap: 20,
-            textAlign: 'left', cursor: 'pointer',
-          }}>
-            <div style={{ width: 92, height: 92, flexShrink: 0, display: 'grid', placeItems: 'center' }}>
-              <img src="/assets/fire_stack.png" alt="" style={{
-                width: 92, height: 92, objectFit: 'contain', display: 'block',
-              }} />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ ...T.h4 }}>Fire games</div>
-              <div style={{ ...T.caption, color: 'rgba(0,0,0,0.7)', marginTop: 4 }}>
-                Win up to <span style={{ color: 'rgba(0,0,0,0.9)', fontWeight: 500 }}><MoniesGlyph size={12} /> 4,657</span>
-              </div>
-              <div style={{ marginTop: 12 }}>
-                <span style={{
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  padding: '6px 16px', borderRadius: 100,
-                  background: 'transparent', border: '1px solid rgba(0,0,0,0.2)',
-                  ...T.btnSm, color: '#D30AD7', whiteSpace: 'nowrap',
-                }}>Play now</span>
-              </div>
-            </div>
-          </button>
-        </PagePad>
-        <Spacer h={16} />
-        <PagePad>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-            <ExploreMedium subtext="Spark" title="5 drops" icon={<SparkBrandStack />} />
-            <ExploreMedium subtext="Monies"
-              title={<><MoniesGlyph size={18} /> 240</>}
-              icon={<img src="/assets/monies_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
-          </div>
-        </PagePad>
-      </>
-    );
+
 
     const RewardsSection = ({ variant, isInCard }) => {
-      const C = { A: RW_A, B: RW_B, D: RW_D, E: RW_E, F: RW_F, G: RW_G, H: RW_H, I: RW_I, K: RW_K, L: RW_L, M: RW_M }[variant] || RW_F;
+      const C = { A: RW_A, B: RW_B, E: RW_E, F: RW_F, G: RW_G, H: RW_H, I: RW_I, K: RW_K, N: RW_N }[variant] || RW_F;
       return <C isInCard={isInCard} />;
     };
 
@@ -2788,13 +2743,32 @@ import ReactDOM from 'react-dom';
       </PagePad>
     );
 
-    /* D — Sparkline card + 2 list rows (NEW, hybrid visual + density) */
-    const ST_D = () => (
-      <>
+    /* ST_D — Top half of ST_L (caption + amount + delta + smooth-bezier
+       sparkline with brand gradient + pulse), no categories. Cleaner,
+       compact stat tile that shares ST_L's visual recipe so the section
+       reads with one voice. */
+    const ST_D = () => {
+      const VB_W = 120, VB_H = 48;
+      const pts = [
+        { x: 0,   y: 38 },
+        { x: 56,  y: 8  },
+        { x: 108, y: 22, current: true },
+      ];
+      const linePath = `M${pts[0].x} ${pts[0].y} ` + pts.slice(1).map((p, i) => {
+        const prev = pts[i];
+        return `C${prev.x + 22} ${prev.y} ${p.x - 22} ${p.y} ${p.x} ${p.y}`;
+      }).join(' ');
+      const cur = pts.find(p => p.current);
+      return (
         <PagePad>
-          <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 24 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-              {/* 3-label text stack — caption, featured amount, colored delta. */}
+          <div style={{
+            background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER,
+            borderRadius: 16, padding: 20,
+          }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              gap: 16,
+            }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>May spends</div>
                 <div style={{
@@ -2807,17 +2781,40 @@ import ReactDOM from 'react-dom';
                   color: '#00A63E', marginTop: 6,
                 }}>↓ 16% vs Apr</div>
               </div>
-              <svg width="100" height="40" viewBox="0 0 100 40" fill="none" style={{ flexShrink: 0 }}>
-                <path d="M0 30 L20 22 L40 26 L60 14 L80 8 L100 18"
-                  stroke="#D30AD7" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M0 30 L20 22 L40 26 L60 14 L80 8 L100 18 L100 40 L0 40 Z"
-                  fill="rgba(211,10,215,0.08)" />
+              <svg width={VB_W} height={VB_H} viewBox={`0 0 ${VB_W} ${VB_H}`}
+                fill="none" style={{ flexShrink: 0 }}>
+                <defs>
+                  <linearGradient id="st_d_fill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#D30AD7" stopOpacity="0.18" />
+                    <stop offset="100%" stopColor="#D30AD7" stopOpacity="0" />
+                  </linearGradient>
+                  <linearGradient id="st_d_bloom"
+                    x1={cur.x} y1={cur.y} x2={VB_W} y2={VB_H}
+                    gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#D30AD7" stopOpacity="0.18" />
+                    <stop offset="100%" stopColor="#D30AD7" stopOpacity="0" />
+                  </linearGradient>
+                  <linearGradient id="st_d_stroke" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#D30AD7" stopOpacity="0.55" />
+                    <stop offset="100%" stopColor="#D30AD7" stopOpacity="1" />
+                  </linearGradient>
+                </defs>
+                <path d={`${linePath} L${cur.x} ${VB_H} L${pts[0].x} ${VB_H} Z`}
+                  fill="url(#st_d_fill)" />
+                <path
+                  d={`M${cur.x} ${cur.y} C${cur.x + 4} ${cur.y + 6} ${VB_W - 2} ${VB_H * 0.55} ${VB_W} ${VB_H} L${cur.x} ${VB_H} Z`}
+                  fill="url(#st_d_bloom)" />
+                <path d={linePath} stroke="url(#st_d_stroke)" strokeWidth="2.5"
+                  fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx={cur.x} cy={cur.y} r="9" fill="rgba(211,10,215,0.18)" />
+                <circle cx={cur.x} cy={cur.y} r="4" fill="#D30AD7" />
+                <circle cx={cur.x} cy={cur.y} r="2" fill="#FFFFFF" />
               </svg>
             </div>
           </div>
         </PagePad>
-      </>
-    );
+      );
+    };
 
     /* E — Bar chart only (cashback/interest stripped per latest direction) */
     const ST_E = () => (
@@ -3185,7 +3182,7 @@ import ReactDOM from 'react-dom';
     };
 
     const StatsSection = ({ variant, isInCard }) => {
-      const C = { A: ST_A, B: ST_B, C: ST_C, D: ST_D, E: ST_E, F: ST_F, G: ST_G, K: ST_K, L: ST_L }[variant];
+      const C = { B: ST_B, C: ST_C, D: ST_D, E: ST_E, F: ST_F, G: ST_G, K: ST_K, L: ST_L }[variant];
       /* Whole stats card is a tap target — opens the Analytics page. */
       const openAnalytics = () => window.dispatchEvent(new CustomEvent('open-analytics'));
       return (
@@ -3626,12 +3623,12 @@ import ReactDOM from 'react-dom';
       },
       {
         key: 'rewards', label: 'Rewards & Benefits', variants: {
-          K: 'Triptych palette', L: 'Spark hero', M: 'Fire hero + Spark/Monies', G: 'Fire hero + 2 below', F: 'Featured Large + 2 Med', D: 'Carousel · brand-grad first',
+          K: 'Triptych palette', N: 'Bento · abstract shapes', G: 'Fire hero + 2 below', F: 'Featured Large + 2 Med',
         }
       },
       {
         key: 'stats', label: 'Statistics', variants: {
-          L: 'Inline graph + categories', K: 'Bar + top categories', A: 'Bar chart', D: 'Sparkline card', G: 'Analytics widget',
+          L: 'Inline graph + categories', K: 'Bar + top categories', D: 'Sparkline card', G: 'Analytics widget',
         }
       },
       {
@@ -3661,7 +3658,7 @@ import ReactDOM from 'react-dom';
       V1: {
         label: 'Exploration',
         headerStyle: 'List',
-        sections: { forYou: 'D', aiBanker: 'None', bills: 'C', rewards: 'G', stats: 'L', more: 'A', footer: 'A' },
+        sections: { forYou: 'D', aiBanker: 'None', bills: 'C', rewards: 'F', stats: 'L', more: 'A', footer: 'A' },
       },
     };
 
