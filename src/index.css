@@ -425,7 +425,10 @@
       position: relative;
     }
     [data-section] {
-      scroll-margin-top: calc(var(--bar-overlap, 118px) + 12px);
+      /* Land the section 20px BELOW the bottom of the app bar — never under
+         it. --bar-overlap is the app bar's vertical extent; +20 is the
+         breathing buffer per design. */
+      scroll-margin-top: calc(var(--bar-overlap, 118px) + 20px);
     }
     .section-block.active {
       animation: section-pulse 700ms ease both;
@@ -440,9 +443,26 @@
        state. Items get staggered animation-delay so they appear one-after-
        another (right → left). */
     @keyframes spark-brand-in {
-      from { opacity: 0; transform: translateX(10px) scale(0.92); }
-      to   { opacity: 1; transform: translateX(0)    scale(1); }
+      /* Jakub-style polish: pills enter with opacity + translateX + a tiny
+         blur. The blur dropping to 0 reads as "coming into focus" rather
+         than just sliding — gives the cascade a softer, more designed
+         feel without changing the silhouette. No scale. */
+      0%   { opacity: 0; transform: translateX(10px); filter: blur(4px); }
+      60%  { opacity: 1; }
+      100% { opacity: 1; transform: translateX(0);   filter: blur(0px); }
     }
+
+    /* spark-blob-in — slower, springy "blob" entry where each pill scales
+       up past its final size and settles, with a soft blur drop. Used in
+       contexts where pills should feel like they're MATERIALISING (small
+       tiles, ExploreMedium card) rather than streaming in. */
+    @keyframes spark-blob-in {
+      0%   { opacity: 0; transform: scale(0.35); filter: blur(8px); }
+      55%  { opacity: 1; transform: scale(1.18); filter: blur(0px); }
+      100% { opacity: 1; transform: scale(1);    filter: blur(0px); }
+    }
+
+
 
     /* RW_N orbit — parent rotates one full turn over a long duration so
        the motion reads as subtle drift, not a spinner. Children

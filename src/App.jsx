@@ -514,16 +514,150 @@ import ReactDOM from 'react-dom';
        Animation only starts once the stack is on-screen (IntersectionObserver)
        with a 100ms delay, so the user sees a clean entry every time. */
     const SparkBrandStack = ({
-      brands = ['brand_a.png', 'brand_b.png', 'brand_c.png', 'brand_d.png'],
+      brands = ['brand_a.png', 'brand_b.png', 'brand_c.png', 'brand_d.png', 'brand_e.png'],
       size = 32,
+      /* `iconSize` controls ONLY the initial spark-icon dimension; brand
+         circles still use `size`. Lets callers scale the attention-grabbing
+         spark up to match adjacent icons (e.g. Fire/Monies at ~52px) without
+         widening the cascaded pills stack. */
+      iconSize,
       overlap = 10,
-      durationMs = 500,
-      staggerMs = 180,
-      startDelayMs = 100,
-      /* `animate` controls the right-to-left fade-in. Off by default for
-         contexts where the stack sits next to static text — the staggered
-         entrance reads awkward when the text is already there. Opt in
-         explicitly (e.g. the original FY hero spark card). */
+      durationMs = 780,
+      staggerMs = 110,
+      /* Hold the spark icon on-screen for ~650ms after enter-viewport before
+         the rotate-and-cascade reveal — enough to register the spark as the
+         source object, smooth enough that the cascade reads as one
+         unhurried gesture rather than a snap. */
+      startDelayMs = 650,
+      /* `animate` controls the spark-icon → brand-pills reveal. Off by default
+         for contexts where the stack sits next to static text. Opt in
+         explicitly (e.g. the FY/RW hero spark card). When animate=true, the
+         initial state shows a single spark icon — it rotates and dissolves,
+         and the brand pills cascade in from the same spot.
+
+         The optional `play` prop lets a parent component control timing
+         directly (skips the internal observer + hold delay). If `play` is
+         undefined, an internal IntersectionObserver + startDelayMs hold runs.
+         Trigger fires only when the stack is well clear of the bottom nav
+         bar (rootMargin bottom −260px + threshold 0.85). */
+      animate = false,
+      play: externalPlay,
+      /* When `blobs` is true, pills enter via the spark-blob-in keyframe —
+         each scales up past 1 and settles with a soft blur drop. Slower,
+         springier feel for contexts where the pills should materialise
+         rather than slide. */
+      blobs = false,
+    }) => {
+      const externallyControlled = externalPlay !== undefined;
+      const rootRef = React.useRef(null);
+      const [internalPlay, setInternalPlay] = React.useState(!animate);
+      const play = externallyControlled ? externalPlay : internalPlay;
+      React.useEffect(() => {
+        if (!animate || externallyControlled) return;
+        const el = rootRef.current;
+        if (!el) return;
+        const obs = new IntersectionObserver(([entry]) => {
+          if (entry.isIntersecting) {
+            const t = setTimeout(() => setInternalPlay(true), startDelayMs);
+            obs.disconnect();
+            return () => clearTimeout(t);
+          }
+        }, { threshold: 0.85, rootMargin: '0px 0px -260px 0px' });
+        obs.observe(el);
+        return () => obs.disconnect();
+      }, [animate, externallyControlled, startDelayMs]);
+      const display = [...brands].reverse();
+      /* Linger-then-snap: ease-in curve holds the spark icon at near-full
+         visual state for the first 60-70% of the duration, then accelerates
+         it through the rotate-and-shrink so it's GONE by the time the pills
+         are settling. Set to 680ms for a smooth, unhurried rotation. */
+      const SPARK_ROTATE_MS = 680;
+      /* Hold the pills off by ~100ms so the spark's rotation is visible
+         before the first pill starts to land. Pills render OVER the spark
+         (zIndex), so the handoff is icon-rotates-then-pill-cascade rather
+         than overlap-then-fade. */
+      const FIRST_PILL_OVERLAP = SPARK_ROTATE_MS - 100;
+      const containerW = size + (display.length - 1) * (size - overlap);
+      const sparkIconSize = iconSize ?? size;
+      /* Container must be tall enough for both the brand pills (size) and
+         the (potentially larger) spark icon — take the max so the icon
+         doesn't get clipped by the smaller container height. */
+      const containerH = Math.max(size, sparkIconSize);
+      return (
+        <div ref={rootRef} style={{
+          position: 'relative',
+          width: containerW, height: containerH,
+          display: 'flex', flexDirection: 'row', alignItems: 'center',
+        }}>
+          {/* Initial-state spark icon — rotates + scales down + dissolves
+              when `play` flips. When animate=false this is never rendered.
+              Rendered at sparkIconSize so it can be sized independently of
+              the brand-pill diameter to match adjacent icons. Anchored to
+              the right edge so the pivot of the rotate lands where the
+              first brand pill will appear. */}
+          {animate && (
+            <img
+              src="/assets/spark_icon.png"
+              alt=""
+              aria-hidden
+              style={{
+                position: 'absolute',
+                right: 0, top: '50%',
+                width: sparkIconSize, height: sparkIconSize,
+                marginTop: -sparkIconSize / 2,
+                display: 'block',
+                opacity: play ? 0 : 1,
+                transform: play ? 'rotate(360deg) scale(0)' : 'rotate(0deg) scale(1)',
+                transition: `transform ${SPARK_ROTATE_MS}ms cubic-bezier(0.65, 0, 0.35, 1), opacity ${SPARK_ROTATE_MS - 200}ms cubic-bezier(0.7, 0, 0.84, 0) ${200}ms, filter ${SPARK_ROTATE_MS - 150}ms ease-in ${150}ms`,
+                filter: play ? 'blur(6px)' : 'blur(0px)',
+                transformOrigin: '50% 50%',
+                pointerEvents: 'none',
+                /* zIndex 0 — pills render ABOVE the spark icon and slide in
+                   OVER it. The icon sits behind, fading + rotating out
+                   underneath the incoming pills. */
+                zIndex: 0,
+              }}
+            />
+          )}
+          {display.map((src, di) => {
+            const animI = display.length - 1 - di;
+            return (
+              <div key={src} style={{
+                width: size, height: size, borderRadius: '50%',
+                overflow: 'hidden',
+                marginLeft: di === 0 ? 0 : -overlap,
+                zIndex: display.length - di,
+                boxShadow: '0 0 0 2px #fff',
+                opacity: animate ? 0 : 1,
+                animation: animate && play
+                  ? (blobs
+                    ? `spark-blob-in ${Math.round(durationMs * 1.4)}ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards 1`
+                    : `spark-brand-in ${durationMs}ms cubic-bezier(0.16, 1, 0.3, 1) forwards 1`)
+                  : 'none',
+                animationDelay: animate && play ? `${(SPARK_ROTATE_MS - FIRST_PILL_OVERLAP) + animI * staggerMs}ms` : '0ms',
+              }}>
+                <img src={`/assets/${src}`} alt="" style={{
+                  width: '100%', height: '100%', objectFit: 'cover', display: 'block',
+                }} />
+              </div>
+            );
+          })}
+        </div>
+      );
+    };
+
+    /* SparkBubbleCloud — alternate spark→brands reveal where the brand
+       circles aren't a tight row but a SCATTERED cluster anchored bottom-right
+       inside a 120×120 area. Sizes vary star-style (one bigger, one smaller)
+       and positions are hand-tuned to read as drifting bubbles, not a grid.
+       Initial state: spark icon at the bottom-right anchor. On viewport-enter
+       + startDelayMs hold, the spark rotates+scales out and the bubbles pop
+       in with a soft springy stagger from the same anchor outward. */
+    const SparkBubbleCloud = ({
+      brands = ['brand_a.png', 'brand_b.png', 'brand_c.png', 'brand_d.png', 'brand_e.png'],
+      width = 120, height = 120,
+      iconSize = 52,
+      startDelayMs = 750,
       animate = false,
     }) => {
       const rootRef = React.useRef(null);
@@ -538,27 +672,72 @@ import ReactDOM from 'react-dom';
             obs.disconnect();
             return () => clearTimeout(t);
           }
-        }, { threshold: 0.2 });
+        }, { threshold: 0.6, rootMargin: '0px 0px -200px 0px' });
         obs.observe(el);
         return () => obs.disconnect();
       }, [animate, startDelayMs]);
-      const display = [...brands].reverse();
+      /* Bubble offsets — balanced quincunx-style cluster with LIGHT corner
+         touches, not heavy overlap. B0 (32) anchor at bottom-right. B1
+         due-left of B0 with a 4px gap; B2 directly-above with a 4px gap;
+         B3 (24) sits in the NW-interior with light corner touches to
+         B0/B1/B2 (the "5" dot of the die); B4 (20, smallest) sits cleanly
+         upper-right, separated from the rest. Sizes 20-32, all bubbles
+         well clear of the text block at card_x ≤ 76. */
+      const BUBBLES = [
+        { size: 32, right: 0,  bottom: 0,  delay: 0 },
+        { size: 24, right: 36, bottom: 4,  delay: 90 },
+        { size: 24, right: 4,  bottom: 36, delay: 180 },
+        { size: 24, right: 26, bottom: 26, delay: 270 },
+        { size: 20, right: 14, bottom: 54, delay: 360 },
+      ];
+      const SPARK_ROTATE_MS = 680;
+      const BLOB_MS = 980;
       return (
         <div ref={rootRef} style={{
-          display: 'flex', flexDirection: 'row', alignItems: 'center',
+          position: 'relative', width, height,
         }}>
-          {display.map((src, di) => {
-            const animI = display.length - 1 - di;
+          {animate && (
+            <img
+              src="/assets/spark_icon.png"
+              alt="" aria-hidden
+              style={{
+                position: 'absolute',
+                right: 0, bottom: 0,
+                width: iconSize, height: iconSize,
+                display: 'block',
+                opacity: play ? 0 : 1,
+                transform: play ? 'rotate(360deg) scale(0)' : 'rotate(0deg) scale(1)',
+                transition: `transform ${SPARK_ROTATE_MS}ms cubic-bezier(0.65, 0, 0.35, 1), opacity ${SPARK_ROTATE_MS - 200}ms cubic-bezier(0.7, 0, 0.84, 0) ${200}ms, filter ${SPARK_ROTATE_MS - 150}ms ease-in ${150}ms`,
+                filter: play ? 'blur(6px)' : 'blur(0px)',
+                /* Rotate + scale about the icon's own center so the spin
+                   reads as the icon spinning in place (not pivoting around
+                   its bottom-right corner, which made it slide off-anchor
+                   during the rotation). */
+                transformOrigin: '50% 50%',
+                pointerEvents: 'none',
+                zIndex: 0,
+              }}
+            />
+          )}
+          {brands.map((src, i) => {
+            const b = BUBBLES[i];
+            if (!b) return null;
             return (
               <div key={src} style={{
-                width: size, height: size, borderRadius: '50%',
-                overflow: 'hidden',
-                marginLeft: di === 0 ? 0 : -overlap,
-                zIndex: display.length - di,
-                boxShadow: '0 0 0 2px #fff',
+                position: 'absolute',
+                right: b.right, bottom: b.bottom,
+                width: b.size, height: b.size,
+                borderRadius: '50%', overflow: 'hidden',
+                boxShadow: '0 0 0 2px #fff, 0 2px 8px rgba(0,0,0,0.08)',
                 opacity: animate ? 0 : 1,
-                animation: animate && play ? `spark-brand-in ${durationMs}ms ease-out forwards 1` : 'none',
-                animationDelay: animate && play ? `${animI * staggerMs}ms` : '0ms',
+                animation: animate && play
+                  ? `spark-blob-in ${BLOB_MS}ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards 1`
+                  : 'none',
+                animationDelay: animate && play ? `${(SPARK_ROTATE_MS - 80) + b.delay}ms` : '0ms',
+                /* Later bubbles render ON TOP — keeps the smaller satellite
+                   pills (notably the pink Nykaa at i=4) from getting hidden
+                   behind the bigger overlapping bubbles in the cluster. */
+                zIndex: i + 1,
               }}>
                 <img src={`/assets/${src}`} alt="" style={{
                   width: '100%', height: '100%', objectFit: 'cover', display: 'block',
@@ -750,7 +929,10 @@ import ReactDOM from 'react-dom';
       </div>
     );
 
-    const BillsShortcutGrid = ({ columnGap = 8, avatarVariant = 'tinted' }) => (
+    /* Labels for the 1-line variant — shorter words so each fits in one row
+       at the same caption font-size. Same column count and grid spacing. */
+    const BILL_ICONS_SINGLE = ['Credit', 'Power', 'Mobile', 'More'];
+    const BillsShortcutGrid = ({ columnGap = 8, avatarVariant = 'tinted', singleLine = false }) => (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: columnGap }}>
         {BILL_ICONS.map((b, i) => (
           <button key={i} className="tap" style={{
@@ -758,8 +940,12 @@ import ReactDOM from 'react-dom';
             display: 'flex', flexDirection: 'column', alignItems: 'center',
           }}>
             <BillAvatar variant={avatarVariant}>{b.glyph}</BillAvatar>
-            <div style={{ ...T.caption, textAlign: 'center', marginTop: 8, whiteSpace: 'pre-line', color: 'rgba(0,0,0,0.7)' }}>
-              {b.t}
+            <div style={{
+              ...T.caption, textAlign: 'center', marginTop: 8,
+              whiteSpace: singleLine ? 'nowrap' : 'pre-line',
+              color: 'rgba(0,0,0,0.7)',
+            }}>
+              {singleLine ? BILL_ICONS_SINGLE[i] : b.t}
             </div>
           </button>
         ))}
@@ -793,18 +979,26 @@ import ReactDOM from 'react-dom';
 
     /* ----- For You: A:carousel(NEW) B:strip(kept) C:medium(kept) D:hero-large(NEW) E:2-up-smalls(NEW) ----- */
 
-    /* Shared slide data + colour schemes for all For You carousel variants */
+    /* Shared slide data + colour schemes for all For You carousel variants.
+       `kind` classifies each slide as a UTILITY action (bill, statement,
+       spend insight — things the user must DO) or a PROMOTIONAL drop
+       (rewards, offers, launches — things the user can OPT INTO). FY_D and
+       FY_K colour their bg from kind so the cool-vs-warm wash signals the
+       card category without needing a text tag or intent chip. */
     const FY_SLIDES = [
       {
         title: 'Electricity bill due today', sub: '₹1,240 · due in 3 days', cta: 'Pay now',
+        kind: 'utility',
         heroImg: 'fy_3d_bill.png', centeredImg: 'fy_centered_bill.png', bannerImg: 'fy_banner_bill.png'
       },
       {
         title: 'New Spark Drop', sub: 'Fresh rewards just dropped', cta: 'Explore',
+        kind: 'promo',
         heroImg: 'fy_3d_drop.png', centeredImg: 'fy_centered_drop.png', bannerImg: 'fy_banner_drop.png'
       },
       {
         title: 'Spent ₹18K last month', sub: '22% higher than usual', cta: 'See report',
+        kind: 'utility',
         heroImg: 'fy_3d_spends.png', centeredImg: 'fy_centered_spends.png', bannerImg: 'fy_banner_spends.png'
       },
     ];
@@ -813,6 +1007,17 @@ import ReactDOM from 'react-dom';
       ['#E0F4E0', '#C2E6C2', '#9CD49C'],
       ['#FFE7CC', '#FAD0A8', '#F2B884'],
     ];
+    /* Two-scheme palette keyed by slide kind. Utility is a SMOOTH, LIGHT,
+       COOL blue wash — gentle enough to read as a clean informational
+       surface but visible enough that you clock the kind at a glance.
+       Promo is a brighter warm wash (currently Valentino but can be any
+       bright colour). Third stop pads to white to keep `lerpScheme`
+       3-tuple compatible. */
+    const FY_KIND_SCHEMES = {
+      utility: ['#D2E0F0', '#EAF0F8', '#FFFFFF'], // Smooth light cool blue → softer → white
+      promo:   ['#F5C5F5', '#FAE2FA', '#FFFFFF'], // Bright Valentino → Valentino-50 → white
+    };
+    const fySchemeForSlide = (s) => FY_KIND_SCHEMES[s.kind] || FY_KIND_SCHEMES.utility;
 
     /* Hex → rgb → lerp helpers for continuous gradient interpolation between slide schemes. */
     const _hexToRgb = (h) => {
@@ -893,15 +1098,29 @@ import ReactDOM from 'react-dom';
           }, 140);
         };
         el.addEventListener('scroll', onScroll, { passive: true });
-        const onDown = () => { paused.current = true; };
-        const onUp = () => { setTimeout(() => { paused.current = false; }, 3000); };
+        /* Interaction pause: keep paused while the user is touching the
+           carousel AND for 7s after they release. The longer post-release
+           hold gives them time to read the card they just landed on before
+           the auto-advance pulls it away. */
+        let releaseTimer;
+        const onDown = () => {
+          paused.current = true;
+          clearTimeout(releaseTimer);
+        };
+        const onUp = () => {
+          clearTimeout(releaseTimer);
+          releaseTimer = setTimeout(() => { paused.current = false; }, 7000);
+        };
         el.addEventListener('pointerdown', onDown);
         el.addEventListener('pointerup', onUp);
+        el.addEventListener('pointercancel', onUp);
         return () => {
           clearTimeout(settleTimer);
+          clearTimeout(releaseTimer);
           el.removeEventListener('scroll', onScroll);
           el.removeEventListener('pointerdown', onDown);
           el.removeEventListener('pointerup', onUp);
+          el.removeEventListener('pointercancel', onUp);
         };
       }, [slideCount]);
 
@@ -1020,16 +1239,23 @@ import ReactDOM from 'react-dom';
       const SLIDE_PCT = 100;
       const TEXT_BOTTOM = 52;
       const slideBg = (s) => {
-        /* Color holds at scheme[0] for the top quarter (covering the app bar
-           area), eases through scheme[1], then dissolves to white at the
-           bottom edge — opposite of FY_A which starts white at the top. */
-        return `linear-gradient(to bottom, ${s[0]} 0%, ${s[0]} 30%, ${s[1]} 70%, #FFFFFF 100%)`;
+        /* Color holds at scheme[0] for the top ~45% (covering the app bar
+           area), eases through scheme[1] up to ~85%, then only the bottom
+           15% dissolves to white. Earlier curve faded to white too aggressively,
+           leaving a big white band between the paginator and the next
+           section's heading. */
+        return `linear-gradient(to bottom, ${s[0]} 0%, ${s[0]} 45%, ${s[1]} 85%, #FFFFFF 100%)`;
       };
       const [ref, idx, progress] = useInfiniteCarousel(FY_SLIDES.length);
-      const lo = Math.floor(progress) % FY_SCHEMES.length;
-      const hi = (lo + 1) % FY_SCHEMES.length;
+      const lo = Math.floor(progress) % FY_SLIDES.length;
+      const hi = (lo + 1) % FY_SLIDES.length;
       const t = progress - Math.floor(progress);
-      const scheme = lerpScheme(FY_SCHEMES[lo], FY_SCHEMES[hi], t);
+      /* BG scheme is driven by the slide's KIND (utility vs promo), not by a
+         positional FY_SCHEMES index. Two-color palette means the wash cleanly
+         signals "action item" vs "offer" without any text tag or chip. The
+         lerp between adjacent slide schemes keeps the scroll-driven color
+         shift smooth. */
+      const scheme = lerpScheme(fySchemeForSlide(FY_SLIDES[lo]), fySchemeForSlide(FY_SLIDES[hi]), t);
       const renderedSlides = [FY_SLIDES[FY_SLIDES.length - 1], ...FY_SLIDES, FY_SLIDES[0]];
 
       return (
@@ -1080,6 +1306,87 @@ import ReactDOM from 'react-dom';
               ))}
             </div>
             <CarouselDots count={FY_SLIDES.length} activeIdx={idx} bottom={16} />
+          </div>
+        </>
+      );
+    };
+
+    /* FY_J — partitioned carousel. Same hero+text layout as FY_D, but each
+       slide carries its OWN discrete color block instead of a single background
+       that fades between scheme colors. The result reads as a series of cards,
+       not a continuous tinted surface. Hard edges at slide boundaries make
+       the carousel feel snappier and more product-shelf-like. */
+    const FY_J = ({ overlap = 'none' }) => {
+      const TEXT_TOP_CSS = 'calc(var(--bar-overlap, 118px) + 24px)';
+      /* Carousel height varies by which element overlaps the bottom edge:
+         · 'none' : no overlap → standard 220 MIN_H, 52 TEXT_BOTTOM.
+         · 'ab'   : AB_F pill (52px tall, marginTop:-44 → ~22px into the
+                    carousel) → only needs a modest bump for the pill seam
+                    + breathing above. MIN_H 240, TEXT_BOTTOM 70.
+         · 'bills': BL_J card (~140px tall, marginTop:-68 → ~half-overlap)
+                    → needs the full bump so the card's vertical center
+                    lands on the seam with 40px clear above the card top.
+                    MIN_H 292, TEXT_BOTTOM 108. */
+      const hideDots = overlap !== 'none';
+      const MIN_H = overlap === 'bills' ? 292 : overlap === 'ab' ? 240 : 220;
+      const SLIDE_PCT = 100;
+      const TEXT_BOTTOM = overlap === 'bills' ? 108 : overlap === 'ab' ? 70 : 52;
+      const [ref, idx] = useInfiniteCarousel(FY_SLIDES.length);
+      const renderedSlides = [FY_SLIDES[FY_SLIDES.length - 1], ...FY_SLIDES, FY_SLIDES[0]];
+      /* The active slide's scheme drives a parent-level absolute bg. As
+         the carousel snaps to the next slide, the bg hard-cuts to the new
+         scheme — no fade interpolation. The bg layer uses inset:0 + the
+         parent's negative marginTop so it stretches up under the app bar. */
+      const currentScheme = FY_SCHEMES[idx % FY_SCHEMES.length];
+      const sectionBg = `linear-gradient(180deg, ${currentScheme[0]} 0%, ${currentScheme[1]} 100%)`;
+      return (
+        <>
+          <div style={{ position: 'relative', marginTop: 'calc(-1 * var(--bar-overlap, 118px))', overflow: 'hidden' }}>
+            <div style={{
+              position: 'absolute', inset: 0, background: sectionBg,
+              pointerEvents: 'none', zIndex: 0,
+            }} />
+            <div ref={ref} style={{
+              position: 'relative', zIndex: 1,
+              display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
+              overscrollBehavior: 'none',
+            }} className="scrollbar-hide">
+              {renderedSlides.map((s, i) => (
+                <div key={i} style={{
+                  flex: `0 0 ${SLIDE_PCT}%`, scrollSnapAlign: 'start',
+                  position: 'relative', minHeight: MIN_H, overflow: 'hidden',
+                  background: 'transparent',
+                }}>
+                  <div style={{
+                    position: 'absolute', right: 20, top: TEXT_TOP_CSS, bottom: TEXT_BOTTOM,
+                    width: 96, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    pointerEvents: 'none',
+                  }}>
+                    <img src={`/assets/${s.heroImg}`} alt="" style={{
+                      width: 96, height: 96, objectFit: 'contain',
+                      borderRadius: 20, display: 'block',
+                    }} />
+                  </div>
+                  <div style={{
+                    position: 'relative', width: '100%',
+                    paddingTop: TEXT_TOP_CSS, paddingRight: 120, paddingBottom: TEXT_BOTTOM, paddingLeft: 28,
+                    display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                    minHeight: MIN_H, boxSizing: 'border-box', zIndex: 1,
+                  }}>
+                    <div>
+                      <div style={{ ...T.h4, lineHeight: '20px' }}>{s.title}</div>
+                      <div style={{ ...T.caption, color: 'rgba(0,0,0,0.7)', marginTop: 4 }}>{s.sub}</div>
+                    </div>
+                    <button className="tap" style={{
+                      alignSelf: 'flex-start', marginTop: 12,
+                      padding: '6px 14px', background: '#000', border: 'none', borderRadius: 100,
+                      ...T.btnSm, color: 'white', cursor: 'pointer', whiteSpace: 'nowrap',
+                    }}>{s.cta}</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {!hideDots && <CarouselDots count={FY_SLIDES.length} activeIdx={idx} bottom={16} />}
           </div>
         </>
       );
@@ -1247,6 +1554,17 @@ import ReactDOM from 'react-dom';
         const el = cardRefs.current[origIdx];
         if (el && el.getAnimations) el.getAnimations().forEach(a => a.cancel());
       };
+      /* Inner setTimeout IDs scheduled by the auto-cycle (the z-drop at apex
+         and the setOrder at the end of the cycle). Tracked in a ref so a
+         manual drag can clear them — otherwise a stale setOrder from an
+         in-flight cycle would fire AFTER the user committed a drag and
+         silently reshuffle the deck, manifesting as the middle card
+         "randomly" appearing on top. */
+      const cycleTimers = React.useRef([]);
+      const clearCycleTimers = () => {
+        cycleTimers.current.forEach(t => clearTimeout(t));
+        cycleTimers.current = [];
+      };
       /* Cancel every in-flight auto-cycle animation and clear the
          elevated z-index the cycle sets on the leaving card. Used on
          pointer-down so the user's drag starts from a clean state with
@@ -1257,6 +1575,7 @@ import ReactDOM from 'react-dom';
           if (!el) return;
           if (el.getAnimations) el.getAnimations().forEach(a => a.cancel());
         });
+        clearCycleTimers();
         /* Clear any in-flight z-lift via React so the next render
            rebinds z-indexes deterministically from stack position. */
         setZOverride(null);
@@ -1342,16 +1661,25 @@ import ReactDOM from 'react-dom';
                 ];
             el.animate(keyframes, { duration: DURATION, fill: 'forwards' });
           });
-          /* Z drops at the apex so the descending half passes UNDER. */
-          setTimeout(() => {
+          /* Z drops at the apex so the descending half passes UNDER. The
+             two inner timers are pushed into cycleTimers so a mid-cycle
+             cancel (e.g. user grabs the deck) can clear them — otherwise
+             the trailing setOrder fires AFTER the user's drag committed
+             and silently reshuffles the deck. */
+          const tApex = setTimeout(() => {
             setZOverride({ id: topId, z: 0 });
           }, DURATION * APEX_AT);
-          setTimeout(() => {
+          cycleTimers.current.push(tApex);
+          const tEnd = setTimeout(() => {
             setOrder(newOrder);
             setZOverride(null);
           }, DURATION + 30);
+          cycleTimers.current.push(tEnd);
         }, 2500);
-        return () => clearTimeout(id);
+        return () => {
+          clearTimeout(id);
+          clearCycleTimers();
+        };
       }, [autoScroll, dragging, cooldown, order]);
 
       const onPointerDown = (e) => {
@@ -1522,30 +1850,28 @@ import ReactDOM from 'react-dom';
       );
     };
 
-    /* FY_B — HScroll banner carousel themed with slice DLS palette.
-       Per-slide visual identity:
-         · Bill due  → Valentino-50 (#FAE2FA) — urgency in slice's signature pink
-         · Spark drop → slice brand gradient (#D30AD7 → #2B6ACF) with white text
-         · Spends    → Slate-10 (#F6F9FC) light neutral
-       CTAs reuse slice purple / white / slate-900 per surface contrast. */
-    /* CTA is the same dark pill on every banner so the action affordance is
-       instantly recognisable regardless of slide. Matches the dark-pill CTA
-       used in FY_A. */
+    /* FY_B — HScroll banner carousel, redesigned 2026-05-17 for DLS alignment.
+       Surface = solid DLS Tier-30/50 tints (no custom gradients). Category chip
+       distinguishes UTILITY (Slate-30 surface) from BRAND/REWARD (Valentino-50
+       surface). Within each category, the chip intent (negative/info/main)
+       names the specific kind of card. CTA is the same dark pill across all
+       three so the action affordance reads identically regardless of slide. */
     const FY_B_CTA_BG = '#171A1F';
     const FY_B_CTA_COLOR = '#FFFFFF';
     const FY_B_THEMES = [
-      /* Bill due — pink (matching FY_A scheme[0] → scheme[2]) */
-      { bg: 'linear-gradient(135deg, #FCE3FC 0%, #F5C8F5 50%, #E5A8E5 100%)',
-        titleColor: 'rgba(0,0,0,0.9)', subColor: 'rgba(0,0,0,0.7)', ctaBg: FY_B_CTA_BG, ctaColor: FY_B_CTA_COLOR },
-      /* Spark — peach pastel from DLS Orange-50 → 400 family. Warm "fresh
-       drop" energy that sits in the same soft tonal family as the pink bill
-       and green spends cards instead of fighting them with a saturated
-       brand gradient. */
-      { bg: 'linear-gradient(135deg, #FFF3E3 0%, #FAD0A8 50%, #F2B884 100%)',
-        titleColor: 'rgba(0,0,0,0.9)', subColor: 'rgba(0,0,0,0.7)', ctaBg: FY_B_CTA_BG, ctaColor: FY_B_CTA_COLOR },
-      /* Spends — green (matching FY_A scheme[0] → scheme[2]) */
-      { bg: 'linear-gradient(135deg, #E0F4E0 0%, #C2E6C2 50%, #9CD49C 100%)',
-        titleColor: 'rgba(0,0,0,0.9)', subColor: 'rgba(0,0,0,0.7)', ctaBg: FY_B_CTA_BG, ctaColor: FY_B_CTA_COLOR },
+      /* Bill due — utility category, negative intent (money out). */
+      { bg: '#F0F4F7', chipIntent: 'negative', chipLabel: 'Bill',
+        titleColor: 'rgba(0,0,0,0.9)', subColor: 'rgba(0,0,0,0.7)',
+        ctaBg: FY_B_CTA_BG, ctaColor: FY_B_CTA_COLOR },
+      /* Spark drop — brand category, main intent (Valentino). The only
+         brand-tinted card so it visually pops from the utility group. */
+      { bg: '#FAE2FA', chipIntent: 'main', chipLabel: 'Drop',
+        titleColor: 'rgba(0,0,0,0.9)', subColor: 'rgba(0,0,0,0.7)',
+        ctaBg: FY_B_CTA_BG, ctaColor: FY_B_CTA_COLOR },
+      /* Spends report — utility category, info intent (insight, neutral). */
+      { bg: '#F0F4F7', chipIntent: 'info', chipLabel: 'Insight',
+        titleColor: 'rgba(0,0,0,0.9)', subColor: 'rgba(0,0,0,0.7)',
+        ctaBg: FY_B_CTA_BG, ctaColor: FY_B_CTA_COLOR },
     ];
 
     /* useDragToScroll — desktop mouse drag-to-scroll for horizontal scrollers.
@@ -1642,57 +1968,88 @@ import ReactDOM from 'react-dom';
         init();
       }, []);
 
+      /* Track whether the carousel is actively scrolling — used to gate the
+         edge-teleport AND the auto-advance interval. Three flags interact:
+           · scrolling.current — true between scroll events; clears 250ms after
+             the last scroll event fires. Use `scrollend` when supported.
+           · paused.current    — true between pointerdown and 5s after pointerup.
+           · teleporting.current — true during the edge clone-jump RAF tick.
+         The carousel is "quiet" only when all three are false. */
+      const scrolling = React.useRef(false);
+
       React.useEffect(() => {
         const el = ref.current;
         if (!el) return;
         let settleTimer;
-        const onScroll = () => {
+        let scrollIdleTimer;
+        const SCROLL_IDLE_MS = 250;
+        const supportsScrollend = 'onscrollend' in el;
+
+        const tryTeleport = () => {
           if (teleporting.current) return;
-          clearTimeout(settleTimer);
-          settleTimer = setTimeout(() => {
-            const pos = Math.round(el.scrollLeft / STRIDE);
-            if (pos <= 0) {
-              teleporting.current = true;
-              const prev = el.style.scrollBehavior;
-              el.style.scrollBehavior = 'auto';
-              el.scrollLeft = STRIDE * N;
-              requestAnimationFrame(() => {
-                el.style.scrollBehavior = prev;
-                teleporting.current = false;
-              });
-            } else if (pos >= N + 1) {
-              teleporting.current = true;
-              const prev = el.style.scrollBehavior;
-              el.style.scrollBehavior = 'auto';
-              el.scrollLeft = STRIDE;
-              requestAnimationFrame(() => {
-                el.style.scrollBehavior = prev;
-                teleporting.current = false;
-              });
-            }
-          }, 160);
+          const pos = Math.round(el.scrollLeft / STRIDE);
+          if (pos > 0 && pos < N + 1) return; // not at an edge
+          teleporting.current = true;
+          const prev = el.style.scrollBehavior;
+          el.style.scrollBehavior = 'auto';
+          el.scrollLeft = pos <= 0 ? STRIDE * N : STRIDE;
+          // Two RAF ticks: first paint absorbs the jump, second restores smooth.
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              el.style.scrollBehavior = prev;
+              teleporting.current = false;
+            });
+          });
         };
+
+        const markIdle = () => {
+          scrolling.current = false;
+          tryTeleport();
+        };
+
+        const onScroll = () => {
+          scrolling.current = true;
+          if (teleporting.current) return;
+          if (supportsScrollend) return; // scrollend will handle it
+          clearTimeout(settleTimer);
+          clearTimeout(scrollIdleTimer);
+          settleTimer = setTimeout(tryTeleport, SCROLL_IDLE_MS);
+          scrollIdleTimer = setTimeout(() => { scrolling.current = false; }, SCROLL_IDLE_MS);
+        };
+        const onScrollEnd = () => {
+          scrolling.current = false;
+          tryTeleport();
+        };
+
         el.addEventListener('scroll', onScroll, { passive: true });
+        if (supportsScrollend) el.addEventListener('scrollend', onScrollEnd);
         const onDown = () => { paused.current = true; };
-        const onUp = () => { setTimeout(() => { paused.current = false; }, 3000); };
+        const onUp = () => { setTimeout(() => { paused.current = false; }, 5000); };
         el.addEventListener('pointerdown', onDown);
         el.addEventListener('pointerup', onUp);
+        el.addEventListener('pointercancel', onUp);
         return () => {
           el.removeEventListener('scroll', onScroll);
+          if (supportsScrollend) el.removeEventListener('scrollend', onScrollEnd);
           el.removeEventListener('pointerdown', onDown);
           el.removeEventListener('pointerup', onUp);
+          el.removeEventListener('pointercancel', onUp);
           clearTimeout(settleTimer);
+          clearTimeout(scrollIdleTimer);
         };
       }, [N]);
 
-      /* Auto-advance every 4s — pauses for 3s after any user touch. */
+      /* Auto-advance every 5s — pauses for 5s after any user touch AND blocks
+         if the carousel is currently mid-scroll/inertia. Together this means a
+         user can scroll cleanly without an auto-advance colliding with their
+         own gesture. */
       React.useEffect(() => {
         const el = ref.current;
         if (!el) return;
         const t = setInterval(() => {
-          if (paused.current || teleporting.current) return;
+          if (paused.current || teleporting.current || scrolling.current) return;
           el.scrollBy({ left: STRIDE, behavior: 'smooth' });
-        }, 4000);
+        }, 5000);
         return () => clearInterval(t);
       }, []);
 
@@ -1700,7 +2057,7 @@ import ReactDOM from 'react-dom';
       useDragToScroll(ref);
 
       return (
-        <div style={{ paddingTop: 16, paddingBottom: 40 }}>
+        <div style={{ paddingTop: 16, paddingBottom: 32 }}>
           <div ref={ref} style={{
             /* overflowY MUST be explicit `hidden` — pairing `auto` with
                `visible` silently promotes both axes to `auto` on mobile and
@@ -1744,10 +2101,9 @@ import ReactDOM from 'react-dom';
                     display: 'flex', flexDirection: 'column', justifyContent: 'space-between', textAlign: 'left',
                     position: 'relative', overflow: 'hidden',
                   }}>
-                    {/* Title runs the full card width — the hero sits in the
-                        bottom-right corner so there's no vertical overlap with
-                        the title row. Sub gets paddingRight to clear the hero
-                        only on its own line. */}
+                    {/* Card type is signalled purely by surface color: Slate-30
+                        for utility cards (Bill, Spends), Valentino-50 for brand
+                        drops (Spark). No category chip — color does the work. */}
                     <div style={{ width: '100%', position: 'relative', zIndex: 1 }}>
                       <div style={{
                         ...T.h4, lineHeight: '20px', color: th.titleColor,
@@ -1773,7 +2129,6 @@ import ReactDOM from 'react-dom';
         </div>
       );
     };
-
 
 
 
@@ -1915,9 +2270,9 @@ import ReactDOM from 'react-dom';
     };
 
 
-    const ForYouSection = ({ variant, autoScroll }) => {
-      const C = { A: FY_A, B: FY_B, C: FY_C, D: FY_D, F: FY_F, I: FY_I }[variant] || FY_I;
-      return <C autoScroll={autoScroll} />;
+    const ForYouSection = ({ variant, autoScroll, fyOverlap }) => {
+      const C = { A: FY_A, B: FY_B, C: FY_C, D: FY_D, F: FY_F, I: FY_I, J: FY_J }[variant] || FY_I;
+      return <C autoScroll={autoScroll} overlap={fyOverlap} />;
     };
 
     /* ----- AI Banker — all 5 are inline-input variants (extends previous E) ----- */
@@ -2074,7 +2429,35 @@ import ReactDOM from 'react-dom';
       );
     };
 
-    const AiBankerSection = ({ variant }) => ({ A: AB_A, B: AB_B, C: AB_C, D: AB_D, E: AB_E }[variant])();
+    /* AB_F — overlapping search-bar variant. Visually identical to AB_A
+       (clean pill, AI icon, rolling questions) but pulls up with negative
+       marginTop so it sits ON the bottom edge of the For-You gradient
+       carousel above. Inspired by Grab's sticky search bar that overlays
+       the bottom of the deals banner. Pairs with FY_J (partitioned carousel
+       with paginator hidden) for a cohesive top-of-page combo. */
+    const AB_F = () => (
+      <PagePad>
+        {/* Pill height is 52 → marginTop -26 centres its vertical midpoint
+            exactly on the carousel's bottom seam. Half (26px) overlaps the
+            carousel above, half (26px) sits in the white below. */}
+        <div style={{ marginTop: -26, position: 'relative', zIndex: 2 }}>
+          <button className="tap" style={{
+            width: '100%', height: 52, padding: '0 18px', boxSizing: 'border-box',
+            display: 'flex', alignItems: 'center', gap: 12,
+            background: '#FFFFFF', border: '1px solid rgba(0,0,0,0.05)', borderRadius: 100,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.10), 0 2px 6px rgba(0,0,0,0.04)',
+            cursor: 'pointer', textAlign: 'left',
+          }}>
+            <img src="/assets/ai_icon.png" width={23} height={23} alt="" style={{ display: 'block', flexShrink: 0 }} />
+            <span style={{ ...T.bodySm, color: 'rgba(0,0,0,0.5)', lineHeight: '20px', flex: 1, minWidth: 0 }}>
+              <RollingText items={AB_QUESTIONS} />
+            </span>
+          </button>
+        </div>
+      </PagePad>
+    );
+
+    const AiBankerSection = ({ variant }) => ({ A: AB_A, B: AB_B, C: AB_C, D: AB_D, E: AB_E, F: AB_F }[variant])();
 
     /* ----- Bills & Recharges — no nudges (urgency lives in For You). No inner heading
        (the section header above is the title). 5 ways to present the shortcut surface. ----- */
@@ -2101,6 +2484,26 @@ import ReactDOM from 'react-dom';
     const BL_C = () => (
       <PagePad style={{ paddingTop: 8 }}>
         <BillsShortcutGrid avatarVariant="outline" />
+      </PagePad>
+    );
+
+    /* BL_J — Floating bills card. Designed exclusively for the FY=J + AB=None
+       combo. Rendered without a section header or inter-section spacer (see
+       ExplorePage's combo branch), so this card's negative marginTop is the
+       only thing positioning it relative to the FY_J carousel's hard bottom
+       edge. Pulled up ~half its own height so the card straddles the seam:
+       roughly half above (overlapping the carousel), half below. */
+    const BL_J = () => (
+      <PagePad>
+        <div style={{
+          marginTop: -68, position: 'relative', zIndex: 2,
+          background: '#FFFFFF',
+          border: CARD_BORDER, borderRadius: 16,
+          boxShadow: CARD_SHADOW,
+          padding: '20px 12px',
+        }}>
+          <BillsShortcutGrid columnGap={4} avatarVariant="tinted" />
+        </div>
       </PagePad>
     );
 
@@ -2178,7 +2581,7 @@ import ReactDOM from 'react-dom';
     );
 
     const BillsSection = ({ variant, isInCard }) => {
-      const C = { A: BL_A, B: BL_B, C: BL_C, D: BL_D, E: BL_E, F: BL_F }[variant];
+      const C = { A: BL_A, B: BL_B, C: BL_C, D: BL_D, E: BL_E, F: BL_F, J: BL_J }[variant];
       return <C isInCard={isInCard} />;
     };
 
@@ -2283,6 +2686,94 @@ import ReactDOM from 'react-dom';
         <img src="/assets/spark_icon.png" width={22} height={22} alt="" style={{ display: 'block' }} />
       </div>
     );
+    /* SparkHeroCard — RW_F's hero.
+       Sequence on enter-viewport (tuned for smooth, unhurried pacing):
+         t=0       : "Save ₹1200" visible, spark icon visible
+         t≈650ms   : spark icon rotates+shrinks (680ms) → brand pills cascade
+                     in (780ms each, 110ms stagger, last pill lands ~t≈2450ms)
+         t≈2450ms  : title pushes up to next entry (800ms slide, lands ~3250ms)
+         every 5200ms thereafter: title pushes up to the next entry
+                     (continuous same-direction rotation — never reverses) */
+    const SPARK_TITLES = ['Save ₹1200', '5 drops live'];
+    const SparkHeroCard = () => {
+      const rootRef = React.useRef(null);
+      const [cycleIdx, setCycleIdx] = React.useState(0);
+      const [pillsPlay, setPillsPlay] = React.useState(false);
+      React.useEffect(() => {
+        const el = rootRef.current;
+        if (!el) return;
+        let pillsTimer, firstSwap, loopInterval;
+        const obs = new IntersectionObserver(([entry]) => {
+          if (entry.isIntersecting) {
+            pillsTimer = setTimeout(() => setPillsPlay(true), 650);
+            firstSwap = setTimeout(() => {
+              setCycleIdx((i) => i + 1);
+              loopInterval = setInterval(() => {
+                setCycleIdx((i) => i + 1);
+              }, 5200);
+            }, 2450);
+            obs.disconnect();
+          }
+        }, { threshold: 0.85, rootMargin: '0px 0px -260px 0px' });
+        obs.observe(el);
+        return () => {
+          obs.disconnect();
+          clearTimeout(pillsTimer);
+          clearTimeout(firstSwap);
+          clearInterval(loopInterval);
+        };
+      }, []);
+      const titleSlideMs = 800;
+      const titleEasing = 'cubic-bezier(0.22, 1, 0.36, 1)';
+      const ROW_H = 24;
+      /* Render enough strip rows to cover the current cycle plus a buffer.
+         Each row sits at its own translateY offset; the WHOLE strip never
+         resets — translateY just keeps moving up. This guarantees rotation
+         direction is identical on every swap (no teleport, no reverse). */
+      const stripLen = cycleIdx + 4;
+      const stripItems = React.useMemo(
+        () => Array.from({ length: stripLen }, (_, i) => SPARK_TITLES[i % SPARK_TITLES.length]),
+        [stripLen]
+      );
+      return (
+        <button ref={rootRef} className="tap" style={{
+          width: '100%', padding: 20, borderRadius: 16,
+          background: '#FFFFFF', border: CARD_BORDER, boxShadow: CARD_SHADOW,
+          textAlign: 'left', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', gap: 16,
+          position: 'relative', overflow: 'hidden',
+        }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ ...T.caption, color: 'rgba(0,0,0,0.5)' }}>Spark</div>
+            {/* Title rolls upward continuously. The strip's translateY keeps
+                increasing so the eye always sees motion in the same direction. */}
+            <div style={{
+              position: 'relative', marginTop: 4, height: ROW_H,
+              overflow: 'hidden',
+            }}>
+              <div style={{
+                position: 'absolute', top: 0, left: 0, right: 0,
+                transform: `translateY(${-cycleIdx * ROW_H}px)`,
+                transition: `transform ${titleSlideMs}ms ${titleEasing}`,
+                willChange: 'transform',
+              }}>
+                {stripItems.map((t, i) => (
+                  <div key={i} style={{
+                    ...T.h3, color: 'rgba(0,0,0,0.9)',
+                    height: ROW_H, lineHeight: `${ROW_H}px`,
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                  }}>{t}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div style={{ flexShrink: 0 }}>
+            <SparkBrandStack animate play={pillsPlay} iconSize={44} size={32} overlap={10} />
+          </div>
+        </button>
+      );
+    };
+
     const RW_F = ({ isInCard }) => {
       /* Simplified spark hero — same content pattern as the spark tile
          in RW_K, scaled up to hero size. Single icon + single label/value
@@ -2292,31 +2783,10 @@ import ReactDOM from 'react-dom';
          The previous version had: title row + divider + brand-logo stack
          + meta line ("4 sparks live · Due in 5 days"). All of that is
          repeat content for a one-glance Explore card — pruned. */
-      const sparkHero = (
-        <button className="tap" style={{
-          width: '100%', padding: 20, borderRadius: 16,
-          background: '#FFFFFF', border: CARD_BORDER, boxShadow: CARD_SHADOW,
-          textAlign: 'left', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', gap: 16,
-          position: 'relative', overflow: 'hidden',
-        }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ ...T.caption, color: 'rgba(0,0,0,0.5)' }}>Spark</div>
-            <div style={{ ...T.h4, color: 'rgba(0,0,0,0.9)', marginTop: 2 }}>
-              5 drops
-            </div>
-          </div>
-          {/* Brand-logo stack pinned right, with the right-to-left
-              fade-in animation re-enabled. The text on the left stays
-              put while the brand circles cascade in on mount. */}
-          <div style={{ flexShrink: 0 }}>
-            <SparkBrandStack animate />
-          </div>
-        </button>
-      );
-      const bottomRow = (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
-          <ExploreMedium subtext="Fire games" title="5 fires"
+      const sparkHero = <SparkHeroCard />;
+      const fireMoniesRow = (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+          <ExploreMedium subtext="Fire games" title="3 fires"
             icon={<img src="/assets/fire_sparkle.png" width={54} height={54} alt="" />} />
           <ExploreMedium subtext="Monies"
             title={<><MoniesGlyph size={18} /> 240</>}
@@ -2325,8 +2795,8 @@ import ReactDOM from 'react-dom';
       );
       return (
         <PagePad>
-          {sparkHero}
-          {bottomRow}
+          {fireMoniesRow}
+          <div style={{ marginTop: 16 }}>{sparkHero}</div>
         </PagePad>
       );
     };
@@ -2388,7 +2858,7 @@ import ReactDOM from 'react-dom';
             <ExploreMedium
               subtext="Spark"
               title="5 live"
-              icon={<SparkBrandStack />} />
+              icon={<SparkBubbleCloud animate iconSize={52} />} />
             <ExploreMedium subtext="Monies"
               title={<><MoniesGlyph size={18} /> 240</>}
               icon={<img src="/assets/monies_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
@@ -2546,16 +3016,16 @@ import ReactDOM from 'react-dom';
       <PagePad>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
           {RW_K_TILES.map(t => {
-            const isBrand = t.surface === 'brand';
-            const labelColor = isBrand ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.5)';
-            const valueColor = isBrand ? '#FFFFFF' : 'rgba(0,0,0,0.9)';
+            /* All three tiles share the same white-card surface — the
+               spark icon's orange-bolt illustration carries the differentiation
+               on its own. No bg/text color override per tile. */
+            const labelColor = 'rgba(0,0,0,0.5)';
+            const valueColor = 'rgba(0,0,0,0.9)';
             return (
               <button key={t.key} className="tap" style={{
                 padding: '20px 12px', borderRadius: 16,
-                background: isBrand
-                  ? 'linear-gradient(135deg, #D30AD7 0%, #2B6ACF 100%)'
-                  : '#FFFFFF',
-                border: isBrand ? 'none' : CARD_BORDER,
+                background: '#FFFFFF',
+                border: CARD_BORDER,
                 boxShadow: CARD_SHADOW,
                 /* Centered composition. Reward tiles aren't data cards
                    (where top-left labels work) — they're identity tiles,
@@ -2571,7 +3041,7 @@ import ReactDOM from 'react-dom';
                 overflow: 'hidden',
               }}>
                 {t.iconAsset
-                  ? <img src={`/assets/${t.iconAsset}`} width={48} height={48} alt=""
+                  ? <img src={`/assets/${t.iconAsset}`} width={40} height={40} alt=""
                       style={{ display: 'block' }} />
                   : t.iconNode}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -2670,8 +3140,51 @@ import ReactDOM from 'react-dom';
 
 
 
+    /* RW_O — Deck-to-expand. Three clean cards (Monies / Fires / Spark)
+       start STACKED like a deck. When the section scrolls into the viewport,
+       the IntersectionObserver flips `expanded` and the cards animate to
+       three equally-spaced slots in a vertical column. Each card carries
+       just a heading + subheading — no CTAs, no extra stats, no chevrons.
+       Card 0 sits on top of the stack initially; the trailing cards fan
+       out below it on expansion. */
+    /* RW_O — Three SEPARATE white DLS cards stacked vertically (Monies /
+       Fires / Spark). Each card is a complete tap target with its own
+       border, shadow, and radius — reads as three peer entry points
+       rather than three rows of one list. 12px gap between cards. */
+    const RW_O_ROWS = [
+      { label: 'Monies', headline: <><MoniesGlyph size={20} /><span>&nbsp;240</span></>, icon: 'monies_icon.png' },
+      { label: 'Fires',  headline: '3 ready',          icon: 'fire_sparkle.png' },
+      { label: 'Spark',  headline: '5 drops live',     icon: 'spark_icon.png' },
+    ];
+    const RW_O = () => (
+      <PagePad>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {RW_O_ROWS.map((row) => (
+            <button key={row.label} className="tap" style={{
+              width: '100%', padding: '18px 20px',
+              background: '#FFFFFF', border: CARD_BORDER, boxShadow: CARD_SHADOW,
+              borderRadius: 16,
+              textAlign: 'left', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 16,
+            }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ ...T.caption, color: 'rgba(0,0,0,0.5)' }}>{row.label}</div>
+                <div style={{
+                  ...T.h3, color: 'rgba(0,0,0,0.9)', marginTop: 2,
+                  display: 'inline-flex', alignItems: 'baseline',
+                }}>{row.headline}</div>
+              </div>
+              <img src={`/assets/${row.icon}`} width={44} height={44} alt=""
+                style={{ display: 'block', flexShrink: 0 }} />
+            </button>
+          ))}
+        </div>
+      </PagePad>
+    );
+
+
     const RewardsSection = ({ variant, isInCard }) => {
-      const C = { A: RW_A, B: RW_B, E: RW_E, F: RW_F, G: RW_G, H: RW_H, I: RW_I, K: RW_K, N: RW_N }[variant] || RW_F;
+      const C = { A: RW_A, B: RW_B, E: RW_E, F: RW_F, G: RW_G, H: RW_H, I: RW_I, K: RW_K, N: RW_N, O: RW_O }[variant] || RW_F;
       return <C isInCard={isInCard} />;
     };
 
@@ -3183,10 +3696,11 @@ import ReactDOM from 'react-dom';
 
     const StatsSection = ({ variant, isInCard }) => {
       const C = { B: ST_B, C: ST_C, D: ST_D, E: ST_E, F: ST_F, G: ST_G, K: ST_K, L: ST_L }[variant];
-      /* Whole stats card is a tap target — opens the Analytics page. */
-      const openAnalytics = () => window.dispatchEvent(new CustomEvent('open-analytics'));
+      /* Whole stats card is a tap target. AnalyticsPage was removed —
+         no navigation, just visual tap state via the .tap CSS class
+         (scale 0.97 + opacity 0.9 on :active). */
       return (
-        <div onClick={openAnalytics} style={{ cursor: 'pointer' }}>
+        <div className="tap" style={{ cursor: 'pointer' }}>
           <C isInCard={isInCard} />
         </div>
       );
@@ -3209,138 +3723,64 @@ import ReactDOM from 'react-dom';
       </PagePad>
     );
 
-    /* MR_B — flat list with the figma 3D icons, no chevrons, condensed copy. */
-    const MR_B_ROW = ({ icon, title, subtitle, trailing }) => (
-      <div className="tap" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 24px' }}>
-        {icon}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={T.body}>{title}</div>
-          <div style={{ ...T.caption, marginTop: 2 }}>{subtitle}</div>
-        </div>
-        {trailing}
-      </div>
+    /* Shared list rows for the title-type More variants. Each entry has
+       just a title + value — no descriptions, no chevrons, no avatars in
+       the plain variants. Variants differ in row treatment. The data is
+       enriched with subtitle + glyph + intent + asset so each variant can
+       pull just the fields it needs. */
+    const MR_LIST_ITEMS = [
+      { label: 'AutoPay',     value: 'Active',   intent: 'positive', subtitle: '3 active',           iconAsset: 'autopay_icon.png',      glyph: <GlyphBolt color="#2B6ACF" />, bg: '#E6EDF9' },
+      { label: 'CIBIL score', value: '785',      intent: 'info',     subtitle: 'updated 2 days ago', iconAsset: 'credit_score_icon.png', glyph: <GlyphChart color="#00A63E" />, bg: '#E0F4E8' },
+      { label: 'Statements',  value: 'Apr 2026', intent: 'neutral',  subtitle: 'last 12 months',     iconAsset: 'may_spends.png',        glyph: <GlyphSpark color="#D30AD7" />, bg: '#FAE2FA' },
+    ];
+
+    /* Shared edge-to-edge row primitive. Slice uses these at the bottom of
+       L1 screens — no card wrapper, hairline divider between rows, page
+       horizontal padding handled by PagePad. Children render the row's
+       content; the wrapper handles padding, the hairline, and tap state. */
+    const MoreRow = ({ children, isFirst }) => (
+      <button className="tap" style={{
+        width: '100%', padding: '16px 0',
+        background: 'transparent', border: 'none',
+        borderTop: isFirst ? 'none' : '1px solid rgba(0,0,0,0.05)',
+        display: 'flex', alignItems: 'center', gap: 12,
+        cursor: 'pointer', textAlign: 'left',
+      }}>
+        {children}
+      </button>
     );
+
+    /* MR_B — Edge-to-edge title + value list. No card wrapper, no avatar.
+       Mirrors slice's L1-bottom list pattern (e.g. the bottom of Spend
+       insights, Card controls). Title left, value right, hairlines only
+       between rows. */
     const MR_B = () => (
-      <>
-        <MR_B_ROW
-          icon={<img src="/assets/autopay_icon.png" width={44} height={44} alt="" style={{ display: 'block' }} />}
-          title="Autopay"
-          subtitle="3 active" />
-        <DividerInset />
-        <MR_B_ROW
-          icon={<img src="/assets/credit_score_icon.png" width={44} height={44} alt="" style={{ display: 'block' }} />}
-          title="Credit score"
-          subtitle="Updated 5 May"
-          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>778</div>} />
-      </>
-    );
-
-    /* C — Compact 2-column tile rows */
-    const MR_C = () => (
       <PagePad>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          {[
-            { glyph: <GlyphBolt color="#2B6ACF" />, bg: '#E6EDF9', label: 'AutoPay', sub: '1 mandate active' },
-            { glyph: <GlyphChart color="#00A63E" />, bg: '#E0F4E8', label: 'CIBIL', sub: '785 · +12' },
-          ].map((m, i) => (
-            <button key={i} className="tap" style={{
-              background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 12,
-              padding: 12, display: 'flex', alignItems: 'center', gap: 10,
-              cursor: 'pointer', textAlign: 'left',
-            }}>
-              <Avatar size={36} bg={m.bg} glyph={m.glyph} />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={T.bodySm}>{m.label}</div>
-                <div style={{ ...T.caption, marginTop: 2 }}>{m.sub}</div>
-              </div>
-            </button>
-          ))}
-        </div>
+        {MR_LIST_ITEMS.map((row, i) => (
+          <MoreRow key={row.label} isFirst={i === 0}>
+            <span style={{ ...T.body, color: 'rgba(0,0,0,0.9)', flex: 1, minWidth: 0 }}>{row.label}</span>
+            <span style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>{row.value}</span>
+          </MoreRow>
+        ))}
       </PagePad>
     );
 
-    /* D — Grouped sub-headers + lists */
+    /* MR_D — Edge-to-edge list with leading 32px Avatar (tinted bg + glyph).
+       Adds category colour cue without wrapping the rows in a card. */
     const MR_D = () => (
-      <>
-        <div style={{ padding: '0 24px 4px', ...T.meta }}>Payments</div>
-        <ListItemAvatar bg="#E6EDF9" glyph={<GlyphBolt color="#2B6ACF" />}
-          title="AutoPay" subtitle="1 mandate active · next ₹239 on 8 May" />
-        <Spacer h={16} />
-        <div style={{ padding: '0 24px 4px', ...T.meta }}>Credit</div>
-        <ListItemAvatar bg="#E0F4E8" glyph={<GlyphChart color="#00A63E" />}
-          title="CIBIL score" subtitle="+12 this month"
-          trailing={<div style={{ ...T.h4, color: '#00A63E' }}>785</div>} />
-      </>
-    );
-
-    /* E — Condensed text-only rows */
-    const MR_E = () => (
       <PagePad>
-        <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, overflow: 'hidden' }}>
-          {[
-            { label: 'AutoPay', value: '1 active' },
-            { label: 'CIBIL score', value: '785' },
-          ].map((row, i) => (
-            <button key={i} className="tap" style={{
-              width: '100%', padding: '14px 16px',
-              background: 'transparent', border: 'none',
-              borderTop: i > 0 ? '1px solid rgba(0,0,0,0.05)' : 'none',
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              cursor: 'pointer', textAlign: 'left',
-            }}>
-              <span style={{ ...T.body, color: 'rgba(0,0,0,0.9)' }}>{row.label}</span>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>{row.value}</span>
-                <Chevron />
-              </span>
-            </button>
-          ))}
-        </div>
-      </PagePad>
-    );
-
-    /* F — Premium In-card Header Variant. Always renders an in-card header so F stays
-       distinct from E regardless of outer header style. Full title + CTA when outer
-       header is hidden, otherwise a subtle "Edit" CTA inside the card. */
-    const MR_F = ({ isInCard }) => (
-      <PagePad>
-        <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, overflow: 'hidden' }}>
-          <div style={{ padding: '24px 24px 0' }}>
-            {isInCard
-              ? <InCardHeader title="More" cta="Edit" />
-              : (
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
-                  <button className="tap" style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0, ...T.btnSm, color: '#D30AD7' }}>Edit</button>
-                </div>
-              )}
-          </div>
-          <div style={{ padding: '8px 16px 16px' }}>
-            {[
-              { label: 'AutoPay', sub: '1 mandate active', glyph: <GlyphBolt color="#2B6ACF" />, value: null },
-              { label: 'CIBIL score', sub: '+12 this month', glyph: <GlyphChart color="#00A63E" />, value: '785' },
-            ].map((row, i) => (
-              <button key={i} className="tap" style={{
-                width: '100%', padding: '12px 8px',
-                background: 'transparent', border: 'none',
-                display: 'flex', alignItems: 'center', gap: 12,
-                cursor: 'pointer', textAlign: 'left',
-              }}>
-                <Avatar size={36} bg="#F0F4F7" glyph={row.glyph} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={T.body}>{row.label}</div>
-                  <div style={{ ...T.caption, marginTop: 2 }}>{row.sub}</div>
-                </div>
-                {row.value && <div style={{ ...T.h4, color: '#00A63E' }}>{row.value}</div>}
-                <Chevron />
-              </button>
-            ))}
-          </div>
-        </div>
+        {MR_LIST_ITEMS.map((row, i) => (
+          <MoreRow key={row.label} isFirst={i === 0}>
+            <Avatar size={32} bg={row.bg} glyph={row.glyph} />
+            <span style={{ ...T.body, color: 'rgba(0,0,0,0.9)', flex: 1, minWidth: 0 }}>{row.label}</span>
+            <span style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>{row.value}</span>
+          </MoreRow>
+        ))}
       </PagePad>
     );
 
     const MoreSection = ({ variant, isInCard }) => {
-      const C = { A: MR_A, B: MR_B, C: MR_C, D: MR_D, E: MR_E, F: MR_F }[variant];
+      const C = { A: MR_A, B: MR_B, D: MR_D }[variant] || MR_A;
       return <C isInCard={isInCard} />;
     };
 
@@ -3387,14 +3827,28 @@ import ReactDOM from 'react-dom';
     const ExplorePage = ({ sections, headerStyle, activeSection, separateMore, autoScroll }) => {
       const isInCard = headerStyle === 'None';
       const isActive = (k) => activeSection === k;
-      const isGradientFY = sections.forYou === 'D' || sections.forYou === 'F';
+      const isGradientFY = sections.forYou === 'D' || sections.forYou === 'F' || sections.forYou === 'J';
       const isUtilityFY = sections.forYou === 'I';
+      /* FY=J + aiBanker=F combo: hide paginator dots because the AI search
+         pill overlaps the carousel's bottom — the pill IS the visual anchor. */
+      /* FY_J's carousel grows taller + hides paginator whenever something
+         OVERLAPS its bottom edge — either the AB_F search pill (when AI
+         banker is on) or the BL_J floating bills card (when AI banker is
+         off). Same anchor mechanic either way. */
+      /* Which element overlaps the FY_J carousel bottom edge. 'ab' = AB_F
+         search pill (smaller bump); 'bills' = BL_J floating bills card
+         (full bump). 'none' = no overlap → standard carousel. Drives
+         FY_J's MIN_H + TEXT_BOTTOM. */
+      const fyOverlap =
+        sections.forYou === 'J' && sections.aiBanker === 'F' ? 'ab'
+        : sections.forYou === 'J' && sections.aiBanker === 'None' && sections.bills === 'J' ? 'bills'
+        : 'none';
       return (
         <ScreenShell transparentAppBar={isGradientFY}>
           <SectionAnchor id="forYou" />
           <SectionBlock id="forYou" active={isActive('forYou')}>
             <SectionWrap title="For you" headerStyle="None" isFirst>
-              <ForYouSection variant={sections.forYou} autoScroll={autoScroll} />
+              <ForYouSection variant={sections.forYou} autoScroll={autoScroll} fyOverlap={fyOverlap} />
             </SectionWrap>
           </SectionBlock>
           {/* Utility FY variants finish flush against the next section. Add
@@ -3420,14 +3874,21 @@ import ReactDOM from 'react-dom';
           )}
           <SectionAnchor id="bills" />
           <SectionBlock id="bills" active={isActive('bills')}>
-            {sections.aiBanker === 'None' ? (
+            {sections.forYou === 'J' && sections.aiBanker === 'None' && sections.bills === 'J' ? (
+              /* FY=J + AB=None + bills=J combo: render BL_J flush against
+                 the carousel with NO section header and NO inter-section
+                 spacer. BL_J's own negative marginTop pulls the card so its
+                 vertical center lands on the carousel's hard bottom edge. */
+              <BillsSection variant={sections.bills} isInCard={isInCard} />
+            ) : sections.aiBanker === 'None' ? (
               <>
-                {/* AI banker hidden → extra +12 breathing room before
-                    the Bills heading so it doesn't feel crammed against
-                    the For You section. Utility FY (card-stack) ends
-                    flush, so it gets a full 36. Carousel FYs self-pad
-                    on the bottom but still need 12 to read cleanly. */}
-                <Spacer h={isUtilityFY ? 36 : 12} />
+                {/* AI banker hidden → breathing room before Bills heading.
+                    Utility FY (card-stack) ends flush → 28.
+                    Gradient FYs (D/F/J) finish at the white seam — explicit 24
+                    so the next header doesn't feel crammed.
+                    Strip FYs (B/C) have their own scroll-padding budget below
+                    the cards — only 12 needed before the next header. */}
+                <Spacer h={isUtilityFY ? 28 : isGradientFY ? 24 : 4} />
                 <SectionWrap title="Bills & Recharges" headerStyle={headerStyle} isFirst>
                   <BillsSection variant={sections.bills} isInCard={isInCard} />
                   {headerStyle === 'Bold' && <Spacer h={8} />}
@@ -3522,80 +3983,80 @@ import ReactDOM from 'react-dom';
         </div>
       </div>
     );
-    /* FT_B — Brand-gradient hero push. Edge-to-edge card using the
-       slice brand gradient (Valentino → Blue) so the invite feels like a
-       reward, not a footnote. White copy + white-pill CTA reverses the
-       hierarchy so the card itself becomes the surface for action.
-       The magnet illustration peeks from the right with negative margins
-       so the card has a hero feel, not a stat-tile feel. */
+
+    /* FT_B — Magnet card. White DLS card recipe (border + shadow + radius
+       16). Big magnet illustration on the right anchors the visual; caption +
+       h3 + sub copy stack on the left; a single Send link pill sits at the
+       bottom-left under the copy. The magnet asset carries the brand idea
+       ("pull friends in"); typography stays in stock DLS tokens. */
     const FT_B = () => (
       <PagePad>
-        <div style={{
-          borderRadius: 16, padding: 20, paddingRight: 0,
-          background: 'linear-gradient(135deg, #D30AD7 0%, #2B6ACF 100%)',
-          boxShadow: CARD_SHADOW,
-          position: 'relative', overflow: 'hidden',
-          display: 'flex', alignItems: 'center', gap: 12,
+        <button className="tap" style={{
+          width: '100%', padding: 20, borderRadius: 16,
+          background: '#FFFFFF', border: CARD_BORDER, boxShadow: CARD_SHADOW,
+          textAlign: 'left', cursor: 'pointer', position: 'relative', overflow: 'hidden',
+          display: 'flex', alignItems: 'stretch', gap: 16,
         }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ ...T.h3, color: '#FFFFFF' }}>
-              Invite &amp; earn <MoniesGlyph size={16} /> 500
+          <div style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
+            <div style={{ ...T.caption, color: 'rgba(0,0,0,0.5)' }}>Invite &amp; earn</div>
+            <div style={{ ...T.h3, color: 'rgba(0,0,0,0.9)', marginTop: 2 }}>
+              ₹500 per friend
             </div>
-            <div style={{
-              ...T.caption, color: 'rgba(255,255,255,0.7)', marginTop: 6,
-            }}>
-              Win a fire per friend who joins slice
+            <div style={{ ...T.caption, color: 'rgba(0,0,0,0.6)', marginTop: 8 }}>
+              Send the link. A fire lands every time someone joins slice.
             </div>
-            <button className="tap" style={{
-              marginTop: 16, height: 36, padding: '0 16px',
-              background: '#FFFFFF', border: 'none', borderRadius: 100,
-              ...T.btnSm, color: '#D30AD7', cursor: 'pointer',
-            }}>Send link</button>
+            <div style={{ marginTop: 16 }}>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                padding: '8px 18px', borderRadius: 100,
+                background: '#171A1F',
+                ...T.btnSm, color: '#FFFFFF', whiteSpace: 'nowrap',
+              }}>Send link</span>
+            </div>
           </div>
-          <img src="/assets/invite_magnet.png" alt="" style={{
-            width: 110, height: 110, objectFit: 'contain', display: 'block',
-            flexShrink: 0, marginRight: -12,
+          <img src="/assets/invite_magnet.png" alt="" aria-hidden style={{
+            width: 92, height: 92, objectFit: 'contain', flexShrink: 0,
+            alignSelf: 'center', display: 'block',
           }} />
-        </div>
+        </button>
       </PagePad>
     );
 
-    /* FT_C — Tinted soft card. Valentino-50 background is the gentler
-       version of FT_B — still on-brand, but the page can have multiple
-       brand-toned cards above (FY/RW) without the gradient hero
-       competing. Avatar-style icon on the left mirrors the rest of the
-       page's card recipe (Bills, Rewards). Filled Valentino CTA on the
-       trailing edge so the action is unmissable. */
+    /* FT_C — Brand-gradient hero. slice brand gradient (Valentino → Blue,
+       per DLS) anchors the bottom of the page as a closer moment. Big H3
+       headline in white, single line of supporting copy, magnet illustration
+       on the right at hero scale. Full-width white pill CTA so the closer
+       button reads as the strongest single tap on the page. */
     const FT_C = () => (
       <PagePad>
-        <div style={{
-          borderRadius: 16, padding: 20,
-          background: '#FAE2FA',
-          boxShadow: CARD_SHADOW,
-          display: 'flex', alignItems: 'center', gap: 16,
+        <button className="tap" style={{
+          width: '100%', padding: 24, borderRadius: 16,
+          background: 'linear-gradient(135deg, #D30AD7 0%, #2B6ACF 100%)',
+          border: 'none', boxShadow: CARD_SHADOW,
+          textAlign: 'left', cursor: 'pointer', position: 'relative', overflow: 'hidden',
         }}>
-          <div style={{
-            width: 56, height: 56, borderRadius: 100, flexShrink: 0,
-            background: '#FFFFFF',
-            display: 'grid', placeItems: 'center', overflow: 'hidden',
-          }}>
-            <img src="/assets/magnet.png" alt="" width={40} height={40}
-              style={{ display: 'block' }} />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ ...T.h4, color: 'rgba(0,0,0,0.9)' }}>
-              Invite &amp; earn <MoniesGlyph size={14} /> 500
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ ...T.caption, color: 'rgba(255,255,255,0.7)' }}>Invite &amp; earn</div>
+              <div style={{ ...T.h2, color: '#FFFFFF', marginTop: 2, lineHeight: '30px' }}>
+                ₹500 per<br/>friend who joins
+              </div>
             </div>
-            <div style={{ ...T.caption, color: 'rgba(0,0,0,0.7)', marginTop: 4 }}>
-              Win a fire per friend
-            </div>
-            <button className="tap" style={{
-              marginTop: 12, height: 32, padding: '0 14px',
-              background: '#D30AD7', border: 'none', borderRadius: 100,
-              ...T.btnSm, color: '#FFFFFF', cursor: 'pointer',
-            }}>Send link</button>
+            <img src="/assets/invite_magnet.png" alt="" aria-hidden style={{
+              width: 104, height: 104, objectFit: 'contain', flexShrink: 0,
+              filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.18))',
+              display: 'block',
+            }} />
           </div>
-        </div>
+          <div style={{ marginTop: 18 }}>
+            <span style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: '100%', height: 44, borderRadius: 100,
+              background: '#FFFFFF',
+              ...T.btnSm, color: '#171A1F',
+            }}>Send your link</span>
+          </div>
+        </button>
       </PagePad>
     );
 
@@ -3608,22 +4069,25 @@ import ReactDOM from 'react-dom';
       {
         key: 'forYou', label: 'For You', variants: {
           I: 'Card stack · shuffle',
-          D: 'Full-bleed (top-tinted, PWA)', F: 'Centered carousel', B: 'Horizontal strip', C: 'Compact dark strip',
+          D: 'Full-bleed (top-tinted, PWA)', J: 'Full-bleed · partitioned', F: 'Centered carousel', B: 'Horizontal strip', C: 'Compact dark strip',
         }
       },
       {
         key: 'aiBanker', label: 'AI banker', variants: {
-          A: 'Pill + BETA tag', C: 'Input + scroll pills', E: 'Pill + rolling examples', None: 'X'
+          A: 'Pill + BETA tag', C: 'Input + scroll pills', E: 'Pill + rolling examples',
+          F: 'Floating search pill (overlap)', None: 'X'
         }
       },
       {
         key: 'bills', label: 'Bills & Recharges', variants: {
           A: 'Grid', C: 'Grid (outline avatars)', B: 'Grid in card',
+          J: 'Floating card (overlap)',
         }
       },
       {
         key: 'rewards', label: 'Rewards & Benefits', variants: {
-          K: 'Triptych palette', N: 'Bento · abstract shapes', G: 'Fire hero + 2 below', F: 'Featured Large + 2 Med',
+          K: 'Triptych palette', G: 'Fire hero + 2 below', F: 'Featured Large + 2 Med',
+          O: 'Source breakdown',
         }
       },
       {
@@ -3633,7 +4097,9 @@ import ReactDOM from 'react-dom';
       },
       {
         key: 'more', label: 'More', variants: {
-          A: 'List rows', E: 'Condensed text-only',
+          A: 'Two big tiles',
+          B: 'List · title + value',
+          D: 'List · avatar + title + value',
         }
       },
       {
@@ -3789,6 +4255,26 @@ import ReactDOM from 'react-dom';
           <div>
             {SECTION_META.map((s, idx) => {
               const currentVariantKey = sections[s.key];
+              /* Conditional variants:
+                 · aiBanker:
+                     - FY=J → only F + None (F is the overlap pill designed
+                       specifically for the J carousel)
+                     - FY≠J → hide F (no carousel to overlap)
+                 · bills:
+                     - BL_J is the floating-card overlap variant. It is ONLY
+                       available when FY=J AND aiBanker=None — that's the
+                       combo where the bills card slot in as the seam anchor
+                       instead of the AB_F search pill. Hidden otherwise. */
+              const filteredVariants = Object.entries(s.variants).filter(([v]) => {
+                if (s.key === 'aiBanker') {
+                  if (sections.forYou === 'J') return v === 'F' || v === 'None';
+                  return v !== 'F';
+                }
+                if (s.key === 'bills' && v === 'J') {
+                  return sections.forYou === 'J' && sections.aiBanker === 'None';
+                }
+                return true;
+              });
               return (
                 <div key={s.key} className="section-row" style={{
                   display: 'flex', alignItems: 'center',
@@ -3803,7 +4289,7 @@ import ReactDOM from 'react-dom';
                     {s.label}
                   </div>
                   <div className="var-pills" style={{ flexShrink: 0 }}>
-                    {Object.entries(s.variants).map(([v, label]) => (
+                    {filteredVariants.map(([v, label]) => (
                       <VariantTile key={v}
                         sectionKey={s.key}
                         variantKey={v}
@@ -3894,11 +4380,39 @@ import ReactDOM from 'react-dom';
        can immediately see what changed. scrollIntoView works correctly even when the
        phone-screen is transform-scaled on mobile; scroll-margin-top (CSS) handles the
        offset for the fixed app bar. */
+    /* Scroll the edited section into view when it's NOT already comfortably
+       visible. On phone we always scroll because the drawer's bottom sheet
+       covers ~half the viewport, so we need the section pinned at the top
+       (effective top portion is small). On desktop we leave well-enough
+       alone if the section's top edge already sits in the top 70% of the
+       viewport — saves the jarring scroll-on-every-tweak. */
+    /* Phone: always scroll (drawer eats most of the viewport).
+       Desktop: skip the scroll ONLY when the section is fully clear of the
+       app bar (top >= bar bottom + 20) AND its top is in the top 50% of the
+       viewport AND its bottom is fully visible. If any of those fails —
+       especially "section is hidden under the app bar" — scroll. The CSS
+       scroll-margin-top lands the section 20px below the bar automatically.
+       Two RAF ticks so the variant's reflow has finished before measuring. */
+    const BAR_OVERLAP = 118; // matches --bar-overlap CSS default
+    const BAR_GAP = 20;
     const scrollToSection = (key) => {
-      requestAnimationFrame(() => {
+      const measureAndScroll = () => {
         const target = document.querySelector(`[data-section="${key}"]`);
-        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
+        if (!target) return;
+        const isPhone = typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches;
+        if (isPhone) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          return;
+        }
+        const rect = target.getBoundingClientRect();
+        const vh = window.innerHeight || document.documentElement.clientHeight || 0;
+        const underBar = rect.top < BAR_OVERLAP + BAR_GAP;
+        const topInTop50 = rect.top >= 0 && rect.top < vh * 0.5;
+        const bottomVisible = rect.bottom <= vh;
+        if (!underBar && topInTop50 && bottomVisible) return;
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+      requestAnimationFrame(() => requestAnimationFrame(measureAndScroll));
     };
 
     /* Top-of-drawer drag handle. A downward drag dismisses the drawer.
@@ -3947,88 +4461,6 @@ import ReactDOM from 'react-dom';
     /* Every-load splash. Three-dot loader pulsing in slice Valentino over a
        white surface. Always plays — user wants the "Upgrading Explore"
        beat on every webapp open, not just first visit. */
-    /* AnalyticsPage — slides in from the right when the May spends card
-       is tapped. Lives at phone-screen scope (sibling of the main page)
-       so the slide-in only covers the phone, not the desktop layout.
-       Back button slides it back out to the right. */
-    const AnalyticsPage = ({ open, onClose }) => {
-      return (
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: '#FFFFFF',
-          zIndex: 50,
-          transform: open ? 'translateX(0)' : 'translateX(100%)',
-          transition: 'transform 380ms cubic-bezier(0.16, 1, 0.3, 1)',
-          display: 'flex', flexDirection: 'column',
-          overflow: 'hidden',
-        }}>
-          {/* Top bar: back chevron + title. Sits above the dynamic island
-              zone to mimic a stacked navigation feel. */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 12,
-            paddingTop: 54, paddingLeft: 16, paddingRight: 24,
-            height: 54 + 64, flexShrink: 0,
-            background: '#FFFFFF',
-          }}>
-            <button onClick={onClose} className="tap" style={{
-              width: 44, height: 44, borderRadius: 100,
-              background: 'transparent', border: 'none',
-              display: 'grid', placeItems: 'center', cursor: 'pointer',
-            }}>
-              <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                <path d="M14 4 L7 11 L14 18" stroke="rgba(0,0,0,0.9)"
-                  strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-            <div style={{ ...T.h3 }}>Analytics</div>
-          </div>
-          {/* Scrollable content */}
-          <div style={{
-            flex: 1, overflowY: 'auto',
-            paddingBottom: 40,
-          }} className="scrollbar-hide">
-            <PagePad>
-              <div style={{ paddingTop: 8 }}>
-                <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>May spends</div>
-                <div style={{ ...T.display, marginTop: 4 }}>₹12,487</div>
-                <div style={{ marginTop: 8 }}>
-                  <TagSubtle intent="positive">↓ 18% vs Apr</TagSubtle>
-                </div>
-              </div>
-            </PagePad>
-            <PagePad>
-              <div style={{ marginTop: 24, background: '#FFFFFF', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 24 }}>
-                <div style={{ ...T.meta, marginBottom: 8 }}>Weekly pattern</div>
-                <SpendBarChart />
-              </div>
-            </PagePad>
-            <PagePad>
-              <div style={{ marginTop: 16, background: '#FFFFFF', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ ...T.meta }}>Top categories</div>
-                  <div style={{ ...T.caption, color: 'rgba(0,0,0,0.5)' }}>This month</div>
-                </div>
-                {SPEND_CATEGORIES.map(c => (
-                  <div key={c.label} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <img src={`/assets/${c.icon}`} width={44} height={44} alt=""
-                      style={{ display: 'block', flexShrink: 0 }} />
-                    <div style={{ flex: 1, minWidth: 0, ...T.h4 }}>{c.label}</div>
-                    <div style={{ ...T.h4 }}>{c.amount}</div>
-                  </div>
-                ))}
-              </div>
-            </PagePad>
-            <PagePad>
-              <div style={{ marginTop: 16, background: '#FFFFFF', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 24 }}>
-                <div style={{ ...T.meta, marginBottom: 12 }}>Insights</div>
-                <div style={{ ...T.bodySm }}>You spent ₹1,820 less than April. Food &amp; drinks is your biggest category this month.</div>
-              </div>
-            </PagePad>
-          </div>
-        </div>
-      );
-    };
-
     const Splash = ({ onDone }) => {
       const [fading, setFading] = useState(false);
       React.useEffect(() => {
@@ -4089,7 +4521,6 @@ import ReactDOM from 'react-dom';
         try { localStorage.setItem('slice-explore-comments', JSON.stringify(comments)); }
         catch (_) { /* quota */ }
       }, [comments]);
-      const [analyticsOpen, setAnalyticsOpen] = useState(false);
       const [activeSection, setActiveSection] = useState(null);
       /* True once the user has changed a More variant while the drawer is
          open. Adds extra bottom scroll-room so scrollToSection('more') can
@@ -4108,16 +4539,7 @@ import ReactDOM from 'react-dom';
         return () => window.removeEventListener('open-debug-drawer', onOpen);
       }, []);
 
-      /* Tapping the May spends card anywhere in the page dispatches
-         'open-analytics' — listened here so the analytics page can mount
-         at the phone-screen level. */
-      React.useEffect(() => {
-        const onOpen = () => setAnalyticsOpen(true);
-        window.addEventListener('open-analytics', onOpen);
-        return () => window.removeEventListener('open-analytics', onOpen);
-      }, []);
-
-      /* Reset the extra-scroll flag any time the drawer closes — by any path
+/* Reset the extra-scroll flag any time the drawer closes — by any path
          (backdrop, drag, close button). */
       React.useEffect(() => {
         if (!drawerOpen) setMoreScrollPad(false);
@@ -4126,7 +4548,32 @@ import ReactDOM from 'react-dom';
       const pulseTimer = React.useRef(null);
       const updateSection = (key, v) => {
         setUseOriginal(false);
-        setSections(prev => ({ ...prev, [key]: v }));
+        setSections(prev => {
+          const next = { ...prev, [key]: v };
+          /* Combo coherence for the FY_J carousel:
+             · Only ONE element can overlap the carousel's bottom edge at a
+               time — either AB_F (search pill) OR BL_J (bills card), never
+               both.
+             · BL_J is only valid when AB=None (the search pill isn't there).
+             · AB_F is only valid when FY=J.
+             · When FY leaves J, both overlap states reset to neutral.
+             · When FY arrives at J, default to AB=F (the picker also offers
+               this as the only AI banker option for FY=J). */
+          if (key === 'forYou') {
+            if (v === 'J') {
+              if (prev.aiBanker !== 'F' && prev.aiBanker !== 'None') next.aiBanker = 'F';
+            } else {
+              if (prev.aiBanker === 'F') next.aiBanker = 'None';
+              if (prev.bills === 'J') next.bills = 'A';
+            }
+          }
+          if (key === 'aiBanker') {
+            if (v === 'F' && prev.bills === 'J') next.bills = 'A';
+            if (v === 'None' && prev.forYou === 'J' && prev.bills !== 'J') next.bills = 'J';
+            if (v !== 'None' && v !== 'F' && prev.bills === 'J') next.bills = 'A';
+          }
+          return next;
+        });
         /* Trigger the extra scroll-room only when the user edits the More
            section while the drawer is open. Other sections are far enough up
            that they don't need this. */
@@ -4198,8 +4645,7 @@ import ReactDOM from 'react-dom';
                     {useOriginal
                       ? <OriginalExplore />
                       : <ExplorePage sections={sections} headerStyle={headerStyle} activeSection={activeSection} separateMore={separateMore} autoScroll={autoScroll} />}
-                    <AnalyticsPage open={analyticsOpen} onClose={() => setAnalyticsOpen(false)} />
-                    {/* Splash sits INSIDE phone-screen so it inherits the
+{/* Splash sits INSIDE phone-screen so it inherits the
                         transform: scale used on mobile — proportions match the
                         rendered page exactly instead of being misaligned at
                         viewport-pixel scale. */}
