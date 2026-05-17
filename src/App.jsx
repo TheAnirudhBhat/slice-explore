@@ -522,13 +522,14 @@ import ReactDOM from 'react-dom';
          widening the cascaded pills stack. */
       iconSize,
       overlap = 10,
-      durationMs = 780,
-      staggerMs = 110,
-      /* Hold the spark icon on-screen for ~650ms after enter-viewport before
-         the rotate-and-cascade reveal — enough to register the spark as the
-         source object, smooth enough that the cascade reads as one
-         unhurried gesture rather than a snap. */
-      startDelayMs = 650,
+      durationMs = 920,
+      staggerMs = 130,
+      /* Hold the spark icon on-screen for ~450ms after enter-viewport before
+         the rotate-and-cascade reveal. Was 650ms — read as a slight delay
+         after scroll arrived. 450 fires sooner (still long enough for the
+         spark to register as the source) and the longer durationMs +
+         SPARK_ROTATE_MS keep the choreography deliberate. */
+      startDelayMs = 450,
       /* `animate` controls the spark-icon → brand-pills reveal. Off by default
          for contexts where the stack sits next to static text. Opt in
          explicitly (e.g. the FY/RW hero spark card). When animate=true, the
@@ -570,8 +571,8 @@ import ReactDOM from 'react-dom';
       /* Linger-then-snap: ease-in curve holds the spark icon at near-full
          visual state for the first 60-70% of the duration, then accelerates
          it through the rotate-and-shrink so it's GONE by the time the pills
-         are settling. Set to 680ms for a smooth, unhurried rotation. */
-      const SPARK_ROTATE_MS = 680;
+         are settling. Bumped 680 → 820ms — slower, more deliberate spin. */
+      const SPARK_ROTATE_MS = 820;
       /* Hold the pills off by ~100ms so the spark's rotation is visible
          before the first pill starts to land. Pills render OVER the spark
          (zIndex), so the handoff is icon-rotates-then-pill-cascade rather
@@ -657,7 +658,7 @@ import ReactDOM from 'react-dom';
       brands = ['brand_a.png', 'brand_b.png', 'brand_c.png', 'brand_d.png', 'brand_e.png'],
       width = 120, height = 120,
       iconSize = 52,
-      startDelayMs = 750,
+      startDelayMs = 500,
       animate = false,
     }) => {
       const rootRef = React.useRef(null);
@@ -690,8 +691,8 @@ import ReactDOM from 'react-dom';
         { size: 24, right: 26, bottom: 26, delay: 270 },
         { size: 20, right: 14, bottom: 54, delay: 360 },
       ];
-      const SPARK_ROTATE_MS = 680;
-      const BLOB_MS = 980;
+      const SPARK_ROTATE_MS = 820;
+      const BLOB_MS = 1120;
       return (
         <div ref={rootRef} style={{
           position: 'relative', width, height,
@@ -1525,7 +1526,8 @@ import ReactDOM from 'react-dom';
           leaving card from its drop position back to the rear-stack
           slot. The card visually starts at the drop point, then slides
           down/back into the deck. */
-    const FY_I = ({ autoScroll }) => {
+    const FY_I = ({ autoScroll, surface = 'solid' }) => {
+      const isGlass = surface === 'glass';
       const items = FY_SLIDES;
       const N = items.length;
       const [order, setOrder] = React.useState(() => items.map((_, i) => i));
@@ -1533,15 +1535,16 @@ import ReactDOM from 'react-dom';
       const [dragging, setDragging] = React.useState(false);
       const start = React.useRef({ x: 0, y: 0 });
       const cardRefs = React.useRef({});
-      /* Lower commit threshold so a small flick triggers the deal-back.
-         Was 100px — too far. 55 reads as a definite gesture but doesn't
-         demand a full screen pull. */
-      const COMMIT_DIST = 55;
-      /* Bounded drag region so the card can't be pulled all the way to
-         the screen edges. Card stays inside a centred zone — tight on
-         Y to feel constrained, slightly looser on X for the swipe feel. */
-      const DRAG_LIMIT_X = 130;
-      const DRAG_LIMIT_Y = 70;
+      /* Commit threshold — small flicks should NOT trigger the deal-back.
+         100 was too far, 55 too easy. 70 reads as a deliberate gesture
+         without demanding a full pull. */
+      const COMMIT_DIST = 70;
+      /* Bounded drag region — generous so the card has visible travel
+         in both directions before it hits the clamp. The card stays
+         centred, but the user gets real movement to feel the gesture
+         (was 130/70 — felt locked-in too early). */
+      const DRAG_LIMIT_X = 180;
+      const DRAG_LIMIT_Y = 110;
       /* ease-out-expo — punchy at start, long quiet tail. Combined with a
          longer duration (820ms) the deal-back reads as a smooth settle
          rather than a quick snap. */
@@ -1615,9 +1618,11 @@ import ReactDOM from 'react-dom';
          only rise during the descent half — synchronised with the
          leaving card going behind.
 
-         Z-index: 35 (above app bar) through lift+dwell, dropped to 1
-         right when the descent begins, so the card slides UNDER the
-         rising cards. */
+         Z-index: 50 (well above app bar at 30) through lift+dwell,
+         dropped to 0 right when the descent begins, so the card slides
+         UNDER the rising cards. Bumped from 35 → 50 because on mobile
+         the dragged card was getting clipped behind the app bar in some
+         scroll positions. */
       React.useEffect(() => {
         if (!autoScroll || dragging || cooldown) return;
         const id = setTimeout(() => {
@@ -1628,7 +1633,7 @@ import ReactDOM from 'react-dom';
              frozen). Rise uses ease-out-cubic so the lift accelerates
              gently then decelerates into the apex; descent uses
              ease-out-quart so the card eases into the rear slot. */
-          const LIFT_DIST = 24;
+          const LIFT_DIST = 28;
           const DURATION = 800;
           const APEX_AT = 0.2;
           const RISE_EASE = 'cubic-bezier(0.33, 1, 0.68, 1)';
@@ -1636,7 +1641,7 @@ import ReactDOM from 'react-dom';
           const newOrder = [...order.slice(1), order[0]];
           /* Lift leaving card above the deck via React state — no inline
              style.zIndex manipulation. */
-          setZOverride({ id: topId, z: 35 });
+          setZOverride({ id: topId, z: 50 });
           order.forEach((origIdx, currentPos) => {
             const el = cardRefs.current[origIdx];
             if (!el || !el.animate) return;
@@ -1793,6 +1798,7 @@ import ReactDOM from 'react-dom';
                       if (el) cardRefs.current[origIdx] = el;
                       else delete cardRefs.current[origIdx];
                     }}
+                    className={isGlass ? 'fy-i-glass' : undefined}
                     onPointerDown={isTop ? onPointerDown : undefined}
                     onPointerMove={isTop ? onPointerMove : undefined}
                     onPointerUp={isTop ? endDrag : undefined}
@@ -1810,16 +1816,36 @@ import ReactDOM from 'react-dom';
                          racing with the WAAPI and making the deck pop. */
                       transition: 'none',
                       /* Z-index priority:
-                           1. Auto-cycle override (lift to 35, drop to 0)
-                           2. Drag lift (35, above app bar, below status bar)
+                           1. Auto-cycle override (lift to 50, drop to 0)
+                           2. Drag lift (50, above app bar at 30 — mobile
+                              fake status bar is hidden, so no clash)
                            3. Stack position (top = highest)
                          React-only — never set el.style.zIndex via JS. */
                       zIndex:
                         zOverride && zOverride.id === origIdx ? zOverride.z
-                        : isTop && dragging ? 35
+                        : isTop && dragging ? 50
                         : N - stackPos,
-                      background: '#FFFFFF',
-                      boxShadow: STACK_CARD_SHADOW,
+                      /* Apple-style liquid glass: minimal frost, mostly
+                         clear with a hint of white wash. The blur +
+                         brightness lives in the .fy-i-glass CSS class so
+                         the style engine has it parsed before first paint
+                         (declaring backdrop-filter inline caused a brief
+                         transparent-then-frost glitch on mount). */
+                      background: isGlass ? 'rgba(255,255,255,0.28)' : '#FFFFFF',
+                      /* Match the solid variant's drop shadow so the
+                         spacing below the stack reads identically. Glass
+                         lift = single inset top highlight only. The
+                         previous 1px inner rim was visible as a "weird
+                         shimmer" on the card edges when the user dragged
+                         the card over non-white area (status bar, phone
+                         shell) — the rim picked up the backdrop colour. */
+                      boxShadow: isGlass
+                        ? `${STACK_CARD_SHADOW}, inset 0 1px 0 rgba(255,255,255,0.85)`
+                        : STACK_CARD_SHADOW,
+                      /* Same hairline as the solid variant so the stack's
+                         bottom edge reads cleanly against the page — a
+                         white-on-white border made the bottom card fade
+                         out and pushed the Bills header visually away. */
                       border: CARD_BORDER,
                       borderRadius: 16,
                       padding: '12px 16px',
@@ -2271,6 +2297,9 @@ import ReactDOM from 'react-dom';
 
 
     const ForYouSection = ({ variant, autoScroll, fyOverlap }) => {
+      /* K = liquid-glass surface on the FY_I shuffle-deck engine. Same
+         interactions, swapped material. */
+      if (variant === 'K') return <FY_I autoScroll={autoScroll} surface="glass" />;
       const C = { A: FY_A, B: FY_B, C: FY_C, D: FY_D, F: FY_F, I: FY_I, J: FY_J }[variant] || FY_I;
       return <C autoScroll={autoScroll} overlap={fyOverlap} />;
     };
@@ -3694,8 +3723,99 @@ import ReactDOM from 'react-dom';
       );
     };
 
+    /* ST_M — Variant of ST_L where the top-of-card amount drops from the
+       hero 28px down to T.h4 (16px) so its weight matches the category
+       rows below. Same sparkline, same layout, quieter header. Useful
+       when Stats sits alongside other section cards (Bills, Rewards)
+       whose headers are all 16px — keeps the page's type rhythm even. */
+    const ST_M = () => {
+      const VB_W = 120, VB_H = 48;
+      const pts = [
+        { x: 0,   y: 38 },
+        { x: 56,  y: 8  },
+        { x: 108, y: 22, current: true },
+      ];
+      const linePath = `M${pts[0].x} ${pts[0].y} ` + pts.slice(1).map((p, i) => {
+        const prev = pts[i];
+        return `C${prev.x + 22} ${prev.y} ${p.x - 22} ${p.y} ${p.x} ${p.y}`;
+      }).join(' ');
+      const cur = pts.find(p => p.current);
+      return (
+        <PagePad>
+          <div style={{
+            background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER,
+            borderRadius: 16, padding: 20,
+          }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              gap: 16,
+            }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={T.caption}>May spends</div>
+                <div style={{
+                  ...T.h3, color: 'rgba(0,0,0,0.9)', marginTop: 4,
+                }}>₹18,400</div>
+                <div style={{
+                  ...T.caption, fontWeight: 500,
+                  color: '#00A63E', marginTop: 6,
+                }}>↓ 16% vs Apr</div>
+              </div>
+              <svg width={VB_W} height={VB_H} viewBox={`0 0 ${VB_W} ${VB_H}`}
+                fill="none" style={{ flexShrink: 0 }}>
+                <defs>
+                  <linearGradient id="st_m_fill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#D30AD7" stopOpacity="0.18" />
+                    <stop offset="100%" stopColor="#D30AD7" stopOpacity="0" />
+                  </linearGradient>
+                  <linearGradient id="st_m_bloom"
+                    x1={cur.x} y1={cur.y}
+                    x2={VB_W} y2={VB_H}
+                    gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#D30AD7" stopOpacity="0.18" />
+                    <stop offset="100%" stopColor="#D30AD7" stopOpacity="0" />
+                  </linearGradient>
+                  <linearGradient id="st_m_stroke" x1="0" y1="0" x2="1" y2="0">
+                    <stop offset="0%" stopColor="#D30AD7" stopOpacity="0.55" />
+                    <stop offset="100%" stopColor="#D30AD7" stopOpacity="1" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d={`${linePath} L${cur.x} ${VB_H} L${pts[0].x} ${VB_H} Z`}
+                  fill="url(#st_m_fill)" />
+                <path
+                  d={`M${cur.x} ${cur.y} C${cur.x + 4} ${cur.y + 6} ${VB_W - 2} ${VB_H * 0.55} ${VB_W} ${VB_H} L${cur.x} ${VB_H} Z`}
+                  fill="url(#st_m_bloom)" />
+                <path d={linePath} stroke="url(#st_m_stroke)" strokeWidth="2.5"
+                  fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx={cur.x} cy={cur.y} r="9" fill="rgba(211,10,215,0.18)" />
+                <circle cx={cur.x} cy={cur.y} r="4" fill="#D30AD7" />
+                <circle cx={cur.x} cy={cur.y} r="2" fill="#FFFFFF" />
+              </svg>
+            </div>
+            <div style={{
+              height: 1, background: 'rgba(0,0,0,0.05)',
+              marginTop: 20, marginLeft: -20, marginRight: -20,
+            }} />
+            <div style={{
+              marginTop: 20,
+              display: 'flex', flexDirection: 'column', gap: 14,
+            }}>
+              {SPEND_CATEGORIES.map(c => (
+                <div key={c.label} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <img src={`/assets/${c.icon}`} width={40} height={40} alt=""
+                    style={{ display: 'block', flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0, ...T.bodySm, fontWeight: 500, color: 'rgba(0,0,0,0.9)' }}>{c.label}</div>
+                  <div style={{ ...T.bodySm, fontWeight: 500 }}>{c.amount}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </PagePad>
+      );
+    };
+
     const StatsSection = ({ variant, isInCard }) => {
-      const C = { B: ST_B, C: ST_C, D: ST_D, E: ST_E, F: ST_F, G: ST_G, K: ST_K, L: ST_L }[variant];
+      const C = { B: ST_B, C: ST_C, D: ST_D, E: ST_E, F: ST_F, G: ST_G, K: ST_K, L: ST_L, M: ST_M }[variant];
       /* Whole stats card is a tap target. AnalyticsPage was removed —
          no navigation, just visual tap state via the .tap CSS class
          (scale 0.97 + opacity 0.9 on :active). */
@@ -3828,7 +3948,10 @@ import ReactDOM from 'react-dom';
       const isInCard = headerStyle === 'None';
       const isActive = (k) => activeSection === k;
       const isGradientFY = sections.forYou === 'D' || sections.forYou === 'F' || sections.forYou === 'J';
-      const isUtilityFY = sections.forYou === 'I';
+      /* I and K are both the card-stack utility variant (K = glass material
+         on the same engine). They finish flush against the next section so
+         downstream spacers need the same 28px gap before Bills. */
+      const isUtilityFY = sections.forYou === 'I' || sections.forYou === 'K';
       /* FY=J + aiBanker=F combo: hide paginator dots because the AI search
          pill overlaps the carousel's bottom — the pill IS the visual anchor. */
       /* FY_J's carousel grows taller + hides paginator whenever something
@@ -4068,7 +4191,7 @@ import ReactDOM from 'react-dom';
     const SECTION_META = [
       {
         key: 'forYou', label: 'For You', variants: {
-          I: 'Card stack · shuffle',
+          I: 'Card stack · shuffle', K: 'Card stack · liquid glass',
           D: 'Full-bleed (top-tinted, PWA)', J: 'Full-bleed · partitioned', F: 'Centered carousel', B: 'Horizontal strip', C: 'Compact dark strip',
         }
       },
@@ -4092,7 +4215,7 @@ import ReactDOM from 'react-dom';
       },
       {
         key: 'stats', label: 'Statistics', variants: {
-          L: 'Inline graph + categories', K: 'Bar + top categories', D: 'Sparkline card', G: 'Analytics widget',
+          L: 'Inline graph + categories', M: 'Inline graph · matched header', K: 'Bar + top categories', D: 'Sparkline card', G: 'Analytics widget',
         }
       },
       {
@@ -4124,7 +4247,7 @@ import ReactDOM from 'react-dom';
       V1: {
         label: 'Exploration',
         headerStyle: 'List',
-        sections: { forYou: 'D', aiBanker: 'None', bills: 'C', rewards: 'F', stats: 'L', more: 'A', footer: 'A' },
+        sections: { forYou: 'D', aiBanker: 'None', bills: 'C', rewards: 'F', stats: 'M', more: 'A', footer: 'A' },
       },
     };
 

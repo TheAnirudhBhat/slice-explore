@@ -6,6 +6,22 @@
       color-scheme: light;
     }
 
+    /* FY_K liquid-glass card. The backdrop-filter is declared in a CSS
+       class (not inline style) so the browser style engine has the rule
+       parsed and ready BEFORE first paint — which fixes the brief
+       "transparent → frost pops in" glitch that happened when the prop
+       was inline and the blur was computed a frame after layout.
+       isolation + will-change + translateZ keep each card on its own
+       compositor layer so the blur is composited continuously, not
+       recomputed when the deck shuffles. */
+    .fy-i-glass {
+      isolation: isolate;
+      backdrop-filter: blur(14px) saturate(180%) brightness(108%);
+      -webkit-backdrop-filter: blur(14px) saturate(180%) brightness(108%);
+      will-change: backdrop-filter, transform;
+      transform: translateZ(0);
+    }
+
     html,
     body,
     #root {
