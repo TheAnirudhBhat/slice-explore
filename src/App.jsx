@@ -4661,16 +4661,17 @@ import ReactDOM from 'react-dom';
               height: 1, background: 'rgba(0,0,0,0.05)',
               marginTop: 20,
             }} />
-            {/* Insight row — DLS Avatar (32px tinted circle + glyph)
-                + bodySm label, regular weight. */}
+            {/* Insight row — text on the LEFT (reading anchor),
+                DLS Avatar (32px tinted circle + glyph) on the RIGHT
+                as the visual accent. Bodysm regular weight. */}
             <div style={{
               marginTop: 20,
               display: 'flex', alignItems: 'center', gap: 12,
             }}>
-              <Avatar size={32} bg="#E0F4E8" glyph={<GlyphChart color="#00A63E" />} />
               <div style={{ flex: 1, minWidth: 0, ...T.bodySm, color: 'rgba(0,0,0,0.9)' }}>
                 {SPEND_INSIGHT.text}
               </div>
+              <Avatar size={32} bg="#E0F4E8" glyph={<GlyphChart color="#00A63E" />} />
             </div>
           </div>
         </PagePad>
@@ -4911,7 +4912,7 @@ import ReactDOM from 'react-dom';
                     them); add another 12px so the dots-to-search-bar gap totals 28px.
                     B and V are card variants without dots — those already include their
                     own paddingBottom, so no extra spacer. */}
-                {isGradientFY && <Spacer h={12} />}
+                {(isGradientFY || sections.forYou === 'None') && <Spacer h={16} />}
                 <SectionWrap title="AI banker" headerStyle="None" isFirst>
                   <AiBankerSection variant={sections.aiBanker} />
                 </SectionWrap>
@@ -4926,15 +4927,13 @@ import ReactDOM from 'react-dom';
                  spacer. BL_J's own negative marginTop pulls the card so its
                  vertical center lands on the carousel's hard bottom edge. */
               <BillsSection variant={sections.bills} isInCard={isInCard} />
-            ) : sections.aiBanker === 'None' ? (
+            ) : (sections.aiBanker === 'None' || sections.forYou === 'L') ? (
               <>
-                {/* AI banker hidden → breathing room before Bills heading.
-                    Utility FY (card-stack) ends flush → 28.
-                    Gradient FYs (D/F/J) finish at the white seam — explicit 24
-                    so the next header doesn't feel crammed.
-                    Strip FYs (B/C) have their own scroll-padding budget below
-                    the cards — only 12 needed before the next header. */}
-                <Spacer h={isUtilityFY ? 28 : sections.forYou === 'L' ? 20 : isGradientFY ? 24 : 4} />
+                {/* AI banker hidden (or FY_L kiosk) → explicit pre-Bills
+                    gap. FY_L pins to 16 so the AI-banker → Bills cadence
+                    feels tight inside the kiosk sheet. Others keep their
+                    legacy values. */}
+                <Spacer h={isUtilityFY ? 28 : sections.forYou === 'L' ? 16 : isGradientFY ? 24 : 4} />
                 <SectionWrap title="Bills & Recharges" headerStyle={headerStyle} isFirst>
                   <BillsSection variant={sections.bills} isInCard={isInCard} />
                   {headerStyle === 'Bold' && <Spacer h={8} />}
@@ -4993,11 +4992,11 @@ import ReactDOM from 'react-dom';
             <>
               <SectionAnchor id="footer" />
               <SectionBlock id="footer" active={isActive('footer')}>
-                {/* Pre-section 8px spacer dropped — SectionWrap's
-                   gapNone (24) is enough to match the page's
-                   in-card section rhythm. The extra 8 made the
-                   gap above Invite & Earn read 32 vs 24 elsewhere. */}
-                <SectionWrap title="" headerStyle="None">
+                {/* Explicit 16px pre-section gap. Lets Invite & earn
+                   sit closer to the previous section than the default
+                   in-card rhythm (24). */}
+                <Spacer h={16} />
+                <SectionWrap title="" headerStyle="None" isFirst>
                   <FooterSection variant={sections.footer} />
                 </SectionWrap>
               </SectionBlock>
@@ -5101,7 +5100,62 @@ import ReactDOM from 'react-dom';
       </PagePad>
     );
 
-    const FooterSection = ({ variant }) => ({ A: FT_A, B: FT_B, C: FT_C }[variant] || FT_A)();
+    /* FT_D — FT_B card recipe (row layout: caption + ₹500 H3 left,
+       44×44 magnet right) PLUS a delight reveal: when the card scrolls
+       into view, a small shake fires and a few gold coins rain down
+       from the top edge. CSS-driven (animations defined in index.css),
+       gated by IntersectionObserver so it only triggers once per
+       mount. */
+    const FT_D = () => {
+      const ref = React.useRef(null);
+      const [revealed, setRevealed] = React.useState(false);
+      React.useEffect(() => {
+        if (revealed) return;
+        const el = ref.current;
+        if (!el) return;
+        const obs = new IntersectionObserver(([entry]) => {
+          if (entry.isIntersecting) {
+            setRevealed(true);
+            obs.disconnect();
+          }
+        }, { threshold: 0.6, rootMargin: '0px 0px -120px 0px' });
+        obs.observe(el);
+        return () => obs.disconnect();
+      }, [revealed]);
+      const coinOffsets = [22, 56, 90, 132, 170, 208];
+      const coinDelays  = [0,  90, 200, 320, 460, 600];
+      return (
+        <PagePad>
+          <div ref={ref} style={{ position: 'relative' }}>
+            {revealed && coinOffsets.map((left, i) => (
+              <span key={i} aria-hidden className="ft-b-coin" style={{
+                left,
+                animationDelay: `${coinDelays[i]}ms`,
+              }} />
+            ))}
+            <button className={'tap' + (revealed ? ' ft-b-shake' : '')} style={{
+              width: '100%', padding: '18px 20px',
+              background: '#FFFFFF', border: CARD_BORDER, boxShadow: CARD_SHADOW,
+              borderRadius: 16,
+              textAlign: 'left', cursor: 'pointer', position: 'relative',
+              display: 'flex', alignItems: 'center', gap: 16,
+              overflow: 'hidden',
+            }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ ...T.caption, color: 'rgba(0,0,0,0.5)' }}>Invite &amp; earn</div>
+                <div style={{ ...T.h3, color: 'rgba(0,0,0,0.9)', marginTop: 2 }}>
+                  ₹500 per friend
+                </div>
+              </div>
+              <img src="/assets/invite_magnet.png" width={44} height={44} alt="" aria-hidden
+                style={{ display: 'block', flexShrink: 0, objectFit: 'contain' }} />
+            </button>
+          </div>
+        </PagePad>
+      );
+    };
+
+    const FooterSection = ({ variant }) => ({ A: FT_A, B: FT_B, C: FT_C, D: FT_D }[variant] || FT_A)();
 
     /* ============= DEBUG PANEL ============= */
 
@@ -5170,6 +5224,7 @@ import ReactDOM from 'react-dom';
         },
         archived: {
           C: 'Tinted soft card',
+          D: 'Brand · coin-drop reveal',
         },
       },
     ];
@@ -5189,7 +5244,7 @@ import ReactDOM from 'react-dom';
       V1: {
         label: 'Exploration',
         headerStyle: 'List',
-        sections: { forYou: 'L', aiBanker: 'None', bills: 'C', rewards: 'U', stats: 'M', more: 'A', footer: 'A' },
+        sections: { forYou: 'L', aiBanker: 'None', bills: 'C', rewards: 'U', stats: 'N', more: 'A', footer: 'B' },
       },
     };
 
@@ -5578,7 +5633,7 @@ import ReactDOM from 'react-dom';
       const [spacing, setSpacing] = useState({ gapNone: 24, gapHeaderAbove: 32, gapHeaderBelow: 16 });
       const [highlight, setHighlight] = useState(false);
       const [drawerOpen, setDrawerOpen] = useState(false);
-      const [separateMore, setSeparateMore] = useState(false);
+      const [separateMore, setSeparateMore] = useState(true);
       const [autoScroll, setAutoScroll] = useState(true);
       /* Set to true when the FY_L hero has scrolled past the app bar.
          Drives the app bar opacity + status bar icon colour flip. */
