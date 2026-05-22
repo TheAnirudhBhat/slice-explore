@@ -63,49 +63,37 @@ import ReactDOM from 'react-dom';
     /* Bar lives outside the scroll container (position: absolute) so iOS rubber-band can't
        move it. The white fill + DLS 'Below' shadow are flipped via ref the moment
        scrollTop > 0 — no React state, no transition, instant. */
+    /* AppBar — `scrolled` is React state (not just a ref-mutated
+       inline style) so parent re-renders during a page swipe don't
+       reset the visual scroll state mid-tween. Imperative
+       `setScrolled` is preserved as a stable callback so existing
+       call-sites still work; under the hood it just sets state. */
     const AppBarL0 = React.forwardRef(({ transparent, darkBg }, ref) => {
-      const fillRef = React.useRef(null);
-      const rootRef = React.useRef(null);
-      const titleRef = React.useRef(null);
-      React.useImperativeHandle(ref, () => ({
-        setScrolled: (scrolled) => {
-          const opaque = scrolled || !transparent;
-          if (fillRef.current) fillRef.current.style.opacity = opaque ? '1' : '0';
-          if (rootRef.current) rootRef.current.style.boxShadow = scrolled
-            ? '0 6px 8px 0 rgba(0,0,0,0.05)' : 'none';
-          /* On a dark hero (FY_L), title is white while the bar is
-             transparent; flips to default once the bar fills white. */
-          if (titleRef.current) {
-            titleRef.current.style.color = (darkBg && !opaque) ? '#FFFFFF' : 'rgba(0,0,0,0.9)';
-          }
-        },
-      }), [transparent, darkBg]);
-      const initialOpaque = !transparent;
-      const initialTitleColor = (darkBg && !initialOpaque) ? '#FFFFFF' : 'rgba(0,0,0,0.9)';
+      const [scrolled, setScrolled] = React.useState(false);
+      React.useImperativeHandle(ref, () => ({ setScrolled }), []);
+      const opaque = scrolled || !transparent;
+      const titleColor = (darkBg && !opaque) ? '#FFFFFF' : 'rgba(0,0,0,0.9)';
       return (
-        <div ref={rootRef} className="app-bar-l0" style={{
+        <div className="app-bar-l0" style={{
           position: 'absolute', top: 0, left: 0, right: 0, zIndex: 30,
           paddingTop: 54, height: 54 + 64,
           paddingLeft: 24, paddingRight: 20,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           background: 'transparent',
-          boxShadow: 'none',
-          /* Longer, eased transitions for the FY_L → opaque-bar handoff.
-             Was 160ms — read as a snap. 320ms with an ease-out curve
-             matches the kiosk sheet's overall feel. */
+          boxShadow: scrolled ? '0 6px 8px 0 rgba(0,0,0,0.05)' : 'none',
           transition: 'box-shadow 50ms linear',
         }}>
-          <div ref={fillRef} style={{
+          <div style={{
             position: 'absolute', inset: 0,
             background: '#FFFFFF',
-            opacity: initialOpaque ? 1 : 0,
+            opacity: opaque ? 1 : 0,
             pointerEvents: 'none', zIndex: 0,
             willChange: 'opacity',
             transition: 'opacity 50ms linear',
           }} />
-          <h1 ref={titleRef} style={{
+          <h1 style={{
             ...T.h2, position: 'relative', zIndex: 1,
-            color: initialTitleColor,
+            color: titleColor,
             transition: 'color 50ms linear',
           }}>Explore</h1>
           <div style={{ width: 56, height: 56, display: 'grid', placeItems: 'center', position: 'relative', zIndex: 1 }}>
@@ -197,17 +185,41 @@ import ReactDOM from 'react-dom';
     };
     const HorizontalPager = ({ pages, activeIndex, onChange, onProgress }) => {
       const trackRef = React.useRef(null);
+      const innerRef = React.useRef(null); /* the flex strip that translates */
       const dragRef = React.useRef({ ...DRAG_IDLE });
-      const [dx, setDx] = React.useState(0);
-      const [animating, setAnimating] = React.useState(true);
+      const dxRef = React.useRef(0); /* current drag offset in px — written from pointermove, never via setState */
+      const rafRef = React.useRef(null);
+      const snapPercent = -activeIndex * (100 / pages.length);
 
-      /* Live fractional progress (activeIndex - dx/width) so the
-         bottom-nav overlay can cross-fade WITH the drag, not just at snap. */
-      React.useEffect(() => {
-        if (!onProgress) return;
-        const w = trackRef.current ? trackRef.current.offsetWidth : 360;
-        onProgress(activeIndex - dx / w);
-      }, [dx, activeIndex, onProgress]);
+      /* Apply the current transform directly to the DOM. During drag we
+         skip React entirely so 60fps pointer events don't trigger
+         re-renders of the page tree — that was the cause of the
+         glitchy/non-smooth feel on mobile. CSS transition is enabled
+         on snap (when dxRef = 0 and activeIndex changes). */
+      const paintTransform = (animate) => {
+        const el = innerRef.current;
+        if (!el) return;
+        el.style.transition = animate ? PAGER_SNAP_TRANSITION : 'none';
+        el.style.transform = `translate3d(${snapPercent}%, 0, 0) translate3d(${dxRef.current}px, 0, 0)`;
+        if (onProgress) {
+          const w = trackRef.current ? trackRef.current.offsetWidth : 360;
+          onProgress(activeIndex - dxRef.current / w);
+        }
+      };
+
+      /* Repaint whenever the snap target changes (activeIndex flip) so
+         the CSS transition animates between pages. */
+      React.useLayoutEffect(() => {
+        paintTransform(true);
+      }, [activeIndex]);
+
+      const scheduleFrame = () => {
+        if (rafRef.current != null) return;
+        rafRef.current = requestAnimationFrame(() => {
+          rafRef.current = null;
+          paintTransform(false);
+        });
+      };
 
       const onPointerDown = (e) => {
         if (e.target && e.target.closest && e.target.closest('.no-page-swipe')) {
@@ -215,7 +227,9 @@ import ReactDOM from 'react-dom';
           return;
         }
         dragRef.current = { ...DRAG_IDLE, x: e.clientX, y: e.clientY };
-        setAnimating(false);
+        /* Cancel any in-flight CSS transition so the drag picks up from
+           wherever the snap currently is — no jump. */
+        if (innerRef.current) innerRef.current.style.transition = 'none';
       };
       const onPointerMove = (e) => {
         const s = dragRef.current;
@@ -223,12 +237,9 @@ import ReactDOM from 'react-dom';
         const deltaX = e.clientX - s.x;
         const deltaY = e.clientY - s.y;
         if (!s.decided) {
-          /* Vertical gets the earlier exit (6px vs the 12px+1.8x
-             horizontal commit) so iOS' native vertical scroll wins
-             clean conflicts. The pager only steals the gesture if
-             the move is clearly horizontal AND past a higher
-             threshold — eliminates the conflict where a slightly-
-             diagonal scroll briefly engages page swipe. */
+          /* Vertical wins clean conflicts (lower threshold) so iOS'
+             native scroll isn't fought. Horizontal needs to be clearly
+             dominant before the pager engages. */
           if (Math.abs(deltaY) > 6 && Math.abs(deltaY) > Math.abs(deltaX)) {
             s.decided = true;
             s.blocked = true;
@@ -244,32 +255,31 @@ import ReactDOM from 'react-dom';
         if (s.dragging) {
           const atLeft = activeIndex === 0 && deltaX > 0;
           const atRight = activeIndex === pages.length - 1 && deltaX < 0;
-          setDx(atLeft || atRight ? deltaX * EDGE_RESIST : deltaX);
+          dxRef.current = atLeft || atRight ? deltaX * EDGE_RESIST : deltaX;
+          scheduleFrame();
           if (e.cancelable) e.preventDefault();
         }
       };
       const onPointerUp = () => {
         const s = dragRef.current;
+        const finalDx = dxRef.current;
         if (s.dragging) {
           const w = trackRef.current ? trackRef.current.offsetWidth : 360;
           const threshold = w / 4;
           let next = activeIndex;
-          if (dx > threshold) next = Math.max(0, activeIndex - 1);
-          else if (dx < -threshold) next = Math.min(pages.length - 1, activeIndex + 1);
+          if (finalDx > threshold) next = Math.max(0, activeIndex - 1);
+          else if (finalDx < -threshold) next = Math.min(pages.length - 1, activeIndex + 1);
+          dxRef.current = 0;
           if (next !== activeIndex) onChange(next);
+          else paintTransform(true); /* snap back if no page change */
         }
-        setAnimating(true);
-        setDx(0);
         dragRef.current = { ...DRAG_IDLE };
       };
+      React.useEffect(() => () => {
+        if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      }, []);
 
-      /* Percentage transform: correct from first render even before the
-         container is measured (pre-measure pixel math left Explore off-
-         centre on reload when actual width differed from the 360 fallback).
-         Drag delta stays in px via a second translate. */
-      const snapPercent = -activeIndex * (100 / pages.length);
       const pageWidth = `${100 / pages.length}%`;
-
       return (
         <div ref={trackRef} style={{
           position: 'absolute', inset: 0, overflow: 'hidden',
@@ -279,12 +289,14 @@ import ReactDOM from 'react-dom';
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}>
-          <div style={{
+          <div ref={innerRef} style={{
             display: 'flex',
             width: `${pages.length * 100}%`,
             height: '100%',
-            transform: `translate3d(${snapPercent}%, 0, 0) translate3d(${dx}px, 0, 0)`,
-            transition: animating ? PAGER_SNAP_TRANSITION : 'none',
+            /* Initial transform — useLayoutEffect repaints on every
+               activeIndex change with the right transition state. */
+            transform: `translate3d(${snapPercent}%, 0, 0)`,
+            transition: PAGER_SNAP_TRANSITION,
             willChange: 'transform',
           }}>
             {pages.map((Page, i) => (
@@ -6384,6 +6396,15 @@ import ReactDOM from 'react-dom';
          Explore, 2 = Home. Updates continuously during drag so the
          bottom-nav overlays can cross-fade WITH the swipe. */
       const [pageProgress, setPageProgress] = useState(1);
+      /* Memoise the pages array so frequent `pageProgress` updates
+         during a drag don't force Savings/Explore/Home to re-render —
+         the AppBar inside Explore was flickering because each tick
+         of progress was repainting the heavy page tree. */
+      const pagerPages = React.useMemo(() => [
+        <SavingsPage />,
+        <ExplorePage sections={sections} headerStyle={headerStyle} activeSection={activeSection} separateMore={separateMore} autoScroll={autoScroll} onScrollPast={setHeroScrolledPast} />,
+        <HomePage />,
+      ], [sections, headerStyle, activeSection, separateMore, autoScroll]);
       const [sections, setSections] = useState(PRESETS.V1.sections);
       const [headerStyle, setHeaderStyle] = useState(PRESETS.V1.headerStyle);
       const [spacing, setSpacing] = useState({ gapNone: 24, gapHeaderAbove: 32, gapHeaderBelow: 16 });
@@ -6546,11 +6567,7 @@ import ReactDOM from 'react-dom';
                       ? <OriginalExplore />
                       : (
                         <HorizontalPager
-                          pages={[
-                            <SavingsPage />,
-                            <ExplorePage sections={sections} headerStyle={headerStyle} activeSection={activeSection} separateMore={separateMore} autoScroll={autoScroll} onScrollPast={setHeroScrolledPast} />,
-                            <HomePage />,
-                          ]}
+                          pages={pagerPages}
                           activeIndex={activePage}
                           onChange={setActivePage}
                           onProgress={setPageProgress}
