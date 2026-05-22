@@ -143,6 +143,128 @@ import ReactDOM from 'react-dom';
       );
     };
 
+    /* Full-bleed static page = a reference PNG behind the status bar +
+       bottom nav. The new PNGs already include the status-bar inset
+       at the top of the artboard so the page heading lines up with
+       "Explore" — render the image flush to the top, no offset. */
+    const StaticPage = ({ src, bg = '#FFFFFF', alt = '' }) => (
+      <div style={{ position: 'absolute', inset: 0, background: bg, overflow: 'hidden' }}>
+        <img src={src} alt={alt} style={{
+          width: '100%', height: 'auto', display: 'block',
+          position: 'absolute', top: 0, left: 0,
+          pointerEvents: 'none', userSelect: 'none',
+        }} draggable={false} />
+      </div>
+    );
+    const HomePage = () => (
+      <StaticPage src="/assets/page_home.png" bg="#D30AD7" alt="Home — Pay" />
+    );
+    const SavingsPage = () => (
+      <StaticPage src="/assets/page_savings.png" bg="#FFFFFF" alt="Banking — Savings" />
+    );
+
+    /* HorizontalPager — 3 pages side by side; swipe horizontally
+       between them. Direction-aware gesture: only initiates a page
+       swipe if the touch starts OUTSIDE an inner horizontal scroller
+       (marked with `.no-page-swipe`) AND the drag is more horizontal
+       than vertical. Vertical drags fall through to the page's own
+       scroll. Snap to nearest page on release. */
+    const HorizontalPager = ({ pages, activeIndex, onChange }) => {
+      const trackRef = React.useRef(null);
+      const dragRef = React.useRef({ x: 0, y: 0, dragging: false, blocked: false, decided: false });
+      const [dx, setDx] = React.useState(0);
+      const [animating, setAnimating] = React.useState(true);
+
+      const onPointerDown = (e) => {
+        const target = e.target;
+        if (target && target.closest && target.closest('.no-page-swipe')) {
+          dragRef.current = { x: 0, y: 0, dragging: false, blocked: true, decided: true };
+          return;
+        }
+        dragRef.current = {
+          x: e.clientX, y: e.clientY,
+          dragging: false, blocked: false, decided: false,
+        };
+        setAnimating(false);
+      };
+      const onPointerMove = (e) => {
+        const s = dragRef.current;
+        if (s.blocked || !s.x) return;
+        const deltaX = e.clientX - s.x;
+        const deltaY = e.clientY - s.y;
+        if (!s.decided) {
+          if (Math.abs(deltaX) > 8 && Math.abs(deltaX) > Math.abs(deltaY) * 1.4) {
+            s.decided = true;
+            s.dragging = true;
+          } else if (Math.abs(deltaY) > 10) {
+            s.decided = true;
+            s.blocked = true;
+            return;
+          } else {
+            return;
+          }
+        }
+        if (s.dragging) {
+          /* Resist over-scroll at the edges so the user doesn't drag
+             past the first/last page into empty space. */
+          let bounded = deltaX;
+          if (activeIndex === 0 && deltaX > 0) bounded = deltaX * 0.35;
+          if (activeIndex === pages.length - 1 && deltaX < 0) bounded = deltaX * 0.35;
+          setDx(bounded);
+          if (e.cancelable) e.preventDefault();
+        }
+      };
+      const onPointerUp = () => {
+        const s = dragRef.current;
+        if (s.dragging) {
+          const w = trackRef.current ? trackRef.current.offsetWidth : 360;
+          const threshold = w / 4;
+          let next = activeIndex;
+          if (dx > threshold) next = Math.max(0, activeIndex - 1);
+          else if (dx < -threshold) next = Math.min(pages.length - 1, activeIndex + 1);
+          setAnimating(true);
+          setDx(0);
+          if (next !== activeIndex) onChange(next);
+        } else {
+          setAnimating(true);
+          setDx(0);
+        }
+        dragRef.current = { x: 0, y: 0, dragging: false, blocked: false, decided: false };
+      };
+
+      const trackWidth = trackRef.current ? trackRef.current.offsetWidth : 360;
+      const translateX = -activeIndex * trackWidth + dx;
+
+      return (
+        <div ref={trackRef} style={{
+          position: 'absolute', inset: 0, overflow: 'hidden',
+          touchAction: 'pan-y',
+        }}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}>
+          <div style={{
+            display: 'flex',
+            width: `${pages.length * 100}%`,
+            height: '100%',
+            transform: `translate3d(${translateX}px, 0, 0)`,
+            transition: animating ? 'transform 320ms cubic-bezier(0.16, 1, 0.3, 1)' : 'none',
+            willChange: 'transform',
+          }}>
+            {pages.map((Page, i) => (
+              <div key={i} style={{
+                width: `${100 / pages.length}%`, height: '100%',
+                position: 'relative', flexShrink: 0,
+              }}>
+                {Page}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
     const ScreenShell = ({ children, transparentAppBar, darkBg, scrollThreshold = 0, onPastThreshold }) => {
       const barRef = React.useRef(null);
       const lastScrolled = React.useRef(false);
@@ -169,7 +291,9 @@ import ReactDOM from 'react-dom';
           }}>
             {children}
           </div>
-          <BottomNavGradient />
+          {/* BottomNavGradient now rendered at the phone-screen level
+             (outside the pager) so it overlays all 3 pages with one
+             instance and doesn't slide with them. */}
         </div>
       );
     };
@@ -1022,7 +1146,7 @@ import ReactDOM from 'react-dom';
         scrollSnapType: 'x proximity',
         scrollPaddingLeft: 24, scrollPaddingRight: 24,
         overscrollBehaviorX: 'contain',
-      }} className="scrollbar-hide">
+      }} className="scrollbar-hide no-page-swipe">
         <div style={{ display: 'flex', gap }}>
           {children}
           {/* Trailing sentinel — browsers ignore padding-right on flex scroll content,
@@ -1258,7 +1382,7 @@ import ReactDOM from 'react-dom';
               position: 'relative', zIndex: 1,
               display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
               overscrollBehavior: 'none',
-            }} className="scrollbar-hide">
+            }} className="scrollbar-hide no-page-swipe">
               {renderedSlides.map((s, i) => (
                 <div key={i} style={{
                   flex: `0 0 ${SLIDE_PCT}%`, scrollSnapAlign: 'start',
@@ -1326,7 +1450,7 @@ import ReactDOM from 'react-dom';
           radial-gradient(ellipse 100% 70% at 8% 6%, ${s[0]} 0%, transparent 85%),
           radial-gradient(ellipse 100% 70% at 95% 10%, ${s[1]} 0%, transparent 85%),
           radial-gradient(ellipse 110% 60% at 50% 22%, ${s[2]} 0%, transparent 90%),
-          linear-gradient(to bottom, transparent 55%, #FFFFFF 85%),
+          linear-gradient(to bottom, transparent 70%, #FFFFFF 92%),
           #FFFFFF
         `;
       };
@@ -1353,7 +1477,7 @@ import ReactDOM from 'react-dom';
               position: 'relative', zIndex: 1,
               display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
               overscrollBehavior: 'none',
-            }} className="scrollbar-hide">
+            }} className="scrollbar-hide no-page-swipe">
               {renderedSlides.map((s, i) => {
                 const meta = fyAvatarMeta(s.heroImg);
                 return (
@@ -1508,7 +1632,7 @@ import ReactDOM from 'react-dom';
               position: 'relative', zIndex: 1,
               display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
               overscrollBehavior: 'none',
-            }} className="scrollbar-hide">
+            }} className="scrollbar-hide no-page-swipe">
               {renderedSlides.map((s, i) => (
                 <div key={i} style={{
                   flex: `0 0 ${SLIDE_PCT}%`, scrollSnapAlign: 'start',
@@ -1639,7 +1763,7 @@ import ReactDOM from 'react-dom';
             position: 'relative', zIndex: 1,
             display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
             overscrollBehavior: 'none',
-          }} className="scrollbar-hide">
+          }} className="scrollbar-hide no-page-swipe">
             {renderedSlides.map((s, i) => {
               const meta = fyAvatarMeta(s.heroImg);
               return (
@@ -1732,7 +1856,7 @@ import ReactDOM from 'react-dom';
             position: 'relative', zIndex: 1,
             display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
             overscrollBehavior: 'none',
-          }} className="scrollbar-hide">
+          }} className="scrollbar-hide no-page-swipe">
             {renderedSlides.map((s, i) => {
               const meta = fyAvatarMeta(s.heroImg);
               const iconColor = fyMatchedIconColor(s.heroImg);
@@ -1874,7 +1998,7 @@ import ReactDOM from 'react-dom';
               position: 'relative', zIndex: 1,
               display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
               overscrollBehavior: 'none',
-            }} className="scrollbar-hide">
+            }} className="scrollbar-hide no-page-swipe">
               {renderedSlides.map((s, i) => (
                 <div key={i} style={{
                   flex: `0 0 ${SLIDE_PCT}%`, scrollSnapAlign: 'start',
@@ -1957,18 +2081,21 @@ import ReactDOM from 'react-dom';
                 pointerEvents: 'none', willChange: 'opacity',
               }} />
             ))}
-            {/* Section-level fade-to-white overlay, sits above the
-               crossfading bg deck but below the scroller. */}
+            {/* Section-level fade-to-white overlay — solid white
+               band in the bottom 28px (93% → 100% of MIN_H 380). The
+               eased fade now runs from 50% and resolves to full
+               white at the top of that band — longer runway, more
+               stops, smoother taper. */}
             <div aria-hidden style={{
               position: 'absolute', inset: 0, zIndex: 1,
-              background: 'linear-gradient(to bottom, rgba(255,255,255,0) 55%, rgba(255,255,255,0.4) 75%, rgba(255,255,255,0.85) 88%, #FFFFFF 96%)',
+              background: 'linear-gradient(to bottom, rgba(255,255,255,0) 50%, rgba(255,255,255,0.15) 64%, rgba(255,255,255,0.5) 78%, rgba(255,255,255,0.9) 89%, #FFFFFF 93%, #FFFFFF 100%)',
               pointerEvents: 'none',
             }} />
             <div ref={ref} style={{
               position: 'relative', zIndex: 2,
               display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
               overscrollBehavior: 'none',
-            }} className="scrollbar-hide">
+            }} className="scrollbar-hide no-page-swipe">
               {renderedSlides.map((s, i) => {
                 /* Wrapped distance + signed offset, matching the FY_L
                    recipe: text fades out aggressively (×2.6) and
@@ -2007,7 +2134,7 @@ import ReactDOM from 'react-dom';
                        FY_L motion recipe. */}
                     <div style={{
                       position: 'relative', zIndex: 2,
-                      transform: `translate(${parallaxX}px, -20px)`,
+                      transform: `translate(${parallaxX}px, -12px)`,
                       opacity: textOpacity,
                       willChange: 'transform, opacity',
                       display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -2116,7 +2243,7 @@ import ReactDOM from 'react-dom';
             display: 'flex', overflowX: 'auto',
             scrollSnapType: 'x mandatory',
             overscrollBehavior: 'none',
-          }} className="scrollbar-hide">
+          }} className="scrollbar-hide no-page-swipe">
             {renderedSlides.map((s, i) => {
               /* Distance in slide-units between this rendered slide and
                  the current scroll progress. Wrapped across the loop
@@ -2517,7 +2644,7 @@ import ReactDOM from 'react-dom';
       return (
         <PagePad>
           <div style={{ paddingTop: outerPaddingTop }}>
-            <div style={{ position: 'relative', height: stackHeight }}>
+            <div className="no-page-swipe" style={{ position: 'relative', height: stackHeight }}>
               {/* Silhouette behind the deck — sized and positioned to
                  match the deepest card (same translateY + scale).
                  Stays put while real cards rotate / lift, so the
@@ -2894,7 +3021,7 @@ import ReactDOM from 'react-dom';
                No hard edges visible during the slide. */
             WebkitMaskImage: 'linear-gradient(to right, transparent 0, black 6%, black 94%, transparent 100%)',
             maskImage: 'linear-gradient(to right, transparent 0, black 6%, black 94%, transparent 100%)',
-          }} className="scrollbar-hide">
+          }} className="scrollbar-hide no-page-swipe">
             <div style={{ display: 'flex', gap: GAP }}>
               {renderedSlides.map((s, i) => {
                 /* Banner cards short-circuit the themed rendering —
@@ -3081,7 +3208,7 @@ import ReactDOM from 'react-dom';
             scrollPaddingLeft: 24,
             scrollSnapType: 'x mandatory',
             overscrollBehaviorX: 'contain',
-          }} className="scrollbar-hide">
+          }} className="scrollbar-hide no-page-swipe">
             <div style={{ display: 'flex', gap: GAP }}>
               {renderedSlides.map((s, i) => (
                 <button className="tap" key={i} style={{
@@ -3195,7 +3322,7 @@ import ReactDOM from 'react-dom';
           <div style={{
             overflowX: 'auto', paddingLeft: 24, paddingRight: 0,
             scrollSnapType: 'x proximity', scrollPaddingLeft: 24,
-          }} className="scrollbar-hide">
+          }} className="scrollbar-hide no-page-swipe">
             <div style={{ display: 'flex', gap: 6 }}>
               {pills.map((q, i) => (
                 <button key={i} className="tap" style={{
@@ -4227,7 +4354,7 @@ import ReactDOM from 'react-dom';
     ];
     const RW_U = () => (
       <div style={{ marginTop: -4 }}>
-        <div className="scrollbar-hide" style={{
+        <div className="scrollbar-hide no-page-swipe" style={{
           display: 'flex', overflowX: 'auto',
           scrollSnapType: 'x mandatory',
           overscrollBehavior: 'none',
@@ -4279,7 +4406,7 @@ import ReactDOM from 'react-dom';
     ];
     const RW_X = () => (
       <div>
-        <div className="scrollbar-hide" style={{
+        <div className="scrollbar-hide no-page-swipe" style={{
           display: 'flex', overflowX: 'auto',
           scrollSnapType: 'x mandatory',
           overscrollBehavior: 'none',
@@ -5807,12 +5934,13 @@ import ReactDOM from 'react-dom';
     const SECTION_META = [
       {
         key: 'forYou', label: 'For You', variants: {
-          I: 'Card stack · shuffle', H: 'Single card', B: 'Horizontal strip', M: 'Full-bleed · no CTA',
+          I: 'Card stack · shuffle', H: 'Single card', B: 'Horizontal strip',
           D: 'Full-bleed (top-tinted, PWA)',
           F: 'Centered carousel', L: 'Image hero carousel',
           None: 'X',
         },
         archived: {
+          M: 'Full-bleed · no CTA',
           O: 'Full-bleed · matched icon',
           J: 'Full-bleed · partitioned',
           C: 'Compact dark strip',
@@ -6281,6 +6409,11 @@ import ReactDOM from 'react-dom';
     const App = () => {
       const [showSplash, setShowSplash] = useState(true);
       const [useOriginal, setUseOriginal] = useState(false);
+      /* Page swiper — Savings (0) | Explore (1, default) | Home (2).
+         Swipe right pulls Savings in from the left; swipe left pulls
+         Home in from the right. Inner horizontal carousels carry the
+         `.no-page-swipe` marker so they're not hijacked. */
+      const [activePage, setActivePage] = useState(1);
       const [sections, setSections] = useState(PRESETS.V1.sections);
       const [headerStyle, setHeaderStyle] = useState(PRESETS.V1.headerStyle);
       const [spacing, setSpacing] = useState({ gapNone: 24, gapHeaderAbove: 32, gapHeaderBelow: 16 });
@@ -6432,10 +6565,52 @@ import ReactDOM from 'react-dom';
                         the main page and the Analytics slide-in via z:60)
                         so the time + icons stay anchored during page
                         transitions instead of sliding with the panel. */}
-                    <StatusBar dark={!useOriginal && (sections.forYou === 'L' || sections.forYou === 'F') && !heroScrolledPast} />
+                    {/* Status bar adapts to whichever page is centred:
+                       Home (Valentino) → white; Savings (white) → dark;
+                       Explore → follows the FY-variant rule. */}
+                    <StatusBar dark={
+                      activePage === 2 /* Home Valentino */
+                      || (activePage === 1 && !useOriginal && (sections.forYou === 'L' || sections.forYou === 'F') && !heroScrolledPast)
+                    } />
                     {useOriginal
                       ? <OriginalExplore />
-                      : <ExplorePage sections={sections} headerStyle={headerStyle} activeSection={activeSection} separateMore={separateMore} autoScroll={autoScroll} onScrollPast={setHeroScrolledPast} />}
+                      : (
+                        <HorizontalPager
+                          pages={[
+                            <SavingsPage />,
+                            <ExplorePage sections={sections} headerStyle={headerStyle} activeSection={activeSection} separateMore={separateMore} autoScroll={autoScroll} onScrollPast={setHeroScrolledPast} />,
+                            <HomePage />,
+                          ]}
+                          activeIndex={activePage}
+                          onChange={setActivePage}
+                        />
+                      )}
+                    {/* Bottom nav overlay — cross-fades between the
+                       default slice nav (Savings + Explore) and the
+                       Home/Payments quick-action footer when the user
+                       swipes to Home. Two layers stacked so they can
+                       opacity-tween without a hard cut. */}
+                    {!useOriginal && (
+                      <>
+                        <div style={{
+                          position: 'absolute', left: 0, right: 0, bottom: 0,
+                          zIndex: 5, pointerEvents: activePage === 2 ? 'none' : 'auto',
+                          opacity: activePage === 2 ? 0 : 1,
+                          transition: 'opacity 220ms ease-out',
+                        }}>
+                          <BottomNavGradient />
+                        </div>
+                        <div style={{
+                          position: 'absolute', left: 0, right: 0, bottom: 0,
+                          zIndex: 6, pointerEvents: activePage === 2 ? 'auto' : 'none',
+                          opacity: activePage === 2 ? 1 : 0,
+                          transition: 'opacity 220ms ease-out',
+                        }}>
+                          <img src="/assets/bottom_nav_home.png" alt=""
+                            style={{ width: '100%', display: 'block' }} />
+                        </div>
+                      </>
+                    )}
 {/* Splash sits INSIDE phone-screen so it inherits the
                         transform: scale used on mobile — proportions match the
                         rendered page exactly instead of being misaligned at
