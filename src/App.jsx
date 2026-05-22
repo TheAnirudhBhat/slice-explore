@@ -6396,15 +6396,6 @@ import ReactDOM from 'react-dom';
          Explore, 2 = Home. Updates continuously during drag so the
          bottom-nav overlays can cross-fade WITH the swipe. */
       const [pageProgress, setPageProgress] = useState(1);
-      /* Memoise the pages array so frequent `pageProgress` updates
-         during a drag don't force Savings/Explore/Home to re-render —
-         the AppBar inside Explore was flickering because each tick
-         of progress was repainting the heavy page tree. */
-      const pagerPages = React.useMemo(() => [
-        <SavingsPage />,
-        <ExplorePage sections={sections} headerStyle={headerStyle} activeSection={activeSection} separateMore={separateMore} autoScroll={autoScroll} onScrollPast={setHeroScrolledPast} />,
-        <HomePage />,
-      ], [sections, headerStyle, activeSection, separateMore, autoScroll]);
       const [sections, setSections] = useState(PRESETS.V1.sections);
       const [headerStyle, setHeaderStyle] = useState(PRESETS.V1.headerStyle);
       const [spacing, setSpacing] = useState({ gapNone: 24, gapHeaderAbove: 32, gapHeaderBelow: 16 });
@@ -6435,6 +6426,15 @@ import ReactDOM from 'react-dom';
         catch (_) { /* quota */ }
       }, [comments]);
       const [activeSection, setActiveSection] = useState(null);
+      /* Memoise the pages array so frequent `pageProgress` updates
+         during a drag don't force Savings/Explore/Home to re-render —
+         the AppBar inside Explore was flickering because each tick
+         of progress was repainting the heavy page tree. */
+      const pagerPages = React.useMemo(() => [
+        <SavingsPage />,
+        <ExplorePage sections={sections} headerStyle={headerStyle} activeSection={activeSection} separateMore={separateMore} autoScroll={autoScroll} onScrollPast={setHeroScrolledPast} />,
+        <HomePage />,
+      ], [sections, headerStyle, activeSection, separateMore, autoScroll]);
       /* True once the user has changed a More variant while the drawer is
          open. Adds extra bottom scroll-room so scrollToSection('more') can
          land the section in the upper half (above the drawer). Auto-clears
