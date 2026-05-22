@@ -108,8 +108,8 @@ import ReactDOM from 'react-dom';
             color: initialTitleColor,
             transition: 'color 50ms linear',
           }}>Explore</h1>
-          <div style={{ width: 48, height: 48, display: 'grid', placeItems: 'center', position: 'relative', zIndex: 1 }}>
-            <img src="/assets/avatar_only.png" width={40} height={40} alt=""
+          <div style={{ width: 56, height: 56, display: 'grid', placeItems: 'center', position: 'relative', zIndex: 1 }}>
+            <img src="/assets/avatar_only.png" width={48} height={48} alt=""
               style={{ display: 'block' }} />
           </div>
         </div>
@@ -144,20 +144,24 @@ import ReactDOM from 'react-dom';
     };
 
     /* Full-bleed static page = a reference PNG behind the status bar +
-       bottom nav. The new PNGs already include the status-bar inset
-       at the top of the artboard so the page heading lines up with
-       "Explore" — render the image flush to the top, no offset. */
-    const StaticPage = ({ src, bg = '#FFFFFF', alt = '' }) => (
+       bottom nav. `topOffset` shifts the image down so the page
+       heading clears the status bar; the exposed band is filled by `bg`. */
+    const StaticPage = ({ src, bg = '#FFFFFF', alt = '', topOffset = 8 }) => (
       <div style={{ position: 'absolute', inset: 0, background: bg, overflow: 'hidden' }}>
         <img src={src} alt={alt} style={{
           width: '100%', height: 'auto', display: 'block',
-          position: 'absolute', top: 0, left: 0,
+          position: 'absolute', top: topOffset, left: 0,
           pointerEvents: 'none', userSelect: 'none',
         }} draggable={false} />
       </div>
     );
+    /* DLS Valentino-500 — used for the exposed top band and the iOS
+       safe-area fill behind the home bottom nav so the seam to the
+       Home poster (which is painted in the same brand magenta) is
+       invisible. */
+    const HOME_VALENTINO = '#D30AD7';
     const HomePage = () => (
-      <StaticPage src="/assets/page_home.png" bg="#D30AD7" alt="Home — Pay" />
+      <StaticPage src="/assets/page_home.png" bg={HOME_VALENTINO} alt="Home — Pay" topOffset={20} />
     );
     const SavingsPage = () => (
       <StaticPage src="/assets/page_savings.png" bg="#FFFFFF" alt="Banking — Savings" />
@@ -169,22 +173,42 @@ import ReactDOM from 'react-dom';
        (marked with `.no-page-swipe`) AND the drag is more horizontal
        than vertical. Vertical drags fall through to the page's own
        scroll. Snap to nearest page on release. */
-    const HorizontalPager = ({ pages, activeIndex, onChange }) => {
+    const DRAG_IDLE = { x: 0, y: 0, dragging: false, blocked: false, decided: false };
+    /* Hard edges — no rubber-band past the first/last page. */
+    const EDGE_RESIST = 0;
+    const PAGER_SNAP_TRANSITION = 'transform 320ms cubic-bezier(0.16, 1, 0.3, 1)';
+    /* Each page wrapper gets its own GPU layer + paint containment so
+       iOS Safari doesn't re-rasterise on swipe-back (otherwise the
+       off-screen page loses its compositor layer and paints after a
+       visible ~1s delay on the way back in). */
+    const PAGER_PAGE_STYLE_BASE = {
+      height: '100%',
+      position: 'relative', flexShrink: 0,
+      transform: 'translateZ(0)',
+      backfaceVisibility: 'hidden',
+      contain: 'layout paint',
+      willChange: 'transform',
+    };
+    const HorizontalPager = ({ pages, activeIndex, onChange, onProgress }) => {
       const trackRef = React.useRef(null);
-      const dragRef = React.useRef({ x: 0, y: 0, dragging: false, blocked: false, decided: false });
+      const dragRef = React.useRef({ ...DRAG_IDLE });
       const [dx, setDx] = React.useState(0);
       const [animating, setAnimating] = React.useState(true);
 
+      /* Live fractional progress (activeIndex - dx/width) so the
+         bottom-nav overlay can cross-fade WITH the drag, not just at snap. */
+      React.useEffect(() => {
+        if (!onProgress) return;
+        const w = trackRef.current ? trackRef.current.offsetWidth : 360;
+        onProgress(activeIndex - dx / w);
+      }, [dx, activeIndex, onProgress]);
+
       const onPointerDown = (e) => {
-        const target = e.target;
-        if (target && target.closest && target.closest('.no-page-swipe')) {
-          dragRef.current = { x: 0, y: 0, dragging: false, blocked: true, decided: true };
+        if (e.target && e.target.closest && e.target.closest('.no-page-swipe')) {
+          dragRef.current = { ...DRAG_IDLE, blocked: true, decided: true };
           return;
         }
-        dragRef.current = {
-          x: e.clientX, y: e.clientY,
-          dragging: false, blocked: false, decided: false,
-        };
+        dragRef.current = { ...DRAG_IDLE, x: e.clientX, y: e.clientY };
         setAnimating(false);
       };
       const onPointerMove = (e) => {
@@ -205,12 +229,9 @@ import ReactDOM from 'react-dom';
           }
         }
         if (s.dragging) {
-          /* Resist over-scroll at the edges so the user doesn't drag
-             past the first/last page into empty space. */
-          let bounded = deltaX;
-          if (activeIndex === 0 && deltaX > 0) bounded = deltaX * 0.35;
-          if (activeIndex === pages.length - 1 && deltaX < 0) bounded = deltaX * 0.35;
-          setDx(bounded);
+          const atLeft = activeIndex === 0 && deltaX > 0;
+          const atRight = activeIndex === pages.length - 1 && deltaX < 0;
+          setDx(atLeft || atRight ? deltaX * EDGE_RESIST : deltaX);
           if (e.cancelable) e.preventDefault();
         }
       };
@@ -222,18 +243,19 @@ import ReactDOM from 'react-dom';
           let next = activeIndex;
           if (dx > threshold) next = Math.max(0, activeIndex - 1);
           else if (dx < -threshold) next = Math.min(pages.length - 1, activeIndex + 1);
-          setAnimating(true);
-          setDx(0);
           if (next !== activeIndex) onChange(next);
-        } else {
-          setAnimating(true);
-          setDx(0);
         }
-        dragRef.current = { x: 0, y: 0, dragging: false, blocked: false, decided: false };
+        setAnimating(true);
+        setDx(0);
+        dragRef.current = { ...DRAG_IDLE };
       };
 
-      const trackWidth = trackRef.current ? trackRef.current.offsetWidth : 360;
-      const translateX = -activeIndex * trackWidth + dx;
+      /* Percentage transform: correct from first render even before the
+         container is measured (pre-measure pixel math left Explore off-
+         centre on reload when actual width differed from the 360 fallback).
+         Drag delta stays in px via a second translate. */
+      const snapPercent = -activeIndex * (100 / pages.length);
+      const pageWidth = `${100 / pages.length}%`;
 
       return (
         <div ref={trackRef} style={{
@@ -248,15 +270,12 @@ import ReactDOM from 'react-dom';
             display: 'flex',
             width: `${pages.length * 100}%`,
             height: '100%',
-            transform: `translate3d(${translateX}px, 0, 0)`,
-            transition: animating ? 'transform 320ms cubic-bezier(0.16, 1, 0.3, 1)' : 'none',
+            transform: `translate3d(${snapPercent}%, 0, 0) translate3d(${dx}px, 0, 0)`,
+            transition: animating ? PAGER_SNAP_TRANSITION : 'none',
             willChange: 'transform',
           }}>
             {pages.map((Page, i) => (
-              <div key={i} style={{
-                width: `${100 / pages.length}%`, height: '100%',
-                position: 'relative', flexShrink: 0,
-              }}>
+              <div key={i} style={{ ...PAGER_PAGE_STYLE_BASE, width: pageWidth }}>
                 {Page}
               </div>
             ))}
@@ -1255,11 +1274,20 @@ import ReactDOM from 'react-dom';
         const el = ref.current;
         if (!el) return;
         let settleTimer;
+        const teleportTo = (scrollLeft) => {
+          teleporting.current = true;
+          const prev = el.style.scrollBehavior;
+          el.style.scrollBehavior = 'auto';
+          el.scrollLeft = scrollLeft;
+          requestAnimationFrame(() => {
+            el.style.scrollBehavior = prev;
+            teleporting.current = false;
+          });
+        };
         const onScroll = () => {
           const cw = el.offsetWidth * strideRatio;
           if (cw === 0) return;
           const raw = el.scrollLeft / cw; /* 0..N+1 */
-          /* Logical position: raw=1 → real slide 0, raw=N → real slide N-1 */
           const logical = raw - 1;
           const wrapped = ((logical % slideCount) + slideCount) % slideCount;
           setProgress(wrapped);
@@ -1269,27 +1297,8 @@ import ReactDOM from 'react-dom';
           clearTimeout(settleTimer);
           settleTimer = setTimeout(() => {
             const pos = Math.round(raw);
-            if (pos <= 0) {
-              /* On cloneLast → jump to real last (position N) without animation */
-              teleporting.current = true;
-              const prev = el.style.scrollBehavior;
-              el.style.scrollBehavior = 'auto';
-              el.scrollLeft = cw * slideCount;
-              requestAnimationFrame(() => {
-                el.style.scrollBehavior = prev;
-                teleporting.current = false;
-              });
-            } else if (pos >= slideCount + 1) {
-              /* On cloneFirst → jump back to real first (position 1) */
-              teleporting.current = true;
-              const prev = el.style.scrollBehavior;
-              el.style.scrollBehavior = 'auto';
-              el.scrollLeft = cw;
-              requestAnimationFrame(() => {
-                el.style.scrollBehavior = prev;
-                teleporting.current = false;
-              });
-            }
+            if (pos <= 0) teleportTo(cw * slideCount);
+            else if (pos >= slideCount + 1) teleportTo(cw);
           }, 140);
         };
         el.addEventListener('scroll', onScroll, { passive: true });
@@ -1317,7 +1326,7 @@ import ReactDOM from 'react-dom';
           el.removeEventListener('pointerup', onUp);
           el.removeEventListener('pointercancel', onUp);
         };
-      }, [slideCount]);
+      }, [slideCount, strideRatio]);
 
       React.useEffect(() => {
         const el = ref.current;
@@ -1860,30 +1869,13 @@ import ReactDOM from 'react-dom';
             {renderedSlides.map((s, i) => {
               const meta = fyAvatarMeta(s.heroImg);
               const iconColor = fyMatchedIconColor(s.heroImg);
-              /* Parallax: text lags the scroll, icon leads it.
-                 Computes the slide's wrapped offset from progress
-                 (closest-side across the infinite loop). The differing
-                 translateX rates create a depth illusion as the user
-                 swipes between slides. */
-              const realPos = i - 1;
-              const offsetUnits = realPos - progress;
-              const wrappedOffset =
-                Math.abs(offsetUnits) <= FY_SLIDES.length / 2
-                  ? offsetUnits
-                  : offsetUnits > 0
-                    ? offsetUnits - FY_SLIDES.length
-                    : offsetUnits + FY_SLIDES.length;
-              /* Parallax magnitudes bumped up so the depth illusion
-                 reads clearly during a finger swipe. Text drifts with
-                 scroll (lagging), icon drifts against (leading). */
-              const textX = wrappedOffset * 56;   // text drifts WITH the scroll, lagging
-              const iconX = wrappedOffset * -40;  // icon drifts AGAINST scroll, leading
-              /* Cross-fade: active slide at opacity 1, neighbours at
-                 opacity 0. Mid-swipe the outgoing slide fades into the
-                 mesh while the incoming slide rises out of white —
-                 only one slide is ever visible at once, so the
-                 parallax reads cleanly without two text rows fighting
-                 each other across the seam. */
+              /* Parallax: text drifts WITH the scroll (lagging) at +56,
+                 icon drifts AGAINST it (leading) at −40. Cross-fade keeps
+                 only one slide visible at once so the parallax reads
+                 cleanly without two text rows fighting across the seam. */
+              const { signed: wrappedOffset } = wrappedCarouselDistance(i - 1, progress, FY_SLIDES.length);
+              const textX = wrappedOffset * 56;
+              const iconX = wrappedOffset * -40;
               const slideOpacity = Math.max(0, 1 - Math.abs(wrappedOffset));
               return (
                 /* No per-slide overflow:hidden — slide-edge clipping
@@ -2045,33 +2037,40 @@ import ReactDOM from 'react-dom';
        avatar dropped: the image IS the hero. A per-slide bottom-to-
        white overlay preserves the fade so copy + paginator land on
        clean white. */
+    /* Wrapped distance/offset across an infinite carousel of length N.
+       Returns the *shortest signed* distance from `pos` to the loop's
+       fractional `progress`, so slides near the deck edges still resolve
+       to the smaller offset. Used by FY_F / FY_L / FY_O for parallax + crossfade. */
+    const wrappedCarouselDistance = (pos, progress, N) => {
+      const raw = pos - progress;
+      const abs = Math.min(Math.abs(raw), Math.abs(raw - N), Math.abs(raw + N));
+      const signed =
+        Math.abs(raw) <= N / 2 ? raw : (raw > 0 ? raw - N : raw + N);
+      return { abs, signed };
+    };
+
+    /* Fade-to-white runway used at the bottom of the FY_F hero — longer
+       eased stops so the deck artwork tapers into the white below the
+       paginator instead of cutting hard. */
+    const FY_F_FADE_OVERLAY = 'linear-gradient(to bottom, rgba(255,255,255,0) 50%, rgba(255,255,255,0.15) 64%, rgba(255,255,255,0.5) 78%, rgba(255,255,255,0.9) 89%, #FFFFFF 93%, #FFFFFF 100%)';
+
     const FY_F = () => {
       const PAD_TOP_CSS = 'calc(var(--bar-overlap, 118px) + 4px)';
       /* Hero grown so the fade-to-white has a long, smooth runway
-         (≥150px). Content sits at the top of the slide; the lower
-         half is bg + a slow-blooming linear overlay. */
+         (≥150px). Content sits centred; the lower band fades to white. */
       const MIN_H = 380;
-      const SLIDE_PCT = 100;
       const N = FY_SLIDES.length;
       const [ref, idx, progress] = useInfiniteCarousel(N);
       const renderedSlides = [FY_SLIDES[N - 1], ...FY_SLIDES, FY_SLIDES[0]];
-      /* Per-real-slide image opacity from wrapped progress — same
-         trick as FY_L. Background deck lifts out of the horizontal
-         scroller and crossfades in place, so the artwork doesn't
-         slide past itself at the slide boundary. */
-      const imageOpacities = FY_SLIDES.map((_, p) => {
-        const d = Math.min(
-          Math.abs(p - progress),
-          Math.abs(p - progress - N),
-          Math.abs(p - progress + N),
-        );
-        return Math.max(0, 1 - d);
-      });
+      /* Per-real-slide image opacity from wrapped progress — same trick
+         as FY_L. Background deck lifts out of the scroller and crossfades
+         in place, so the artwork doesn't slide past itself at the seam. */
+      const imageOpacities = FY_SLIDES.map((_, p) =>
+        Math.max(0, 1 - wrappedCarouselDistance(p, progress, N).abs)
+      );
       return (
         <>
           <div style={{ position: 'relative', marginTop: 'calc(-1 * var(--bar-overlap, 118px))', overflow: 'hidden' }}>
-            {/* Background image deck — absolute-stacked posters that
-               crossfade between slides based on scroll progress. */}
             {FY_SLIDES.map((_, p) => (
               <div key={p} aria-hidden style={{
                 position: 'absolute', inset: 0, zIndex: 0,
@@ -2081,14 +2080,9 @@ import ReactDOM from 'react-dom';
                 pointerEvents: 'none', willChange: 'opacity',
               }} />
             ))}
-            {/* Section-level fade-to-white overlay — solid white
-               band in the bottom 28px (93% → 100% of MIN_H 380). The
-               eased fade now runs from 50% and resolves to full
-               white at the top of that band — longer runway, more
-               stops, smoother taper. */}
             <div aria-hidden style={{
               position: 'absolute', inset: 0, zIndex: 1,
-              background: 'linear-gradient(to bottom, rgba(255,255,255,0) 50%, rgba(255,255,255,0.15) 64%, rgba(255,255,255,0.5) 78%, rgba(255,255,255,0.9) 89%, #FFFFFF 93%, #FFFFFF 100%)',
+              background: FY_F_FADE_OVERLAY,
               pointerEvents: 'none',
             }} />
             <div ref={ref} style={{
@@ -2097,28 +2091,14 @@ import ReactDOM from 'react-dom';
               overscrollBehavior: 'none',
             }} className="scrollbar-hide no-page-swipe">
               {renderedSlides.map((s, i) => {
-                /* Wrapped distance + signed offset, matching the FY_L
-                   recipe: text fades out aggressively (×2.6) and
-                   parallax-X drifts at 60px per unit. */
-                const realPos = i - 1;
-                const dist = Math.min(
-                  Math.abs(realPos - progress),
-                  Math.abs(realPos - progress - N),
-                  Math.abs(realPos - progress + N),
-                );
+                /* FY_L motion recipe: text fades ×2.6 and parallax-X drifts 60px/unit. */
+                const { abs: dist, signed: wrappedOffset } = wrappedCarouselDistance(i - 1, progress, N);
                 const textOpacity = Math.max(0, 1 - dist * 2.6);
-                const offsetUnits = realPos - progress;
-                const wrappedOffset =
-                  Math.abs(offsetUnits) <= N / 2
-                    ? offsetUnits
-                    : offsetUnits > 0
-                      ? offsetUnits - N
-                      : offsetUnits + N;
                 const parallaxX = wrappedOffset * 60;
                 return (
                   <div key={i} style={{
-                    flex: `0 0 ${SLIDE_PCT}%`, scrollSnapAlign: 'start',
-                    position: 'relative', minHeight: MIN_H, overflow: 'hidden',
+                    flex: '0 0 100%', scrollSnapAlign: 'start',
+                    minHeight: MIN_H, overflow: 'hidden',
                     display: 'flex', flexDirection: 'column',
                     alignItems: 'center', justifyContent: 'center',
                     textAlign: 'center',
@@ -2126,14 +2106,8 @@ import ReactDOM from 'react-dom';
                     boxSizing: 'border-box',
                     background: 'transparent',
                   }}>
-                    {/* Copy + CTA. Vertical centering is handled by the
-                       slide's justifyContent; the inner wrapper shifts
-                       up so the content sits at the OPTICAL centre,
-                       parallax-translates against the scroll, and
-                       fades out before reaching the slide edge — same
-                       FY_L motion recipe. */}
                     <div style={{
-                      position: 'relative', zIndex: 2,
+                      position: 'relative', zIndex: 3,
                       transform: `translate(${parallaxX}px, -12px)`,
                       opacity: textOpacity,
                       willChange: 'transform, opacity',
@@ -2192,14 +2166,9 @@ import ReactDOM from 'react-dom';
          crossfades in place instead of sliding past each other — no
          more hard contrast seam at the slide boundary. Text + button
          still ride inside the scroller and get horizontal parallax. */
-      const imageOpacities = slides.map((_, p) => {
-        const d = Math.min(
-          Math.abs(p - progress),
-          Math.abs(p - progress - slides.length),
-          Math.abs(p - progress + slides.length),
-        );
-        return Math.max(0, 1 - d);
-      });
+      const imageOpacities = slides.map((_, p) =>
+        Math.max(0, 1 - wrappedCarouselDistance(p, progress, slides.length).abs)
+      );
       return (
         <div style={{
           /* Sticky pin: hero stays anchored at the top while the
@@ -2245,32 +2214,12 @@ import ReactDOM from 'react-dom';
             overscrollBehavior: 'none',
           }} className="scrollbar-hide no-page-swipe">
             {renderedSlides.map((s, i) => {
-              /* Distance in slide-units between this rendered slide and
-                 the current scroll progress. Wrapped across the loop
-                 boundary so adjacent slides at the deck edges still
-                 resolve to the smaller offset. */
-              const realPos = i - 1;
-              const dist = Math.min(
-                Math.abs(realPos - progress),
-                Math.abs(realPos - progress - slides.length),
-                Math.abs(realPos - progress + slides.length),
-              );
-              /* Text fades aggressively (2.6×) so it's fully invisible
-                 well BEFORE the parallax pushes it to the screen edge —
-                 no half-faded text drifting off-screen during the
-                 transition. Fully gone by dist ≈ 0.38. */
+              /* Text fades aggressively (×2.6) so it's invisible well
+                 BEFORE the parallax pushes it to the screen edge — no
+                 half-faded text drifting off-screen during the transition.
+                 Fully gone by dist ≈ 0.38. Parallax at 60px/unit. */
+              const { abs: dist, signed: wrappedOffset } = wrappedCarouselDistance(i - 1, progress, slides.length);
               const textOpacity = Math.max(0, 1 - dist * 2.6);
-              /* Parallax — text translates against the slide motion at
-                 a fraction so it appears to lag the artwork. Reduced
-                 from 90 → 60 so the text doesn't travel as far before
-                 the opacity finishes fading. */
-              const offsetUnits = realPos - progress;
-              const wrappedOffset =
-                Math.abs(offsetUnits) <= slides.length / 2
-                  ? offsetUnits
-                  : offsetUnits > 0
-                    ? offsetUnits - slides.length
-                    : offsetUnits + slides.length;
               const parallaxX = wrappedOffset * 60;
               return (
                 <div key={i} style={{
@@ -3587,11 +3536,10 @@ import ReactDOM from 'react-dom';
             </>
           )} />
         {showViewAll && (
-          /* Tiny secondary view-all pill straddling the stack's
-             bottom edge — centered horizontally, half above / half
-             below so it reads as anchored to the last card. Slate-30
-             fill + hairline outline keeps it quiet against the white
-             card surface above. */
+          /* Tiny secondary view-all pill straddling the stack's bottom
+             edge — half above / half below so it reads as anchored to
+             the last card. White fill + hairline outline keeps it quiet
+             against the card surface above. */
           <PagePad>
             <div style={{
               marginTop: -19, position: 'relative', zIndex: 5,
@@ -3606,9 +3554,7 @@ import ReactDOM from 'react-dom';
                 lineHeight: '14px', letterSpacing: '0.22px',
                 color: 'rgba(0,0,0,0.9)',
                 display: 'inline-flex', alignItems: 'center',
-              }}>
-                View all
-              </button>
+              }}>View all</button>
             </div>
           </PagePad>
         )}
@@ -5699,9 +5645,16 @@ import ReactDOM from 'react-dom';
             ) : (sections.aiBanker === 'None' || sections.forYou === 'L') ? (
               <>
                 {/* AI banker hidden (or FY_L kiosk) → explicit pre-Bills
-                    gap. FY_L now uses 8 (was 16) — tighter cadence
-                    inside the kiosk. Others keep their legacy values. */}
-                <Spacer h={isUtilityFY ? 28 : sections.forYou === 'L' ? 24 : sections.forYou === 'F' ? 0 : isGradientFY ? 32 : 4} />
+                    gap. Each variant tunes the gap to its own bottom
+                    edge: FY_F's own fade-to-white ends flush, so 0. */}
+                {(() => {
+                  let h = 4;
+                  if (isUtilityFY) h = 28;
+                  else if (sections.forYou === 'L') h = 24;
+                  else if (sections.forYou === 'F') h = 0;
+                  else if (isGradientFY) h = 32;
+                  return <Spacer h={h} />;
+                })()}
                 <SectionWrap title="Bills & Recharges" cta={sections.bills === 'L' ? 'View all' : undefined} headerStyle={headerStyle} isFirst>
                   <BillsSection variant={sections.bills} isInCard={isInCard} />
                   {headerStyle === 'Bold' && <Spacer h={8} />}
@@ -6414,6 +6367,10 @@ import ReactDOM from 'react-dom';
          Home in from the right. Inner horizontal carousels carry the
          `.no-page-swipe` marker so they're not hijacked. */
       const [activePage, setActivePage] = useState(1);
+      /* Live fractional position from the pager — 0 = Savings, 1 =
+         Explore, 2 = Home. Updates continuously during drag so the
+         bottom-nav overlays can cross-fade WITH the swipe. */
+      const [pageProgress, setPageProgress] = useState(1);
       const [sections, setSections] = useState(PRESETS.V1.sections);
       const [headerStyle, setHeaderStyle] = useState(PRESETS.V1.headerStyle);
       const [spacing, setSpacing] = useState({ gapNone: 24, gapHeaderAbove: 32, gapHeaderBelow: 16 });
@@ -6583,34 +6540,32 @@ import ReactDOM from 'react-dom';
                           ]}
                           activeIndex={activePage}
                           onChange={setActivePage}
+                          onProgress={setPageProgress}
                         />
                       )}
-                    {/* Bottom nav overlay — cross-fades between the
-                       default slice nav (Savings + Explore) and the
-                       Home/Payments quick-action footer when the user
-                       swipes to Home. Two layers stacked so they can
-                       opacity-tween without a hard cut. */}
-                    {!useOriginal && (
-                      <>
+                    {/* Bottom nav cross-fades LIVE with the page drag
+                       between the default slice nav (Savings + Explore)
+                       and the Home quick-action footer. homeWeight runs
+                       0→1 as the pager moves from Explore (1) to Home (2). */}
+                    {!useOriginal && (() => {
+                      const homeWeight = Math.max(0, Math.min(1, pageProgress - 1));
+                      const overlay = (zIndex, opacity, active, content) => (
                         <div style={{
                           position: 'absolute', left: 0, right: 0, bottom: 0,
-                          zIndex: 5, pointerEvents: activePage === 2 ? 'none' : 'auto',
-                          opacity: activePage === 2 ? 0 : 1,
-                          transition: 'opacity 220ms ease-out',
-                        }}>
-                          <BottomNavGradient />
-                        </div>
-                        <div style={{
-                          position: 'absolute', left: 0, right: 0, bottom: 0,
-                          zIndex: 6, pointerEvents: activePage === 2 ? 'auto' : 'none',
-                          opacity: activePage === 2 ? 1 : 0,
-                          transition: 'opacity 220ms ease-out',
-                        }}>
-                          <img src="/assets/bottom_nav_home.png" alt=""
-                            style={{ width: '100%', display: 'block' }} />
-                        </div>
-                      </>
-                    )}
+                          zIndex, opacity,
+                          pointerEvents: active ? 'auto' : 'none',
+                        }}>{content}</div>
+                      );
+                      return (
+                        <>
+                          {overlay(5, 1 - homeWeight, homeWeight <= 0.5, <BottomNavGradient />)}
+                          {overlay(6, homeWeight, homeWeight > 0.5, (
+                            <img src="/assets/bottom_nav_home.png" alt=""
+                              style={{ width: '100%', display: 'block' }} />
+                          ))}
+                        </>
+                      );
+                    })()}
 {/* Splash sits INSIDE phone-screen so it inherits the
                         transform: scale used on mobile — proportions match the
                         rendered page exactly instead of being misaligned at
