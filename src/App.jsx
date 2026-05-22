@@ -181,12 +181,18 @@ import ReactDOM from 'react-dom';
        iOS Safari doesn't re-rasterise on swipe-back (otherwise the
        off-screen page loses its compositor layer and paints after a
        visible ~1s delay on the way back in). */
+    /* GPU-layer hint only — `contain: paint` was clipping content that
+       legitimately overflows its page bounds (e.g. FY_F's hero bleeds
+       up under the app bar via a negative top margin), which on iOS
+       Safari caused the bottom fade-to-white to vanish mid-swipe and
+       a hard cut to show through. `backface-visibility: hidden` was
+       triggering a re-rasterise on mobile when the page swiped back
+       into view (app-bar "blink"). Bare `translateZ(0)` is enough to
+       keep each page on its own compositor layer. */
     const PAGER_PAGE_STYLE_BASE = {
       height: '100%',
       position: 'relative', flexShrink: 0,
       transform: 'translateZ(0)',
-      backfaceVisibility: 'hidden',
-      contain: 'layout paint',
       willChange: 'transform',
     };
     const HorizontalPager = ({ pages, activeIndex, onChange, onProgress }) => {
@@ -217,13 +223,20 @@ import ReactDOM from 'react-dom';
         const deltaX = e.clientX - s.x;
         const deltaY = e.clientY - s.y;
         if (!s.decided) {
-          if (Math.abs(deltaX) > 8 && Math.abs(deltaX) > Math.abs(deltaY) * 1.4) {
-            s.decided = true;
-            s.dragging = true;
-          } else if (Math.abs(deltaY) > 10) {
+          /* Vertical gets the earlier exit (6px vs the 12px+1.8x
+             horizontal commit) so iOS' native vertical scroll wins
+             clean conflicts. The pager only steals the gesture if
+             the move is clearly horizontal AND past a higher
+             threshold — eliminates the conflict where a slightly-
+             diagonal scroll briefly engages page swipe. */
+          if (Math.abs(deltaY) > 6 && Math.abs(deltaY) > Math.abs(deltaX)) {
             s.decided = true;
             s.blocked = true;
             return;
+          }
+          if (Math.abs(deltaX) > 12 && Math.abs(deltaX) > Math.abs(deltaY) * 1.8) {
+            s.decided = true;
+            s.dragging = true;
           } else {
             return;
           }
