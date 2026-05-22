@@ -234,19 +234,33 @@ import ReactDOM from 'react-dom';
        Spacers so it's controlled by a single spacing system. */
     const SectionHeaderBold = ({ title, cta }) => (
       <div style={{
-        paddingLeft: 32, paddingRight: 24, lineHeight: '20px',
+        paddingLeft: 32, paddingRight: 24, lineHeight: '18px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        <span style={T.h4}>{title}</span>
+        {/* 14px medium — 2pt down from T.h4 (16px). Section titles
+           now sit a touch quieter, leaving more room for the
+           section's hero card to lead. */}
+        <span style={{
+          fontFamily: 'Rubik', fontSize: 14, fontWeight: 500,
+          lineHeight: '18px', letterSpacing: '0.28px',
+          color: 'rgba(0,0,0,0.9)',
+        }}>{title}</span>
         {cta && <button className="tap" style={{
           background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
           ...T.btnSm, color: '#D30AD7',
         }}>{cta}</button>}
       </div>
     );
-    const SectionHeaderList = ({ title }) => (
-      <div style={{ paddingLeft: 28, paddingRight: 24, lineHeight: '12px' }}>
+    const SectionHeaderList = ({ title, cta }) => (
+      <div style={{
+        paddingLeft: 28, paddingRight: 24, lineHeight: '12px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
         <span style={T.meta}>{title}</span>
+        {cta && <button className="tap" style={{
+          background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
+          ...T.btnSm, color: '#D30AD7',
+        }}>{cta}</button>}
       </div>
     );
 
@@ -265,7 +279,7 @@ import ReactDOM from 'react-dom';
         return (
           <>
             {!isFirst && <Spacer h={gapHeaderAbove} label="section" />}
-            <SectionHeaderList title={title} />
+            <SectionHeaderList title={title} cta={cta} />
             <Spacer h={gapHeaderBelow} label="header→content" />
             {children}
           </>
@@ -1082,7 +1096,7 @@ import ReactDOM from 'react-dom';
        [cloneLast, ...slides, cloneFirst]. After the snap settles on either clone,
        scrollLeft is reset (without animation) to the equivalent real slide so the
        loop feels continuous in both directions. */
-    const useInfiniteCarousel = (slideCount) => {
+    const useInfiniteCarousel = (slideCount, strideRatio = 1) => {
       const ref = React.useRef(null);
       const [idx, setIdx] = useState(0);
       const [progress, setProgress] = useState(0);
@@ -1092,21 +1106,23 @@ import ReactDOM from 'react-dom';
       React.useEffect(() => {
         const el = ref.current;
         if (!el) return;
-        /* Start on the first real slide (position 1; position 0 is cloneLast). */
+        /* Start on the first real slide (position 1; position 0 is cloneLast).
+           Stride = container width × strideRatio so the hook supports
+           sub-100% slide widths (peek-card layouts). */
         const setInitial = () => {
           const cw = el.offsetWidth;
           if (cw === 0) { requestAnimationFrame(setInitial); return; }
-          el.scrollLeft = cw;
+          el.scrollLeft = cw * strideRatio;
         };
         setInitial();
-      }, []);
+      }, [strideRatio]);
 
       React.useEffect(() => {
         const el = ref.current;
         if (!el) return;
         let settleTimer;
         const onScroll = () => {
-          const cw = el.offsetWidth;
+          const cw = el.offsetWidth * strideRatio;
           if (cw === 0) return;
           const raw = el.scrollLeft / cw; /* 0..N+1 */
           /* Logical position: raw=1 → real slide 0, raw=N → real slide N-1 */
@@ -1174,21 +1190,24 @@ import ReactDOM from 'react-dom';
         if (!el) return;
         const t = setInterval(() => {
           if (paused.current) return;
-          const cw = el.offsetWidth;
+          const cw = el.offsetWidth * strideRatio;
           if (cw === 0) return;
           el.scrollBy({ left: cw, behavior: 'smooth' });
         }, 4000);
         return () => clearInterval(t);
-      }, []);
+      }, [strideRatio]);
 
       return [ref, idx, progress];
     };
 
     /* Dot indicators — quiet pill: thinner inactive dots, slate-toned active. */
-    const CarouselDots = ({ count, activeIdx, bottom = 14 }) => (
+    const CarouselDots = ({ count, activeIdx, bottom = 14, align = 'center' }) => (
       <div style={{
         position: 'absolute', bottom, left: 0, right: 0,
-        display: 'flex', justifyContent: 'center', gap: 4, pointerEvents: 'none', zIndex: 2,
+        display: 'flex',
+        justifyContent: align === 'left' ? 'flex-start' : 'center',
+        paddingLeft: align === 'left' ? 28 : 0,
+        gap: 4, pointerEvents: 'none', zIndex: 2,
       }}>
         {Array.from({ length: count }, (_, i) => (
           <div key={i} style={{
@@ -1280,22 +1299,24 @@ import ReactDOM from 'react-dom';
        iOS status bar; in regular Safari the status bar is still white. */
     const FY_D = () => {
       const TEXT_TOP_CSS = 'calc(var(--bar-overlap, 118px) + 24px)';
-      const MIN_H = 220;
+      /* Carousel grown by ~40px so the gradient has room to:
+         (a) hold the slide colour longer through the read zone,
+         (b) transition to white right above the paginator, and
+         (c) leave a solid-white band beneath the paginator so the
+         seam into Bills is invisible (≥20px of pure white). */
+      const MIN_H = 260;
       const SLIDE_PCT = 100;
-      const TEXT_BOTTOM = 52;
+      const TEXT_BOTTOM = 42; // CTA→paginator gap ≈ 24 (paginator bottom 12 + ~6 dot height)
       const slideBg = (s) => {
-        /* Big overlapping blobs concentrated in the UPPER 60% so
-           they have natural room to dissolve before the bottom.
-           Blob 3 pulled up to ~22% vertical so it can't reach the
-           paginator zone. A single smooth linear overlay (no mid
-           stops) blends from transparent at 25% → solid white at
-           100% — no intermediate alpha step = no visible horizontal
-           edge in the lower half. */
+        /* Linear white overlay: hold the slide colour to 55%, then
+           run fully to white by 85%. The bottom 15% (~39px) is pure
+           white — paginator sits on white, and the Bills seam below
+           gets a clean ≥20px white band. */
         return `
           radial-gradient(ellipse 100% 70% at 8% 6%, ${s[0]} 0%, transparent 85%),
           radial-gradient(ellipse 100% 70% at 95% 10%, ${s[1]} 0%, transparent 85%),
           radial-gradient(ellipse 110% 60% at 50% 22%, ${s[2]} 0%, transparent 90%),
-          linear-gradient(to bottom, transparent 25%, #FFFFFF 100%),
+          linear-gradient(to bottom, transparent 55%, #FFFFFF 85%),
           #FFFFFF
         `;
       };
@@ -1323,7 +1344,9 @@ import ReactDOM from 'react-dom';
               display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
               overscrollBehavior: 'none',
             }} className="scrollbar-hide">
-              {renderedSlides.map((s, i) => (
+              {renderedSlides.map((s, i) => {
+                const meta = fyAvatarMeta(s.heroImg);
+                return (
                 <div key={i} style={{
                   flex: `0 0 ${SLIDE_PCT}%`, scrollSnapAlign: 'start',
                   position: 'relative', minHeight: MIN_H, overflow: 'hidden',
@@ -1331,77 +1354,115 @@ import ReactDOM from 'react-dom';
                 }}>
                   <div style={{
                     position: 'absolute', right: 24, top: TEXT_TOP_CSS, bottom: TEXT_BOTTOM,
-                    width: 72, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    width: 60, display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
                     pointerEvents: 'none',
                   }}>
-                    {/* DLS avatar — translucent circle + bigger glyph
-                       keyed off the slide's heroImg. Slice-native
-                       vibe; sits visually integrated with the
-                       gradient instead of as a hard tinted disc. */}
-                    <FyDlsAvatar heroImg={s.heroImg} size={72} glyphSize={40} />
+                    {/* DLS avatar — subtle (tinted) disc + full-colour
+                       icon so avatar + slide mesh read as one unit.
+                       Top-aligned with the heading on the left so the
+                       two elements share a baseline. */}
+                    <FyDlsAvatar heroImg={s.heroImg} size={60} glyphSize={30} tone="subtle" />
                   </div>
                   <div style={{
                     position: 'relative', width: '100%',
                     paddingTop: TEXT_TOP_CSS, paddingRight: 110, paddingBottom: TEXT_BOTTOM, paddingLeft: 28,
-                    display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                    display: 'flex', flexDirection: 'column', justifyContent: 'flex-start',
                     minHeight: MIN_H, boxSizing: 'border-box', zIndex: 1,
                   }}>
                     <div>
                       <div style={{ ...T.h4, lineHeight: '20px' }}>{s.title}</div>
                       <div style={{ ...T.caption, color: 'rgba(0,0,0,0.7)', marginTop: 4 }}>{s.sub}</div>
                     </div>
+                    {/* Tertiary CTA — text link in the slide's avatar
+                       accent colour (green / Valentino / blue) so the
+                       affordance reads as a deepened tone of the slide
+                       rather than a Valentino stamp on every variant.
+                       Fixed 12px gap below the sub-text (no space-between). */}
                     <button className="tap" style={{
                       alignSelf: 'flex-start', marginTop: 12,
-                      padding: '6px 14px', background: '#000', border: 'none', borderRadius: 100,
-                      ...T.btnSm, color: 'white', cursor: 'pointer', whiteSpace: 'nowrap',
-                    }}>{s.cta}</button>
+                      background: 'transparent', border: 'none', padding: 0,
+                      ...T.btnSm, color: meta.accent,
+                      cursor: 'pointer', whiteSpace: 'nowrap',
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                    }}>
+                      {s.cta}
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+                        <path d="M9 6l6 6-6 6" stroke={meta.accent} strokeWidth="2"
+                          strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
-            <CarouselDots count={FY_SLIDES.length} activeIdx={idx} bottom={16} />
+            <CarouselDots count={FY_SLIDES.length} activeIdx={idx} bottom={12} />
           </div>
         </>
       );
     };
 
-    /* Per-slide DLS avatar config — tinted circle + glyph driven by the
-       slide's heroImg. Used by FY_E (avatar-leading variant). */
+    /* Per-slide DLS icon config — official slice DLS icon paths,
+       extracted from Electricity.svg / Spark.svg / Analytics.svg.
+       Each entry returns an array of paths (some icons are multi-
+       path) + an accent colour used by both FY_D (filled colour
+       avatar with white icon) and FY_M (bare icon in accent). */
     const fyAvatarMeta = (heroImg) => ({
-      'fy_3d_bill.png':   { bg: '#F0F4F7', color: 'rgba(0,0,0,0.8)',
-        path: 'M11 2 4 14h6l-1 8 9-12h-6l1-8z', mode: 'fill' },
-      'fy_3d_drop.png':   { bg: '#FAE2FA', color: '#D30AD7',
-        path: 'M12 2 13.5 9 22 12 13.5 15 12 22 10.5 15 2 12 10.5 9z', mode: 'fill' },
-      'fy_3d_spends.png': { bg: '#F0F4F7', color: 'rgba(0,0,0,0.8)',
-        path: 'M4 19h16M6 14l3-4 4 3 5-7', mode: 'stroke' },
-    }[heroImg] || { bg: '#F0F4F7', color: 'rgba(0,0,0,0.8)', path: '', mode: 'fill' });
+      'fy_3d_bill.png': {
+        accent: '#00A63E', // saturated green to pair with mint scheme
+        paths: [
+          'M14.235 9.97088C13.8654 9.97088 13.5057 9.97088 13.136 9.97088H13.0461C13.0461 9.97088 13.0661 9.91089 13.0761 9.88089C13.3958 9.16094 13.7155 8.43099 14.0452 7.71105C14.1851 7.40107 14.0053 7.12109 13.6656 7.12109C12.9662 7.12109 12.2568 7.12109 11.5574 7.12109C11.3476 7.12109 11.2177 7.21108 11.1478 7.42107C10.7681 8.56099 10.3884 9.7009 10.0088 10.8408C9.99879 10.8808 9.97881 10.9208 9.97881 10.9608C9.95883 11.2108 10.1387 11.4008 10.3984 11.4008C10.8181 11.4008 11.2377 11.4008 11.6573 11.4008H11.7472C11.7373 11.4608 11.7273 11.5008 11.7173 11.5508C11.5874 12.1507 11.4475 12.7507 11.3176 13.3406C11.2777 13.5106 11.3676 13.6806 11.5174 13.7606C11.6873 13.8506 11.8771 13.8106 12.007 13.6606C12.1569 13.4806 12.3068 13.3006 12.4566 13.1207C13.146 12.3007 13.8254 11.4708 14.5148 10.6408C14.5648 10.5808 14.6147 10.4908 14.6247 10.4009C14.6547 10.1609 14.4748 9.97088 14.2251 9.97088H14.235Z',
+          'M17.6119 4.18131C16.0732 2.74141 14.0051 1.96147 11.8769 2.00147C9.73883 2.03146 7.74059 2.8614 6.24192 4.3313C4.75323 5.81119 3.93396 7.80104 4.00389 9.80089C4.06384 11.5908 4.81318 13.3106 6.09205 14.6505C7.00125 15.6005 7.5108 16.8104 7.5108 18.0703C7.5108 20.2401 9.36915 22 11.6671 22H12.3365C14.6345 22 16.4929 20.2401 16.4929 18.0703C16.4929 16.5104 17.3221 15.3005 18.0115 14.5405C19.2904 13.1606 19.9998 11.3908 19.9998 9.56091C19.9998 7.52106 19.1505 5.6112 17.6219 4.18131H17.6119ZM16.0632 12.9307C15.4738 13.5706 15.0142 14.2406 14.6545 14.9505C14.3747 15.5205 14.1649 16.1604 14.045 16.8004C13.9651 17.2403 13.5654 17.5403 13.1158 17.5403H10.8878C10.4382 17.5403 10.0486 17.2303 9.95863 16.7904C9.68887 15.3805 8.99948 14.0306 8.01035 13.0107C7.13113 12.1007 6.62158 10.9408 6.58162 9.7309C6.54165 8.371 7.09117 7.0211 8.10027 6.03117C9.10938 5.03124 10.4582 4.47128 11.8869 4.45129H11.9669C13.4056 4.45129 14.7544 4.98125 15.7835 5.93118C16.8226 6.90111 17.3921 8.20101 17.3921 9.57091C17.3921 10.8108 16.9125 12.0107 16.0532 12.9407L16.0632 12.9307Z',
+        ],
+      },
+      'fy_3d_drop.png': {
+        accent: '#D30AD7', // slice Valentino
+        paths: [
+          'M17.6793 9.94054H13.7196V3.6515C13.7196 2.06335 11.6867 1.39633 10.7445 2.67743L4.31777 11.4334C3.5237 12.5239 4.29659 14.0591 5.64122 14.0591H9.60099V20.3482C9.60099 21.9363 11.6338 22.6033 12.5761 21.3222L19.0028 12.5557C19.7969 11.4652 19.024 9.92995 17.6793 9.92995V9.94054Z',
+        ],
+      },
+      'fy_3d_spends.png': {
+        accent: '#2B6ACF', // slice Blue
+        paths: [
+          'M14.0951 11.9143C12.9864 11.9143 12.0792 11.0066 12.0792 9.89713V3.84569C12.0792 2.8472 11.3435 2 10.396 2C10.2952 2 10.1843 2.01009 10.0735 2.03026C8.79341 2.29249 7.57382 2.79677 6.47518 3.53303C4.82219 4.64246 3.53204 6.21583 2.76602 8.06152C2 9.89713 1.80849 11.9244 2.19151 13.881C2.5846 15.8376 3.54212 17.6329 4.95322 19.0449C6.36431 20.4569 8.15842 21.415 10.1138 21.8084C10.7689 21.9395 11.4241 22 12.0792 22C13.3996 22 14.7099 21.7378 15.9396 21.2335C17.7841 20.467 19.3565 19.176 20.4652 17.5219C21.201 16.4226 21.7049 15.2022 21.967 13.9213C22.1887 12.8321 21.2614 11.9143 20.1527 11.9143H14.0951ZM18.54 15.8477C17.9756 16.7655 17.2398 17.5724 16.3428 18.1674C15.0425 19.0348 13.5911 19.4685 12.0893 19.4685C11.5954 19.4685 11.1016 19.4181 10.6178 19.3273C9.14618 19.0348 7.80564 18.3187 6.74732 17.2597C5.689 16.2007 4.97338 14.8593 4.68108 13.3868C4.39886 11.9445 4.52989 10.472 5.07417 9.10035C5.33623 8.44478 5.71924 7.84972 6.17281 7.30509C7.37224 5.84266 8.04755 5.43923 8.85388 5.13666C9.15626 5.01563 9.48888 5.2476 9.49896 5.57035L9.57959 9.88704C9.57959 12.3883 11.6156 14.4256 14.1152 14.4256L18.8424 14.4861C19.0138 14.4861 19.1347 14.6677 19.0742 14.829C18.923 15.182 18.7618 15.5149 18.5501 15.8477H18.54Z',
+          'M18.5107 4.12832C17.5834 3.3618 16.515 2.76675 15.366 2.36332C14.7411 2.15152 14.0859 2.62555 14.0859 3.28112V9.0199C14.0859 9.55444 14.5093 9.97804 15.0435 9.98813L20.7584 10.0386C21.4135 10.0386 21.8974 9.40315 21.6958 8.77784C21.091 6.93215 19.9722 5.32852 18.5107 4.12832Z',
+        ],
+      },
+    }[heroImg] || { accent: 'rgba(0,0,0,0.85)', paths: [] });
 
-    const FyDlsAvatar = ({ heroImg, size = 56, glyphSize = 28 }) => {
+    /* Per-accent soft tint matching the DLS-50 token of each accent.
+       Used by `tone="subtle"` avatars where the disc is a light wash
+       of the accent and the icon carries the full colour. Lets the
+       avatar read as one tonal unit with the slide's mesh instead of
+       a saturated brand sticker on top of it. */
+    const FY_AVATAR_SOFT_BG = {
+      '#00A63E': '#E0F4E8', // green-50
+      '#D30AD7': '#FAE2FA', // valentino-50
+      '#2B6ACF': '#E6EDF9', // blue-50
+    };
+
+    const FyDlsAvatar = ({ heroImg, size = 56, glyphSize = 28, tone = 'bold' }) => {
       const meta = fyAvatarMeta(heroImg);
+      const subtle = tone === 'subtle';
+      const bg = subtle ? (FY_AVATAR_SOFT_BG[meta.accent] || '#F0F4F7') : meta.accent;
+      const glyphFill = subtle ? meta.accent : '#FFFFFF';
       return (
         <div style={{
           width: size, height: size, borderRadius: 100,
-          /* Translucent white surface so the parent slide gradient
-             reads through — feels integrated with the card instead of
-             a hard tinted disc. Backdrop blur softens whatever's
-             behind. Hairline ring + subtle drop shadow give the
-             avatar dimension. */
-          background: 'rgba(255,255,255,0.55)',
-          backdropFilter: 'blur(12px) saturate(140%)',
-          WebkitBackdropFilter: 'blur(12px) saturate(140%)',
-          /* Layered ring: white inner highlight + subtle dark hairline
-             outside so the avatar reads cleanly against any mesh
-             colour. The dark ring is the "subtle outline" — barely
-             there on bright areas, just enough definition on light. */
-          boxShadow: '0 0 0 1px rgba(255,255,255,0.7), 0 0 0 2px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04)',
+          /* bold: filled accent disc + white icon (sticker read).
+             subtle: light wash of the accent + icon in full colour,
+             so the avatar reads as a deepened tone of the slide's
+             mesh instead of a brand stamp on top of it. */
+          background: bg,
+          boxShadow: subtle
+            ? 'none'
+            : '0 0 0 1px rgba(255,255,255,0.6), 0 2px 8px rgba(0,0,0,0.08)',
           display: 'grid', placeItems: 'center', flexShrink: 0,
         }}>
           <svg width={glyphSize} height={glyphSize} viewBox="0 0 24 24" fill="none">
-            <path d={meta.path}
-              fill={meta.mode === 'fill' ? meta.color : 'none'}
-              stroke={meta.mode === 'stroke' ? meta.color : 'none'}
-              strokeWidth={meta.mode === 'stroke' ? 2.4 : 0}
-              strokeLinecap="round" strokeLinejoin="round" />
+            {(meta.paths || []).map((p, i) => (
+              <path key={i} d={p} fill={glyphFill} />
+            ))}
           </svg>
         </div>
       );
@@ -1522,21 +1583,127 @@ import ReactDOM from 'react-dom';
       );
     };
 
-    /* FY_M — FY_D recipe (full-bleed mesh gradient under the app
-       bar, infinite carousel) but stripped of the black CTA pill.
-       Avatar shrinks from 72 → 56, and the text + avatar both
-       vertically centre in the slide so the whole composition
-       reads as a single row. */
+    /* FY_M — FY_D recipe stripped of the CTA. Title bumped to H3
+       (~20px) on a single line, sub on its own single line, and the
+       avatar circle is gone — the glyph alone sits on the right at
+       a larger size (60px) so the artwork carries more presence. */
     const FY_M = () => {
       const TEXT_TOP_CSS = 'calc(var(--bar-overlap, 118px) + 24px)';
-      const MIN_H = 200;
-      const SLIDE_PCT = 100;
-      const TEXT_BOTTOM = 52;
+      /* Peek layout. Geometry on a 360px phone shell:
+         · Slide width 86% of container (≈ 310px) with 6px padding
+           each side → active card ≈ 298px, centered.
+         · Active card respects a visible screen margin on each side
+           (≈ 31px on 360px — within DLS gutter range).
+         · Adjacent slides extend behind, peeking ~25px into the
+           viewport on each side; the inner card peek is ~19px past
+           the slide gutter.
+         · Card-to-card gap at the snap point = 2 × padding = 12px.
+         strideRatio matches slide width so the hook advances by one
+         slide per snap, not by container width. */
+      const MIN_H = 184;
+      const SLIDE_PCT = 86;
+      const STRIDE = 0.86;
+      const TEXT_BOTTOM = 28;
       const slideBg = (s) => (
+        /* Linear fade pushed lower (transparent at 68% vs 55%) so
+           the colour holds further down the slide. */
         `radial-gradient(ellipse 100% 70% at 8% 6%, ${s[0]} 0%, transparent 85%),
          radial-gradient(ellipse 100% 70% at 95% 10%, ${s[1]} 0%, transparent 85%),
          radial-gradient(ellipse 110% 60% at 50% 22%, ${s[2]} 0%, transparent 90%),
-         linear-gradient(to bottom, transparent 25%, #FFFFFF 100%),
+         linear-gradient(to bottom, transparent 68%, #FFFFFF 100%),
+         #FFFFFF`
+      );
+      const [ref, idx, progress] = useInfiniteCarousel(FY_SLIDES.length, STRIDE);
+      const lo = Math.floor(progress) % FY_SLIDES.length;
+      const hi = (lo + 1) % FY_SLIDES.length;
+      const t = progress - Math.floor(progress);
+      const scheme = lerpScheme(fySchemeForSlide(FY_SLIDES[lo]), fySchemeForSlide(FY_SLIDES[hi]), t);
+      const renderedSlides = [FY_SLIDES[FY_SLIDES.length - 1], ...FY_SLIDES, FY_SLIDES[0]];
+      return (
+        <div style={{ position: 'relative', marginTop: 'calc(-1 * var(--bar-overlap, 118px))', overflow: 'hidden' }}>
+          <div style={{
+            position: 'absolute', inset: 0, background: slideBg(scheme),
+            pointerEvents: 'none', zIndex: 0,
+          }}/>
+          <div ref={ref} style={{
+            position: 'relative', zIndex: 1,
+            display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
+            overscrollBehavior: 'none',
+          }} className="scrollbar-hide">
+            {renderedSlides.map((s, i) => {
+              const meta = fyAvatarMeta(s.heroImg);
+              return (
+                <div key={i} style={{
+                  flex: `0 0 ${SLIDE_PCT}%`, scrollSnapAlign: 'center',
+                  position: 'relative', minHeight: MIN_H, overflow: 'hidden',
+                  background: 'transparent',
+                  paddingTop: TEXT_TOP_CSS, paddingBottom: TEXT_BOTTOM,
+                  paddingLeft: 6, paddingRight: 6,
+                  boxSizing: 'border-box',
+                  display: 'flex', alignItems: 'center',
+                }}>
+                  {/* White DLS card wrapping the avatar + text — content
+                     unchanged. Slide is 86% of container width with 6px
+                     padding each side, so the card-to-card gap at the
+                     snap point is 12px and the adjacent cards visibly
+                     peek past the active one. */}
+                  <div style={{
+                    width: '100%',
+                    background: '#FFFFFF',
+                    border: CARD_BORDER, boxShadow: CARD_SHADOW,
+                    borderRadius: 16, padding: '16px 20px',
+                    display: 'flex', alignItems: 'center', gap: 14,
+                  }}>
+                    <FyDlsAvatar heroImg={s.heroImg} size={36} glyphSize={20} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{
+                        /* Smaller heading — buttonSmall step (14px) so
+                           the title sits closer to the sub-caption and
+                           reads as one tight unit on the card. */
+                        fontFamily: 'Rubik', fontSize: 14, fontWeight: 500,
+                        lineHeight: '20px', letterSpacing: '0.28px',
+                        color: 'rgba(0,0,0,0.9)',
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                      }}>{s.title}</div>
+                      <div style={{
+                        ...T.caption, color: 'rgba(0,0,0,0.7)', marginTop: 2,
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                      }}>{s.sub}</div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <CarouselDots count={FY_SLIDES.length} activeIdx={idx} bottom={0} />
+        </div>
+      );
+    };
+
+    /* FY_O — variant of FY_M where the icon colour MATCHES the
+       slide's mesh hue directly (uses the vivid scheme stop instead
+       of the slice brand accent). Tonally cohesive — icon reads as
+       a deepened tone of the surrounding gradient, not a brand
+       sticker on top of it. */
+    const fyMatchedIconColor = (heroImg) => ({
+      'fy_3d_bill.png':   '#2E7D55', // deep mint/forest matching pink-coral... wait mint scheme
+      'fy_3d_drop.png':   '#A008A3', // Valentino-600
+      'fy_3d_spends.png': '#1F4F9F', // deeper sky blue
+    }[heroImg] || 'rgba(0,0,0,0.85)');
+    const FY_O = () => {
+      const TEXT_TOP_CSS = 'calc(var(--bar-overlap, 118px) + 24px)';
+      const MIN_H = 184; // matches FY_M — shorter container, paginator flush
+      const SLIDE_PCT = 100;
+      const TEXT_BOTTOM = 32; // active content sits ~32px above the paginator
+      const slideBg = (s) => (
+        /* White fade pushed almost to the paginator (90% vs 72%) so
+           the colour holds across the parallax band — text + icon
+           drift on continuous mesh instead of crossing into a white
+           frame that visually "cuts" the effect. */
+        `radial-gradient(ellipse 100% 70% at 8% 6%, ${s[0]} 0%, transparent 85%),
+         radial-gradient(ellipse 100% 70% at 95% 10%, ${s[1]} 0%, transparent 85%),
+         radial-gradient(ellipse 110% 60% at 50% 22%, ${s[2]} 0%, transparent 90%),
+         linear-gradient(to bottom, transparent 90%, #FFFFFF 100%),
          #FFFFFF`
       );
       const [ref, idx, progress] = useInfiniteCarousel(FY_SLIDES.length);
@@ -1556,25 +1723,81 @@ import ReactDOM from 'react-dom';
             display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
             overscrollBehavior: 'none',
           }} className="scrollbar-hide">
-            {renderedSlides.map((s, i) => (
-              <div key={i} style={{
-                flex: `0 0 ${SLIDE_PCT}%`, scrollSnapAlign: 'start',
-                position: 'relative', minHeight: MIN_H, overflow: 'hidden',
-                background: 'transparent',
-                paddingTop: TEXT_TOP_CSS, paddingBottom: TEXT_BOTTOM,
-                paddingLeft: 28, paddingRight: 24,
-                boxSizing: 'border-box',
-                display: 'flex', alignItems: 'center', gap: 16,
-              }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ ...T.h4, lineHeight: '20px' }}>{s.title}</div>
-                  <div style={{ ...T.caption, color: 'rgba(0,0,0,0.7)', marginTop: 4 }}>{s.sub}</div>
+            {renderedSlides.map((s, i) => {
+              const meta = fyAvatarMeta(s.heroImg);
+              const iconColor = fyMatchedIconColor(s.heroImg);
+              /* Parallax: text lags the scroll, icon leads it.
+                 Computes the slide's wrapped offset from progress
+                 (closest-side across the infinite loop). The differing
+                 translateX rates create a depth illusion as the user
+                 swipes between slides. */
+              const realPos = i - 1;
+              const offsetUnits = realPos - progress;
+              const wrappedOffset =
+                Math.abs(offsetUnits) <= FY_SLIDES.length / 2
+                  ? offsetUnits
+                  : offsetUnits > 0
+                    ? offsetUnits - FY_SLIDES.length
+                    : offsetUnits + FY_SLIDES.length;
+              /* Parallax magnitudes bumped up so the depth illusion
+                 reads clearly during a finger swipe. Text drifts with
+                 scroll (lagging), icon drifts against (leading). */
+              const textX = wrappedOffset * 56;   // text drifts WITH the scroll, lagging
+              const iconX = wrappedOffset * -40;  // icon drifts AGAINST scroll, leading
+              /* Cross-fade: active slide at opacity 1, neighbours at
+                 opacity 0. Mid-swipe the outgoing slide fades into the
+                 mesh while the incoming slide rises out of white —
+                 only one slide is ever visible at once, so the
+                 parallax reads cleanly without two text rows fighting
+                 each other across the seam. */
+              const slideOpacity = Math.max(0, 1 - Math.abs(wrappedOffset));
+              return (
+                /* No per-slide overflow:hidden — slide-edge clipping
+                   was cutting the parallax just as text/icon began to
+                   drift. Section-level `overflow:hidden` on the parent
+                   still bounds the effect, while the continuous mesh
+                   below remains uninterrupted across slide seams. */
+                <div key={i} style={{
+                  flex: `0 0 ${SLIDE_PCT}%`, scrollSnapAlign: 'start',
+                  position: 'relative', minHeight: MIN_H,
+                  background: 'transparent',
+                  paddingTop: TEXT_TOP_CSS, paddingBottom: TEXT_BOTTOM,
+                  paddingLeft: 28, paddingRight: 24,
+                  boxSizing: 'border-box',
+                  display: 'flex', alignItems: 'center', gap: 16,
+                  opacity: slideOpacity, willChange: 'opacity',
+                }}>
+                  <div style={{
+                    flex: 1, minWidth: 0,
+                    transform: `translateX(${textX}px)`,
+                    willChange: 'transform',
+                  }}>
+                    <div style={{
+                      fontFamily: 'Rubik', fontSize: 18, fontWeight: 500,
+                      lineHeight: '24px', letterSpacing: '0.32px',
+                      color: iconColor,
+                      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    }}>{s.title}</div>
+                    <div style={{
+                      ...T.caption, color: iconColor, opacity: 0.72, marginTop: 4,
+                      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    }}>{s.sub}</div>
+                  </div>
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
+                    style={{
+                      flexShrink: 0,
+                      transform: `translateX(${iconX}px)`,
+                      willChange: 'transform',
+                    }} aria-hidden="true">
+                    {(meta.paths || []).map((p, i) => (
+                      <path key={i} d={p} fill={iconColor} />
+                    ))}
+                  </svg>
                 </div>
-                <FyDlsAvatar heroImg={s.heroImg} size={56} glyphSize={28} />
-              </div>
-            ))}
+              );
+            })}
           </div>
-          <CarouselDots count={FY_SLIDES.length} activeIdx={idx} bottom={16} />
+          <CarouselDots count={FY_SLIDES.length} activeIdx={idx} bottom={0} />
         </div>
       );
     };
@@ -1683,72 +1906,118 @@ import ReactDOM from 'react-dom';
       );
     };
 
-    /* For You F — centered layout carousel. Text + CTA centred within slide,
-       illustration above text. Infinite scroll via cloned edge slides. */
+    /* For You F — centered layout carousel using the FY_L bg images
+       per slide (pink / galaxy / violet posters). Mesh gradient and
+       avatar dropped: the image IS the hero. A per-slide bottom-to-
+       white overlay preserves the fade so copy + paginator land on
+       clean white. */
     const FY_F = () => {
       const PAD_TOP_CSS = 'calc(var(--bar-overlap, 118px) + 4px)';
-      const MIN_H = 220;
+      /* Hero grown so the fade-to-white has a long, smooth runway
+         (≥150px). Content sits at the top of the slide; the lower
+         half is bg + a slow-blooming linear overlay. */
+      const MIN_H = 380;
       const SLIDE_PCT = 100;
-      const slideBg = (s) => {
-        /* Same blended mesh as FY_D — big overlapping radial blobs
-           anchored top-left / top-right / centre, fading through a
-           strong white linear overlay across the lower half. Reuses
-           the per-slide FY_SLIDE_SCHEMES so the colour story matches
-           FY_D for the same slide. */
-        return `
-          radial-gradient(ellipse 100% 90% at 8% 8%, ${s[0]} 0%, transparent 85%),
-          radial-gradient(ellipse 100% 90% at 95% 14%, ${s[1]} 0%, transparent 85%),
-          radial-gradient(ellipse 110% 80% at 50% 35%, ${s[2]} 0%, transparent 90%),
-          linear-gradient(to bottom, transparent 50%, rgba(255,255,255,0.85) 80%, #FFFFFF 100%),
-          #FFFFFF
-        `;
-      };
-      const [ref, idx, progress] = useInfiniteCarousel(FY_SLIDES.length);
-      const lo = Math.floor(progress) % FY_SLIDES.length;
-      const hi = (lo + 1) % FY_SLIDES.length;
-      const t = progress - Math.floor(progress);
-      const scheme = lerpScheme(fySchemeForSlide(FY_SLIDES[lo]), fySchemeForSlide(FY_SLIDES[hi]), t);
-      const renderedSlides = [FY_SLIDES[FY_SLIDES.length - 1], ...FY_SLIDES, FY_SLIDES[0]];
-
+      const N = FY_SLIDES.length;
+      const [ref, idx, progress] = useInfiniteCarousel(N);
+      const renderedSlides = [FY_SLIDES[N - 1], ...FY_SLIDES, FY_SLIDES[0]];
+      /* Per-real-slide image opacity from wrapped progress — same
+         trick as FY_L. Background deck lifts out of the horizontal
+         scroller and crossfades in place, so the artwork doesn't
+         slide past itself at the slide boundary. */
+      const imageOpacities = FY_SLIDES.map((_, p) => {
+        const d = Math.min(
+          Math.abs(p - progress),
+          Math.abs(p - progress - N),
+          Math.abs(p - progress + N),
+        );
+        return Math.max(0, 1 - d);
+      });
       return (
         <>
           <div style={{ position: 'relative', marginTop: 'calc(-1 * var(--bar-overlap, 118px))', overflow: 'hidden' }}>
-            <div style={{
-              position: 'absolute', inset: 0, background: slideBg(scheme),
-              pointerEvents: 'none', zIndex: 0,
-            }}/>
+            {/* Background image deck — absolute-stacked posters that
+               crossfade between slides based on scroll progress. */}
+            {FY_SLIDES.map((_, p) => (
+              <div key={p} aria-hidden style={{
+                position: 'absolute', inset: 0, zIndex: 0,
+                backgroundImage: `url(/assets/${FY_HERO_SLIDES[p % FY_HERO_SLIDES.length].bg})`,
+                backgroundSize: 'cover', backgroundPosition: 'center',
+                opacity: imageOpacities[p],
+                pointerEvents: 'none', willChange: 'opacity',
+              }} />
+            ))}
+            {/* Section-level fade-to-white overlay, sits above the
+               crossfading bg deck but below the scroller. */}
+            <div aria-hidden style={{
+              position: 'absolute', inset: 0, zIndex: 1,
+              background: 'linear-gradient(to bottom, rgba(255,255,255,0) 55%, rgba(255,255,255,0.4) 75%, rgba(255,255,255,0.85) 88%, #FFFFFF 96%)',
+              pointerEvents: 'none',
+            }} />
             <div ref={ref} style={{
-              position: 'relative', zIndex: 1,
+              position: 'relative', zIndex: 2,
               display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
               overscrollBehavior: 'none',
             }} className="scrollbar-hide">
-              {renderedSlides.map((s, i) => (
-                <div key={i} style={{
-                  flex: `0 0 ${SLIDE_PCT}%`, scrollSnapAlign: 'start',
-                  position: 'relative', minHeight: MIN_H, overflow: 'hidden',
-                  background: 'transparent',
-                  display: 'flex', flexDirection: 'column', alignItems: 'center',
-                  textAlign: 'center',
-                  paddingTop: PAD_TOP_CSS, paddingRight: 36, paddingBottom: 53, paddingLeft: 36,
-                  boxSizing: 'border-box',
-                }}>
-                  <img src={`/assets/${s.heroImg}`} alt="" style={{
-                    width: 96, height: 96, objectFit: 'contain',
-                    display: 'block', marginBottom: 16, borderRadius: 20,
-                  }} />
-                  <div style={{ ...T.h4, lineHeight: '20px' }}>{s.title}</div>
-                  <div style={{ ...T.caption, color: 'rgba(0,0,0,0.7)', marginTop: 4 }}>{s.sub}</div>
-                  <button className="tap" style={{
-                    marginTop: 12,
-                    padding: '6px 14px', background: '#000', border: 'none', borderRadius: 100,
-                    ...T.btnSm, color: 'white', cursor: 'pointer', whiteSpace: 'nowrap',
-                  }}>{s.cta}</button>
-                </div>
-              ))}
+              {renderedSlides.map((s, i) => {
+                /* Wrapped distance + signed offset, matching the FY_L
+                   recipe: text fades out aggressively (×2.6) and
+                   parallax-X drifts at 60px per unit. */
+                const realPos = i - 1;
+                const dist = Math.min(
+                  Math.abs(realPos - progress),
+                  Math.abs(realPos - progress - N),
+                  Math.abs(realPos - progress + N),
+                );
+                const textOpacity = Math.max(0, 1 - dist * 2.6);
+                const offsetUnits = realPos - progress;
+                const wrappedOffset =
+                  Math.abs(offsetUnits) <= N / 2
+                    ? offsetUnits
+                    : offsetUnits > 0
+                      ? offsetUnits - N
+                      : offsetUnits + N;
+                const parallaxX = wrappedOffset * 60;
+                return (
+                  <div key={i} style={{
+                    flex: `0 0 ${SLIDE_PCT}%`, scrollSnapAlign: 'start',
+                    position: 'relative', minHeight: MIN_H, overflow: 'hidden',
+                    display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center',
+                    textAlign: 'center',
+                    paddingTop: PAD_TOP_CSS, paddingRight: 36, paddingBottom: 64, paddingLeft: 36,
+                    boxSizing: 'border-box',
+                    background: 'transparent',
+                  }}>
+                    {/* Copy + CTA. Vertical centering is handled by the
+                       slide's justifyContent; the inner wrapper shifts
+                       up so the content sits at the OPTICAL centre,
+                       parallax-translates against the scroll, and
+                       fades out before reaching the slide edge — same
+                       FY_L motion recipe. */}
+                    <div style={{
+                      position: 'relative', zIndex: 2,
+                      transform: `translate(${parallaxX}px, -20px)`,
+                      opacity: textOpacity,
+                      willChange: 'transform, opacity',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    }}>
+                      <div style={{ ...T.h3, color: '#FFFFFF' }}>{s.title}</div>
+                      <div style={{
+                        fontFamily: 'Rubik', fontSize: 14, fontWeight: 400,
+                        lineHeight: '20px', letterSpacing: '0.28px',
+                        color: 'rgba(255,255,255,0.85)', marginTop: 4,
+                      }}>{s.sub}</div>
+                      <button className="tap" style={{
+                        marginTop: 12,
+                        padding: '6px 14px', background: '#FFFFFF', border: 'none', borderRadius: 100,
+                        ...T.btnSm, color: 'rgba(0,0,0,0.9)', cursor: 'pointer', whiteSpace: 'nowrap',
+                      }}>{s.cta}</button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-            {/* The slide-bg gradient ends in white at its bottom, so no overlay
-                is needed — the CTA sits cleanly on the colored portion above. */}
-            <CarouselDots count={FY_SLIDES.length} activeIdx={idx} bottom={16} />
           </div>
         </>
       );
@@ -1983,7 +2252,7 @@ import ReactDOM from 'react-dom';
           leaving card from its drop position back to the rear-stack
           slot. The card visually starts at the drop point, then slides
           down/back into the deck. */
-    const FY_I = ({ autoScroll, surface = 'solid', items: itemsProp, renderContent }) => {
+    const FY_I = ({ autoScroll, surface = 'solid', items: itemsProp, renderContent, outerPaddingTop = 16 }) => {
       const isGlass = surface === 'glass';
       /* Items + per-card renderer can be overridden so the same
          shuffle-deck engine drives both the For You stack (default
@@ -2237,7 +2506,7 @@ import ReactDOM from 'react-dom';
 
       return (
         <PagePad>
-          <div style={{ paddingTop: 16 }}>
+          <div style={{ paddingTop: outerPaddingTop }}>
             <div style={{ position: 'relative', height: stackHeight }}>
               {order.map((origIdx, stackPos) => {
                 const it = items[origIdx];
@@ -2350,21 +2619,27 @@ import ReactDOM from 'react-dom';
     const FY_B_CTA_BG = '#171A1F';
     const FY_B_CTA_COLOR = '#FFFFFF';
     const FY_B_THEMES = [
-      /* Bill due — chip in slice Blue gradient (info / payments). */
+      /* Bill due — chip in slice Blue, mesh glow in amber-yellow to
+         echo the electric-bolt illustration's warm tone. */
       { bg: '#F0F4F7', chipIntent: 'negative', chipLabel: 'Bill',
         titleColor: 'rgba(0,0,0,0.9)', subColor: 'rgba(0,0,0,0.7)',
         ctaBg: 'linear-gradient(135deg, #2B6ACF 0%, #5E8EDB 100%)',
-        ctaColor: '#FFFFFF' },
-      /* Spark drop — chip in slice brand gradient (Valentino → Blue). */
+        ctaColor: '#FFFFFF',
+        glow: 'rgba(255, 178, 79, 0.32)' },
+      /* Spark drop — chip in slice brand gradient, mesh glow in
+         green-mint to echo the spark illustration's cyan-green tone. */
       { bg: '#FAE2FA', chipIntent: 'main', chipLabel: 'Drop',
         titleColor: 'rgba(0,0,0,0.9)', subColor: 'rgba(0,0,0,0.7)',
         ctaBg: 'linear-gradient(135deg, #D30AD7 0%, #FF6CB1 100%)',
-        ctaColor: '#FFFFFF' },
-      /* Spends insight — chip in slice Green gradient (positive insight). */
+        ctaColor: '#FFFFFF',
+        glow: 'rgba(94, 216, 181, 0.34)' },
+      /* Spends insight — chip in slice Green, mesh glow in orange to
+         echo the orange/yellow bar-chart illustration. */
       { bg: '#F0F4F7', chipIntent: 'info', chipLabel: 'Insight',
         titleColor: 'rgba(0,0,0,0.9)', subColor: 'rgba(0,0,0,0.7)',
         ctaBg: 'linear-gradient(135deg, #00A63E 0%, #3DBB6C 100%)',
-        ctaColor: '#FFFFFF' },
+        ctaColor: '#FFFFFF',
+        glow: 'rgba(255, 154, 23, 0.30)' },
     ];
 
     /* useDragToScroll — desktop mouse drag-to-scroll for horizontal scrollers.
@@ -2618,16 +2893,15 @@ import ReactDOM from 'react-dom';
                 return (
                   <button className="tap" key={i} style={{
                     flex: `0 0 ${CARD_W}px`, height: 136, borderRadius: 16, padding: 16,
-                    /* Illustration-anchored mesh: the colour wash
-                       glows AROUND the illustration (bottom-right
-                       corner). Theme bg fades out from the
-                       illustration's anchor; a soft Valentino accent
-                       lifts the artwork and complements the slice
-                       brand tone in the 3D icon. Rest of the card
-                       stays clean white so title/sub read crisply. */
+                    /* Illustration-anchored mesh: glow blob uses the
+                       theme's per-slide illustration colour (amber for
+                       bill bolt, mint for spark, orange for chart) so
+                       the wash visually matches the 3D artwork sitting
+                       in the bottom-right. Theme bg fades behind it.
+                       Rest of the card stays clean white. */
                     background: `
                       radial-gradient(ellipse 70% 80% at 88% 92%, ${th.bg} 0%, transparent 65%),
-                      radial-gradient(ellipse 45% 50% at 78% 78%, rgba(211,10,215,0.18) 0%, transparent 65%),
+                      radial-gradient(ellipse 50% 55% at 78% 78%, ${th.glow} 0%, transparent 65%),
                       #FFFFFF
                     `,
                     /* No border — matches the image banner card. */
@@ -2648,8 +2922,8 @@ import ReactDOM from 'react-dom';
                     }}>{th.chipLabel || 'Live'}</span>
                     <div style={{ width: '100%', position: 'relative', zIndex: 1, paddingRight: 80 }}>
                       <div style={{
-                        fontFamily: 'Rubik', fontSize: 18, fontWeight: 500,
-                        lineHeight: '24px', letterSpacing: '0.32px',
+                        fontFamily: 'Rubik', fontSize: 16, fontWeight: 500,
+                        lineHeight: '20px', letterSpacing: '0.32px',
                         color: th.titleColor,
                       }}>{s.title}</div>
                       <div style={{
@@ -2814,7 +3088,7 @@ import ReactDOM from 'react-dom';
       /* K = liquid-glass surface on the FY_I shuffle-deck engine. Same
          interactions, swapped material. */
       if (variant === 'K') return <FY_I autoScroll={autoScroll} surface="glass" />;
-      const C = { A: FY_A, B: FY_B, C: FY_C, D: FY_D, E: FY_E, F: FY_F, G: FY_G, H: FY_H, I: FY_I, J: FY_J, L: FY_L, M: FY_M }[variant] || FY_I;
+      const C = { A: FY_A, B: FY_B, C: FY_C, D: FY_D, E: FY_E, F: FY_F, G: FY_G, H: FY_H, I: FY_I, J: FY_J, L: FY_L, M: FY_M, O: FY_O }[variant] || FY_I;
       return <C autoScroll={autoScroll} overlap={fyOverlap} />;
     };
 
@@ -2966,7 +3240,6 @@ import ReactDOM from 'react-dom';
                 ))}
               </div>
             </div>
-            <Chevron color="#D30AD7" />
           </button>
         </PagePad>
       );
@@ -3131,34 +3404,107 @@ import ReactDOM from 'react-dom';
       { title: 'Mobile recharge',   sub: 'Plan expires today', amount: '₹299', heroImg: 'bill_mobile.png' },
       { title: 'Credit card bill',  sub: 'Due 12 May',     amount: '₹6,420', heroImg: 'bill_credit.png' },
     ];
-    const BL_K = ({ autoScroll = true }) => (
-      <FY_I
-        autoScroll={autoScroll}
-        items={BL_K_ITEMS}
-        renderContent={(it) => (
-          <>
-            <img src={`/assets/${it.heroImg}`} width={44} height={44} alt=""
-              style={{ display: 'block', borderRadius: 12, flexShrink: 0, objectFit: 'contain', pointerEvents: 'none' }} />
-            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+    const BL_K = ({ autoScroll = true, showViewAll = true }) => (
+      <>
+        <FY_I
+          autoScroll={autoScroll}
+          items={BL_K_ITEMS}
+          outerPaddingTop={0}
+          renderContent={(it) => (
+            <>
+              <img src={`/assets/${it.heroImg}`} width={44} height={44} alt=""
+                style={{ display: 'block', borderRadius: 12, flexShrink: 0, objectFit: 'contain', pointerEvents: 'none' }} />
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <div style={{
+                  ...T.h4,
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                }}>{it.title}</div>
+                <div style={{
+                  ...T.caption, color: 'rgba(0,0,0,0.7)',
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                }}>{it.sub}</div>
+              </div>
               <div style={{
-                ...T.h4,
-                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-              }}>{it.title}</div>
-              <div style={{
-                ...T.caption, color: 'rgba(0,0,0,0.7)',
-                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-              }}>{it.sub}</div>
-            </div>
+                ...T.h4, color: 'rgba(0,0,0,0.9)', flexShrink: 0,
+                pointerEvents: 'none',
+              }}>{it.amount}</div>
+            </>
+          )} />
+        {showViewAll && (
+          /* Tiny secondary view-all pill straddling the stack's
+             bottom edge — centered horizontally, half above / half
+             below so it reads as anchored to the last card. Slate-30
+             fill + hairline outline keeps it quiet against the white
+             card surface above. */
+          <PagePad>
             <div style={{
-              ...T.h4, color: 'rgba(0,0,0,0.9)', flexShrink: 0,
-              pointerEvents: 'none',
-            }}>{it.amount}</div>
-          </>
-        )} />
+              marginTop: -11, position: 'relative', zIndex: 5,
+              display: 'flex', justifyContent: 'center',
+            }}>
+              <button className="tap" style={{
+                background: '#F0F4F7',
+                border: '1px solid rgba(0,0,0,0.05)',
+                borderRadius: 100, padding: '3px 10px',
+                cursor: 'pointer',
+                fontFamily: 'Rubik', fontSize: 11, fontWeight: 500,
+                lineHeight: '14px', letterSpacing: '0.22px',
+                color: 'rgba(0,0,0,0.9)',
+                display: 'inline-flex', alignItems: 'center', gap: 3,
+              }}>
+                View all
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path d="M9 6l6 6-6 6" stroke="rgba(0,0,0,0.9)" strokeWidth="2"
+                    strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
+          </PagePad>
+        )}
+      </>
+    );
+
+    /* BL_L — same shuffle deck as BL_K. "View all" CTA lives in the
+       SECTION HEADER (right side, next to "Bills & Recharges") —
+       wired up via ExplorePage's SectionWrap cta prop. The inline
+       view-all from BL_K is suppressed so it doesn't double up. */
+    const BL_L = ({ autoScroll = true }) => (
+      <BL_K autoScroll={autoScroll} showViewAll={false} />
+    );
+
+    /* BL_M — shuffle deck + floating "View all" pill anchored to
+       the bottom-right edge of the stack. White-fill secondary CTA
+       (CARD_SHADOW + Valentino text) so it reads as a quiet
+       affordance riding on the card surface. BL_K's inline view-all
+       is suppressed so the floating pill is the only one. */
+    const BL_M = ({ autoScroll = true }) => (
+      <div style={{ position: 'relative' }}>
+        <BL_K autoScroll={autoScroll} showViewAll={false} />
+        <PagePad>
+          <div style={{
+            position: 'absolute', right: 24, bottom: -14,
+            zIndex: 5,
+          }}>
+            <button className="tap" style={{
+              background: '#FFFFFF',
+              border: CARD_BORDER, boxShadow: CARD_SHADOW,
+              borderRadius: 100, padding: '8px 14px',
+              ...T.btnSm, color: '#D30AD7',
+              cursor: 'pointer',
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+            }}>
+              View all
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path d="M9 6l6 6-6 6" stroke="#D30AD7" strokeWidth="2"
+                  strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
+        </PagePad>
+      </div>
     );
 
     const BillsSection = ({ variant, isInCard }) => {
-      const C = { A: BL_A, B: BL_B, C: BL_C, D: BL_D, E: BL_E, F: BL_F, J: BL_J, K: BL_K }[variant];
+      const C = { A: BL_A, B: BL_B, C: BL_C, D: BL_D, E: BL_E, F: BL_F, J: BL_J, K: BL_K, L: BL_L, M: BL_M }[variant];
       return <C isInCard={isInCard} />;
     };
 
@@ -3939,26 +4285,29 @@ import ReactDOM from 'react-dom';
           ))}
         </div>
         <PagePad>
-          <div style={{ marginTop: 16 }}>
-            {/* Single-row Monies banner — icon + "Monies" label on
-               the left, 240 value on the right. Compressed to one
-               line so the card stays clearly secondary. */}
+          <div style={{ marginTop: 20 }}>
+            {/* Single-row Monies balance — small leading icon +
+               compact "Monies balance" label on the left, 240
+               value on the right. White card with subtle DLS card
+               shadow so it lifts off the page. */}
             <button className="tap" style={{
-              width: '100%', height: 56, padding: '10px 16px',
+              width: '100%', height: 52, padding: '10px 14px',
               borderRadius: 16,
               background: '#FFFFFF', border: CARD_BORDER, boxShadow: CARD_SHADOW,
               textAlign: 'left', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 12,
+              display: 'flex', alignItems: 'center', gap: 10,
               position: 'relative', overflow: 'hidden',
             }}>
-              <img src="/assets/monies_icon.png" width={26} height={26} alt=""
+              <img src="/assets/monies_icon.png" width={24} height={24} alt=""
                 style={{ display: 'block', flexShrink: 0 }} />
-              <div style={{ ...T.body, flex: 1, minWidth: 0, color: 'rgba(0,0,0,0.9)' }}>
-                Monies
-              </div>
-              <div style={{ ...T.h4, color: 'rgba(0,0,0,0.9)',
-                display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                <MoniesGlyph size={14} /> 240
+              <div style={{
+                ...T.bodySm, flex: 1, minWidth: 0, color: 'rgba(0,0,0,0.9)',
+              }}>Monies balance</div>
+              <div style={{
+                ...T.bodySm, fontWeight: 500, color: 'rgba(0,0,0,0.9)',
+                display: 'inline-flex', alignItems: 'center', gap: 4,
+              }}>
+                <MoniesGlyph size={12} /> 240
               </div>
             </button>
           </div>
@@ -4871,7 +5220,7 @@ import ReactDOM from 'react-dom';
         <PagePad>
           <div style={{
             background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER,
-            borderRadius: 16, padding: 24,
+            borderRadius: 16, padding: 20,
           }}>
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -4986,7 +5335,6 @@ import ReactDOM from 'react-dom';
     const MR_LIST_ITEMS = [
       { label: 'AutoPay',     value: 'Active',   intent: 'positive', subtitle: '3 active',           iconAsset: 'autopay_icon.png',      glyph: <GlyphBolt color="#2B6ACF" />, bg: '#E6EDF9' },
       { label: 'CIBIL score', value: '785',      intent: 'info',     subtitle: 'updated 2 days ago', iconAsset: 'credit_score_icon.png', glyph: <GlyphChart color="#00A63E" />, bg: '#E0F4E8' },
-      { label: 'Statements',  value: 'Apr 2026', intent: 'neutral',  subtitle: 'last 12 months',     iconAsset: 'may_spends.png',        glyph: <GlyphSpark color="#D30AD7" />, bg: '#FAE2FA' },
     ];
 
     /* Shared edge-to-edge row primitive. Slice uses these at the bottom of
@@ -5039,15 +5387,13 @@ import ReactDOM from 'react-dom';
        gap (32 + 12 = 44) so the hairline aligns with the label text. */
     const MR_D = () => (
       <PagePad>
-        <div style={{ paddingLeft: 12, paddingRight: 12 }}>
-          {MR_LIST_ITEMS.map((row, i) => (
-            <MoreRow key={row.label} isFirst={i === 0} dividerInset={44}>
-              <Avatar size={32} bg={row.bg} glyph={row.glyph} />
-              <span style={{ ...T.body, color: 'rgba(0,0,0,0.9)', flex: 1, minWidth: 0 }}>{row.label}</span>
-              <span style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>{row.value}</span>
-            </MoreRow>
-          ))}
-        </div>
+        {MR_LIST_ITEMS.map((row, i) => (
+          <MoreRow key={row.label} isFirst={i === 0} dividerInset={44}>
+            <Avatar size={32} bg={row.bg} glyph={row.glyph} />
+            <span style={{ ...T.body, color: 'rgba(0,0,0,0.9)', flex: 1, minWidth: 0 }}>{row.label}</span>
+            <span style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>{row.value}</span>
+          </MoreRow>
+        ))}
       </PagePad>
     );
 
@@ -5099,7 +5445,7 @@ import ReactDOM from 'react-dom';
     const ExplorePage = ({ sections, headerStyle, activeSection, separateMore, autoScroll, onScrollPast }) => {
       const isInCard = headerStyle === 'None';
       const isActive = (k) => activeSection === k;
-      const isGradientFY = sections.forYou === 'D' || sections.forYou === 'E' || sections.forYou === 'F' || sections.forYou === 'J' || sections.forYou === 'L' || sections.forYou === 'M';
+      const isGradientFY = sections.forYou === 'D' || sections.forYou === 'E' || sections.forYou === 'F' || sections.forYou === 'J' || sections.forYou === 'L' || sections.forYou === 'M' || sections.forYou === 'O';
       /* I, K (card-stack engine + glass material) and H (single hero
          card) all finish flush against the next section, so downstream
          spacers need the same 28px gap before Bills. */
@@ -5139,7 +5485,7 @@ import ReactDOM from 'react-dom';
           )
         : React.Fragment;
       return (
-        <ScreenShell transparentAppBar={isGradientFY} darkBg={sections.forYou === 'L'}
+        <ScreenShell transparentAppBar={isGradientFY} darkBg={sections.forYou === 'L' || sections.forYou === 'F'}
           /* App-bar fill + status-bar colour flip kick in when the
              kiosk's rounded TOP edge reaches the app-bar bottom
              (viewport Y=118). At scrollTop=0 the kiosk top sits at
@@ -5203,15 +5549,15 @@ import ReactDOM from 'react-dom';
                 {/* AI banker hidden (or FY_L kiosk) → explicit pre-Bills
                     gap. FY_L now uses 8 (was 16) — tighter cadence
                     inside the kiosk. Others keep their legacy values. */}
-                <Spacer h={isUtilityFY ? 28 : sections.forYou === 'L' ? 12 : isGradientFY ? 24 : 4} />
-                <SectionWrap title="Bills & Recharges" headerStyle={headerStyle} isFirst>
+                <Spacer h={isUtilityFY ? 28 : sections.forYou === 'L' ? 24 : sections.forYou === 'F' ? 12 : isGradientFY ? 32 : 4} />
+                <SectionWrap title="Bills & Recharges" cta={sections.bills === 'L' ? 'View all' : undefined} headerStyle={headerStyle} isFirst>
                   <BillsSection variant={sections.bills} isInCard={isInCard} />
                   {headerStyle === 'Bold' && <Spacer h={8} />}
               {headerStyle === 'List' && <Spacer h={4} />}
                 </SectionWrap>
               </>
             ) : (
-              <SectionWrap title="Bills & Recharges" headerStyle={headerStyle}>
+              <SectionWrap title="Bills & Recharges" cta={sections.bills === 'L' ? 'View all' : undefined} headerStyle={headerStyle}>
                 <BillsSection variant={sections.bills} isInCard={isInCard} />
                 {headerStyle === 'Bold' && <Spacer h={8} />}
               {headerStyle === 'List' && <Spacer h={4} />}
@@ -5436,8 +5782,9 @@ import ReactDOM from 'react-dom';
     const SECTION_META = [
       {
         key: 'forYou', label: 'For You', variants: {
-          I: 'Card stack · shuffle', H: 'Single card', B: 'Horizontal strip', L: 'Image hero carousel',
-          D: 'Full-bleed (top-tinted, PWA)', M: 'Full-bleed · no CTA', F: 'Centered carousel',
+          I: 'Card stack · shuffle', H: 'Single card', B: 'Horizontal strip', M: 'Full-bleed · no CTA',
+          D: 'Full-bleed (top-tinted, PWA)', O: 'Full-bleed · matched icon',
+          F: 'Centered carousel', L: 'Image hero carousel',
           None: 'X',
         },
         archived: {
@@ -5457,7 +5804,7 @@ import ReactDOM from 'react-dom';
       {
         key: 'bills', label: 'Bills & Recharges', variants: {
           A: 'Grid', C: 'Grid (outline avatars)', B: 'Grid in card',
-          K: 'Card stack · shuffle',
+          K: 'Card stack · shuffle', L: 'Card stack · view all',
           J: 'Floating card (overlap)',
         }
       },
@@ -5466,9 +5813,9 @@ import ReactDOM from 'react-dom';
           K: 'Triptych palette', G: 'Fire hero + 2 below', F: 'Featured Large + 2 Med',
           R: 'Fire+Spark · Monies banner',
           U: 'Portrait card carousel', X: 'Portrait scroll · Monies banner',
-          O: 'Source breakdown',
         },
         archived: {
+          O: 'Source breakdown',
           P: 'Featured · drops headline',
           Q: 'Spark hero · flat tiles',
           S: 'Tinted band',
@@ -5479,15 +5826,21 @@ import ReactDOM from 'react-dom';
       },
       {
         key: 'stats', label: 'Statistics', variants: {
-          L: 'Inline graph + categories', M: 'Inline graph · matched header', N: 'Inline graph · insights', K: 'Bar + top categories', D: 'Sparkline card', G: 'Analytics widget',
-        }
+          L: 'Inline graph + categories', M: 'Inline graph · matched header', N: 'Inline graph · insights', D: 'Sparkline card',
+        },
+        archived: {
+          K: 'Bar + top categories',
+          G: 'Analytics widget',
+        },
       },
       {
         key: 'more', label: 'More', variants: {
           A: 'Two big tiles',
-          B: 'List · title + value',
           D: 'List · avatar + title + value',
-        }
+        },
+        archived: {
+          B: 'List · title + value',
+        },
       },
       {
         key: 'footer', label: 'Invite & earn', variants: {
@@ -5515,7 +5868,7 @@ import ReactDOM from 'react-dom';
       V1: {
         label: 'Exploration',
         headerStyle: 'List',
-        sections: { forYou: 'L', aiBanker: 'None', bills: 'C', rewards: 'U', stats: 'N', more: 'A', footer: 'B' },
+        sections: { forYou: 'F', aiBanker: 'None', bills: 'C', rewards: 'X', stats: 'N', more: 'A', footer: 'B' },
       },
     };
 
@@ -6050,7 +6403,7 @@ import ReactDOM from 'react-dom';
                         the main page and the Analytics slide-in via z:60)
                         so the time + icons stay anchored during page
                         transitions instead of sliding with the panel. */}
-                    <StatusBar dark={!useOriginal && sections.forYou === 'L' && !heroScrolledPast} />
+                    <StatusBar dark={!useOriginal && (sections.forYou === 'L' || sections.forYou === 'F') && !heroScrolledPast} />
                     {useOriginal
                       ? <OriginalExplore />
                       : <ExplorePage sections={sections} headerStyle={headerStyle} activeSection={activeSection} separateMore={separateMore} autoScroll={autoScroll} onScrollPast={setHeroScrolledPast} />}
