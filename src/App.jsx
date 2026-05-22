@@ -257,10 +257,20 @@ import ReactDOM from 'react-dom';
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <span style={T.meta}>{title}</span>
-        {cta && <button className="tap" style={{
-          background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
-          ...T.btnSm, color: '#D30AD7',
-        }}>{cta}</button>}
+        {cta && (
+          /* Chevron-only affordance — quieter than a "View all" label
+             at this metadata-sized header. The whole title row already
+             reads as a section link, so a single icon is enough. */
+          <button className="tap" aria-label={cta} style={{
+            background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path d="M9 6l6 6-6 6" stroke="rgba(0,0,0,0.7)" strokeWidth="2"
+                strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        )}
       </div>
     );
 
@@ -2009,7 +2019,7 @@ import ReactDOM from 'react-dom';
                         color: 'rgba(255,255,255,0.85)', marginTop: 4,
                       }}>{s.sub}</div>
                       <button className="tap" style={{
-                        marginTop: 12,
+                        marginTop: 16,
                         padding: '6px 14px', background: '#FFFFFF', border: 'none', borderRadius: 100,
                         ...T.btnSm, color: 'rgba(0,0,0,0.9)', cursor: 'pointer', whiteSpace: 'nowrap',
                       }}>{s.cta}</button>
@@ -2508,6 +2518,25 @@ import ReactDOM from 'react-dom';
         <PagePad>
           <div style={{ paddingTop: outerPaddingTop }}>
             <div style={{ position: 'relative', height: stackHeight }}>
+              {/* Silhouette behind the deck — sized and positioned to
+                 match the deepest card (same translateY + scale).
+                 Stays put while real cards rotate / lift, so the
+                 view-all pill below always anchors to a visible
+                 edge instead of floating in empty space when the
+                 top card flies out. Slate-30 fill at 0.6 opacity
+                 reads as a quiet ghost behind the stack. */}
+              <div aria-hidden style={{
+                position: 'absolute', left: 0, right: 0, top: 0,
+                height: CARD_H,
+                transform: `translate(0px, ${(N - 1) * PEEK}px) scale(${1 - (N - 1) * 0.04})`,
+                transformOrigin: 'center center',
+                background: '#F0F4F7',
+                border: '1px solid rgba(0,0,0,0.04)',
+                borderRadius: 16,
+                opacity: 0.6,
+                zIndex: 0,
+                pointerEvents: 'none',
+              }} />
               {order.map((origIdx, stackPos) => {
                 const it = items[origIdx];
                 const isTop = stackPos === 0;
@@ -3442,20 +3471,16 @@ import ReactDOM from 'react-dom';
               display: 'flex', justifyContent: 'center',
             }}>
               <button className="tap" style={{
-                background: '#F0F4F7',
+                background: '#FFFFFF',
                 border: '1px solid rgba(0,0,0,0.05)',
                 borderRadius: 100, padding: '3px 10px',
                 cursor: 'pointer',
                 fontFamily: 'Rubik', fontSize: 11, fontWeight: 500,
                 lineHeight: '14px', letterSpacing: '0.22px',
                 color: 'rgba(0,0,0,0.9)',
-                display: 'inline-flex', alignItems: 'center', gap: 3,
+                display: 'inline-flex', alignItems: 'center',
               }}>
                 View all
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden>
-                  <path d="M9 6l6 6-6 6" stroke="rgba(0,0,0,0.9)" strokeWidth="2"
-                    strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
               </button>
             </div>
           </PagePad>
@@ -5549,7 +5574,7 @@ import ReactDOM from 'react-dom';
                 {/* AI banker hidden (or FY_L kiosk) → explicit pre-Bills
                     gap. FY_L now uses 8 (was 16) — tighter cadence
                     inside the kiosk. Others keep their legacy values. */}
-                <Spacer h={isUtilityFY ? 28 : sections.forYou === 'L' ? 24 : sections.forYou === 'F' ? 4 : isGradientFY ? 32 : 4} />
+                <Spacer h={isUtilityFY ? 28 : sections.forYou === 'L' ? 24 : sections.forYou === 'F' ? 0 : isGradientFY ? 32 : 4} />
                 <SectionWrap title="Bills & Recharges" cta={sections.bills === 'L' ? 'View all' : undefined} headerStyle={headerStyle} isFirst>
                   <BillsSection variant={sections.bills} isInCard={isInCard} />
                   {headerStyle === 'Bold' && <Spacer h={8} />}
@@ -5783,11 +5808,12 @@ import ReactDOM from 'react-dom';
       {
         key: 'forYou', label: 'For You', variants: {
           I: 'Card stack · shuffle', H: 'Single card', B: 'Horizontal strip', M: 'Full-bleed · no CTA',
-          D: 'Full-bleed (top-tinted, PWA)', O: 'Full-bleed · matched icon',
+          D: 'Full-bleed (top-tinted, PWA)',
           F: 'Centered carousel', L: 'Image hero carousel',
           None: 'X',
         },
         archived: {
+          O: 'Full-bleed · matched icon',
           J: 'Full-bleed · partitioned',
           C: 'Compact dark strip',
           E: 'Full-bleed · DLS avatar',
@@ -5803,10 +5829,13 @@ import ReactDOM from 'react-dom';
       },
       {
         key: 'bills', label: 'Bills & Recharges', variants: {
-          A: 'Grid', C: 'Grid (outline avatars)', B: 'Grid in card',
+          C: 'Grid (outline avatars)', B: 'Grid in card',
           K: 'Card stack · shuffle', L: 'Card stack · view all',
           J: 'Floating card (overlap)',
-        }
+        },
+        archived: {
+          A: 'Grid',
+        },
       },
       {
         key: 'rewards', label: 'Rewards & Benefits', variants: {
