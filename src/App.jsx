@@ -158,13 +158,9 @@ import ReactDOM from 'react-dom';
     /* HorizontalPager — 3 pages side by side; swipe horizontally
        between them. Direction-aware gesture: only initiates a page
        swipe if the touch starts OUTSIDE an inner horizontal scroller
-       (marked with `.no-page-swipe`) AND the drag is more horizontal
-       than vertical. Vertical drags fall through to the page's own
-       scroll. Snap to nearest page on release. */
-    const DRAG_IDLE = { x: 0, y: 0, dragging: false, blocked: false, decided: false };
-    /* Hard edges — no rubber-band past the first/last page. */
-    const EDGE_RESIST = 0;
-    const PAGER_SNAP_TRANSITION = 'transform 320ms cubic-bezier(0.16, 1, 0.3, 1)';
+       (each inner carousel has its own scroll container with
+       overscroll-behavior: contain so they don't propagate to the
+       outer pager). Native CSS scroll-snap handles momentum + edges. */
     /* Each page wrapper gets its own GPU layer + paint containment so
        iOS Safari doesn't re-rasterise on swipe-back (otherwise the
        off-screen page loses its compositor layer and paints after a
@@ -183,124 +179,69 @@ import ReactDOM from 'react-dom';
       transform: 'translateZ(0)',
       willChange: 'transform',
     };
+    /* Native CSS scroll-snap pager — iOS Safari handles the momentum,
+       rubber-band, and snap entirely in the compositor, which is the
+       only way this feels truly buttery on mobile. We listen to
+       `onScroll` for live fractional progress (used by the bottom-nav
+       cross-fade) and read scrollLeft on settle to update activeIndex.
+       Programmatic page changes call scrollTo with smooth behavior. */
     const HorizontalPager = ({ pages, activeIndex, onChange, onProgress }) => {
       const trackRef = React.useRef(null);
-      const innerRef = React.useRef(null); /* the flex strip that translates */
-      const dragRef = React.useRef({ ...DRAG_IDLE });
-      const dxRef = React.useRef(0); /* current drag offset in px — written from pointermove, never via setState */
-      const rafRef = React.useRef(null);
-      const snapPercent = -activeIndex * (100 / pages.length);
+      const settleTimer = React.useRef(null);
+      const programmaticScroll = React.useRef(false);
 
-      /* Apply the current transform directly to the DOM. During drag we
-         skip React entirely so 60fps pointer events don't trigger
-         re-renders of the page tree — that was the cause of the
-         glitchy/non-smooth feel on mobile. CSS transition is enabled
-         on snap (when dxRef = 0 and activeIndex changes). */
-      const paintTransform = (animate) => {
-        const el = innerRef.current;
-        if (!el) return;
-        el.style.transition = animate ? PAGER_SNAP_TRANSITION : 'none';
-        el.style.transform = `translate3d(${snapPercent}%, 0, 0) translate3d(${dxRef.current}px, 0, 0)`;
-        if (onProgress) {
-          const w = trackRef.current ? trackRef.current.offsetWidth : 360;
-          onProgress(activeIndex - dxRef.current / w);
-        }
-      };
-
-      /* Repaint whenever the snap target changes (activeIndex flip) so
-         the CSS transition animates between pages. */
+      /* Sync scroll position to activeIndex (programmatic snap, e.g.
+         when a tab is selected externally or on first mount). */
       React.useLayoutEffect(() => {
-        paintTransform(true);
+        const el = trackRef.current;
+        if (!el) return;
+        const target = activeIndex * el.offsetWidth;
+        if (Math.abs(el.scrollLeft - target) < 1) return;
+        programmaticScroll.current = true;
+        /* First mount: jump instantly so the initial page is correct
+           without a scroll animation. Subsequent: smooth snap. */
+        const isInitial = el.scrollLeft === 0 && activeIndex !== 0;
+        el.scrollTo({ left: target, behavior: isInitial ? 'auto' : 'smooth' });
+        clearTimeout(settleTimer.current);
+        settleTimer.current = setTimeout(() => { programmaticScroll.current = false; }, 500);
       }, [activeIndex]);
 
-      const scheduleFrame = () => {
-        if (rafRef.current != null) return;
-        rafRef.current = requestAnimationFrame(() => {
-          rafRef.current = null;
-          paintTransform(false);
-        });
+      const onScroll = (e) => {
+        const el = e.currentTarget;
+        const w = el.offsetWidth || 360;
+        if (onProgress) onProgress(el.scrollLeft / w);
+        if (programmaticScroll.current) return;
+        /* Wait for the scroll to settle, then commit the new index. */
+        clearTimeout(settleTimer.current);
+        settleTimer.current = setTimeout(() => {
+          const idx = Math.round(el.scrollLeft / w);
+          if (idx !== activeIndex) onChange(idx);
+        }, 120);
       };
 
-      const onPointerDown = (e) => {
-        if (e.target && e.target.closest && e.target.closest('.no-page-swipe')) {
-          dragRef.current = { ...DRAG_IDLE, blocked: true, decided: true };
-          return;
-        }
-        dragRef.current = { ...DRAG_IDLE, x: e.clientX, y: e.clientY };
-        /* Cancel any in-flight CSS transition so the drag picks up from
-           wherever the snap currently is — no jump. */
-        if (innerRef.current) innerRef.current.style.transition = 'none';
-      };
-      const onPointerMove = (e) => {
-        const s = dragRef.current;
-        if (s.blocked || !s.x) return;
-        const deltaX = e.clientX - s.x;
-        const deltaY = e.clientY - s.y;
-        if (!s.decided) {
-          /* Vertical wins clean conflicts (lower threshold) so iOS'
-             native scroll isn't fought. Horizontal needs to be clearly
-             dominant before the pager engages. */
-          if (Math.abs(deltaY) > 6 && Math.abs(deltaY) > Math.abs(deltaX)) {
-            s.decided = true;
-            s.blocked = true;
-            return;
-          }
-          if (Math.abs(deltaX) > 12 && Math.abs(deltaX) > Math.abs(deltaY) * 1.8) {
-            s.decided = true;
-            s.dragging = true;
-          } else {
-            return;
-          }
-        }
-        if (s.dragging) {
-          const atLeft = activeIndex === 0 && deltaX > 0;
-          const atRight = activeIndex === pages.length - 1 && deltaX < 0;
-          dxRef.current = atLeft || atRight ? deltaX * EDGE_RESIST : deltaX;
-          scheduleFrame();
-          if (e.cancelable) e.preventDefault();
-        }
-      };
-      const onPointerUp = () => {
-        const s = dragRef.current;
-        const finalDx = dxRef.current;
-        if (s.dragging) {
-          const w = trackRef.current ? trackRef.current.offsetWidth : 360;
-          const threshold = w / 4;
-          let next = activeIndex;
-          if (finalDx > threshold) next = Math.max(0, activeIndex - 1);
-          else if (finalDx < -threshold) next = Math.min(pages.length - 1, activeIndex + 1);
-          dxRef.current = 0;
-          if (next !== activeIndex) onChange(next);
-          else paintTransform(true); /* snap back if no page change */
-        }
-        dragRef.current = { ...DRAG_IDLE };
-      };
-      React.useEffect(() => () => {
-        if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      }, []);
+      React.useEffect(() => () => clearTimeout(settleTimer.current), []);
 
-      const pageWidth = `${100 / pages.length}%`;
       return (
-        <div ref={trackRef} style={{
-          position: 'absolute', inset: 0, overflow: 'hidden',
-          touchAction: 'pan-y',
-        }}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerUp}>
-          <div ref={innerRef} style={{
+        <div ref={trackRef} onScroll={onScroll} style={{
+          position: 'absolute', inset: 0,
+          overflowX: 'auto', overflowY: 'hidden',
+          scrollSnapType: 'x mandatory',
+          overscrollBehavior: 'contain',
+          WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'none',
+        }} className="scrollbar-hide">
+          <div style={{
             display: 'flex',
             width: `${pages.length * 100}%`,
             height: '100%',
-            /* Initial transform — useLayoutEffect repaints on every
-               activeIndex change with the right transition state. */
-            transform: `translate3d(${snapPercent}%, 0, 0)`,
-            transition: PAGER_SNAP_TRANSITION,
-            willChange: 'transform',
           }}>
             {pages.map((Page, i) => (
-              <div key={i} style={{ ...PAGER_PAGE_STYLE_BASE, width: pageWidth }}>
+              <div key={i} style={{
+                ...PAGER_PAGE_STYLE_BASE,
+                width: `${100 / pages.length}%`,
+                scrollSnapAlign: 'start',
+                scrollSnapStop: 'always',
+              }}>
                 {Page}
               </div>
             ))}
