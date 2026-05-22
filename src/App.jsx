@@ -3438,7 +3438,7 @@ import ReactDOM from 'react-dom';
              card surface above. */
           <PagePad>
             <div style={{
-              marginTop: -11, position: 'relative', zIndex: 5,
+              marginTop: -19, position: 'relative', zIndex: 5,
               display: 'flex', justifyContent: 'center',
             }}>
               <button className="tap" style={{
@@ -5549,7 +5549,7 @@ import ReactDOM from 'react-dom';
                 {/* AI banker hidden (or FY_L kiosk) → explicit pre-Bills
                     gap. FY_L now uses 8 (was 16) — tighter cadence
                     inside the kiosk. Others keep their legacy values. */}
-                <Spacer h={isUtilityFY ? 28 : sections.forYou === 'L' ? 24 : sections.forYou === 'F' ? 12 : isGradientFY ? 32 : 4} />
+                <Spacer h={isUtilityFY ? 28 : sections.forYou === 'L' ? 24 : sections.forYou === 'F' ? 4 : isGradientFY ? 32 : 4} />
                 <SectionWrap title="Bills & Recharges" cta={sections.bills === 'L' ? 'View all' : undefined} headerStyle={headerStyle} isFirst>
                   <BillsSection variant={sections.bills} isInCard={isInCard} />
                   {headerStyle === 'Bold' && <Spacer h={8} />}
