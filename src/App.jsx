@@ -110,21 +110,22 @@ import ReactDOM from 'react-dom';
          through every parent that uses ScreenShell. */
       const openDebug = () => window.dispatchEvent(new CustomEvent('open-debug-drawer'));
       return (
+        /* Wrapper is solid white and extends through iOS home-indicator
+           safe area. A short inline band (the previous fix) was leaving a
+           1-2px see-through strip below the PNG on mobile when the
+           viewport was slightly taller than the wrapper's measured
+           height. Painting the wrapper itself white removes the seam
+           outright, and `paddingBottom: env(safe-area-inset-bottom)`
+           lets the white follow the home indicator on iPhones. */
         <div style={{
           position: 'absolute', left: 0, right: 0, bottom: 0,
           background: 'transparent',
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
           zIndex: 5, pointerEvents: 'none',
         }}>
-          {/* white band sits behind the icon row + 12px safe area below.
-              Kept short so it doesn't bleed into the PNG's transparent
-              fade at the top. */}
-          <div style={{
-            position: 'absolute', left: 0, right: 0, bottom: 0,
-            height: 48, background: 'white',
-          }} />
           <img src="/assets/bottom_nav_v3.png" alt="" onClick={openDebug} style={{
             width: '100%', display: 'block',
-            position: 'relative', marginBottom: 12,
+            position: 'relative', marginBottom: 0,
             pointerEvents: 'auto', cursor: 'pointer',
           }} />
         </div>
@@ -1315,7 +1316,7 @@ import ReactDOM from 'react-dom';
     };
 
     /* Dot indicators — quiet pill: thinner inactive dots, slate-toned active. */
-    const CarouselDots = ({ count, activeIdx, bottom = 14, align = 'center' }) => (
+    const CarouselDots = ({ count, activeIdx, bottom = 14, align = 'center', light = false }) => (
       <div style={{
         position: 'absolute', bottom, left: 0, right: 0,
         display: 'flex',
@@ -1326,7 +1327,9 @@ import ReactDOM from 'react-dom';
         {Array.from({ length: count }, (_, i) => (
           <div key={i} style={{
             width: i === activeIdx ? 14 : 4, height: 4, borderRadius: 2,
-            background: i === activeIdx ? 'rgba(0,0,0,0.45)' : 'rgba(0,0,0,0.12)',
+            background: light
+              ? (i === activeIdx ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.2)')
+              : (i === activeIdx ? 'rgba(0,0,0,0.45)' : 'rgba(0,0,0,0.12)'),
             transition: 'width 200ms, background 200ms',
           }} />
         ))}
@@ -2473,15 +2476,23 @@ import ReactDOM from 'react-dom';
           down/back into the deck. */
     const FY_I = ({ autoScroll, surface = 'solid', items: itemsProp, renderContent, outerPaddingTop = 16 }) => {
       const isGlass = surface === 'glass';
-      /* Items + per-card renderer can be overridden so the same
-         shuffle-deck engine drives both the For You stack (default
-         FY_SLIDES + heroImg/title/sub recipe) and the bills card
-         stack (bill items + amount-on-right recipe). */
       const items = itemsProp || FY_SLIDES_NO_BILLS;
       const N = items.length;
       const [order, setOrder] = React.useState(() => items.map((_, i) => i));
       const [drag, setDrag] = React.useState({ x: 0, y: 0 });
       const [dragging, setDragging] = React.useState(false);
+      /* Pause auto-scroll when deck is near the top of the viewport
+         (top 20%) — shuffling while partially offscreen looks off. */
+      const deckRef = React.useRef(null);
+      const [inView, setInView] = React.useState(true);
+      React.useEffect(() => {
+        const el = deckRef.current;
+        if (!el) return;
+        const obs = new IntersectionObserver(([e]) => setInView(e.isIntersecting),
+          { threshold: 0.8, rootMargin: '-20% 0px 0px 0px' });
+        obs.observe(el);
+        return () => obs.disconnect();
+      }, []);
       const start = React.useRef({ x: 0, y: 0 });
       const cardRefs = React.useRef({});
       /* Commit threshold — small flicks should NOT trigger the deal-back.
@@ -2573,7 +2584,7 @@ import ReactDOM from 'react-dom';
          the dragged card was getting clipped behind the app bar in some
          scroll positions. */
       React.useEffect(() => {
-        if (!autoScroll || dragging || cooldown) return;
+        if (!autoScroll || dragging || cooldown || !inView) return;
         const id = setTimeout(() => {
           const topId = order[0];
           const topEl = cardRefs.current[topId];
@@ -2588,6 +2599,15 @@ import ReactDOM from 'react-dom';
           const RISE_EASE = 'cubic-bezier(0.33, 1, 0.68, 1)';
           const DESCENT_EASE = 'cubic-bezier(0.22, 1, 0.36, 1)';
           const newOrder = [...order.slice(1), order[0]];
+          /* Cancel any animations that are still alive from the previous
+             cycle BEFORE arming new ones. Without this, stale
+             fill:forwards animations from N cycles ago accumulate and
+             intermittently win the transform race — manifesting as ghost
+             cards stuck mid-arc or text from the back card peeking
+             through the front. */
+          Object.values(cardRefs.current).forEach((el) => {
+            if (el && el.getAnimations) el.getAnimations().forEach((a) => a.cancel());
+          });
           /* Lift leaving card above the deck via React state — no inline
              style.zIndex manipulation. */
           setZOverride({ id: topId, z: 50 });
@@ -2613,7 +2633,13 @@ import ReactDOM from 'react-dom';
                   { transform: `translate(0px, ${fromY}px) scale(${fromScale}) rotate(0deg)`, offset: APEX_AT, easing: DESCENT_EASE },
                   { transform: `translate(0px, ${toY}px) scale(${toScale}) rotate(0deg)`, offset: 1 },
                 ];
-            el.animate(keyframes, { duration: DURATION, fill: 'forwards' });
+            /* fill:none — the inline transform from React's render at the
+               end of the cycle (driven by setOrder + new stackPos) places
+               the card at its final rest. Forward-fill was leaving stale
+               keyframe-end transforms on the element after setOrder ran,
+               which overrode React's new inline transform and produced
+               cards stuck at the wrong stack position. */
+            el.animate(keyframes, { duration: DURATION, fill: 'none' });
           });
           /* Z drops at the apex so the descending half passes UNDER. The
              two inner timers are pushed into cycleTimers so a mid-cycle
@@ -2634,7 +2660,7 @@ import ReactDOM from 'react-dom';
           clearTimeout(id);
           clearCycleTimers();
         };
-      }, [autoScroll, dragging, cooldown, order]);
+      }, [autoScroll, dragging, cooldown, inView, order]);
 
       const onPointerDown = (e) => {
         if (dragging) return;
@@ -2693,6 +2719,11 @@ import ReactDOM from 'react-dom';
             startStates.forEach((s) => {
               const el = cardRefs.current[s.origIdx];
               if (!el || !el.animate) return;
+              /* Kill any animation still alive on this card before
+                 arming a new one. Without this, fast successive drags
+                 leave stale fill:forwards animations from the previous
+                 commit ghosting the card at the wrong position. */
+              if (el.getAnimations) el.getAnimations().forEach((a) => a.cancel());
               const newPos = newOrder.indexOf(s.origIdx);
               const toY = newPos * PEEK;
               const toScale = 1 - newPos * 0.04;
@@ -2712,6 +2743,7 @@ import ReactDOM from 'react-dom';
           requestAnimationFrame(() => {
             const el = cardRefs.current[topId];
             if (!el || !el.animate) return;
+            if (el.getAnimations) el.getAnimations().forEach((a) => a.cancel());
             el.animate(
               [
                 { transform: `translate(${fromX}px, ${fromY}px) scale(1) rotate(${fromRot}deg)` },
@@ -2726,7 +2758,7 @@ import ReactDOM from 'react-dom';
       return (
         <PagePad>
           <div style={{ paddingTop: outerPaddingTop }}>
-            <div className="no-page-swipe" style={{ position: 'relative', height: stackHeight }}>
+            <div ref={deckRef} className="no-page-swipe" style={{ position: 'relative', height: stackHeight }}>
               {/* Silhouette behind the deck — sized and positioned to
                  match the deepest card (same translateY + scale).
                  Stays put while real cards rotate / lift, so the
@@ -2740,7 +2772,7 @@ import ReactDOM from 'react-dom';
                 transform: `translate(0px, ${(N - 1) * PEEK}px) scale(${1 - (N - 1) * 0.04})`,
                 transformOrigin: 'center center',
                 background: '#F0F4F7',
-                border: '1px solid rgba(0,0,0,0.04)',
+                border: 'none',
                 borderRadius: 16,
                 opacity: 0.6,
                 zIndex: 0,
@@ -3462,7 +3494,7 @@ import ReactDOM from 'react-dom';
                   );
                 })}
               </div>
-              <CarouselDots count={slides.length} activeIdx={idx} bottom={12} />
+              <CarouselDots count={slides.length} activeIdx={idx} bottom={12} light={bgType !== 'mesh'} />
             </div>
           </div>
         </PagePad>
@@ -4818,7 +4850,7 @@ import ReactDOM from 'react-dom';
         let intervalId;
         const delay = setTimeout(() => {
           setCycle(1);
-          intervalId = setInterval(() => setCycle(c => c + 1), 3000);
+          intervalId = setInterval(() => setCycle(c => c + 1), 4000);
         }, 100);
         return () => { clearTimeout(delay); if (intervalId) clearInterval(intervalId); };
       }, [visible]);
@@ -4892,13 +4924,13 @@ import ReactDOM from 'react-dom';
             </>
           )}
 
-          {/* === SPARK: brand bubbles only visible during alt state === */}
+          {/* === SPARK: brand bubbles start as bg colour change ends === */}
           {isSpark && (
             <div style={{
               position: 'absolute', right: 14, bottom: 16,
               pointerEvents: 'none',
               opacity: showAlt ? 1 : 0,
-              transition: `opacity ${T_MS} ${EASE}`,
+              transition: showAlt ? `opacity 0.4s ${EASE} 0.2s` : `opacity 0.2s ${EASE}`,
             }}>
               <SparkBubbleCloud animate={showAlt} width={72} height={72} iconSize={0} startDelayMs={0} />
             </div>
@@ -4916,29 +4948,33 @@ import ReactDOM from 'react-dom';
             </div>
           )}
           {/* Fire + Spark: one-directional vertical ticker.
-             Always slides UP. Uses cycle count to keep translating
-             upward through repeated text slots. Never reverses. */}
+             Uses RollingText pattern: [A, B, clone-A]. Scrolls to clone-A,
+             then snaps back to real A without transition. Always upward. */}
           {(isFire || isSpark) && (() => {
             const CAP_H = 16;
             const HEAD_H = 20;
-            const capPair = isFire ? ['Play & win', 'Aman leading'] : ['Sparks', 'Sparks'];
-            const headPair = isFire
+            const caps = isFire ? ['Play & win', 'Aman leading'] : ['Sparks', 'Sparks'];
+            const heads = isFire
               ? [{ text: '3 fires' },
                  { node: (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                    <MoniesGlyph size={14} color="#FFFFFF" /> 8,435
                  </span>) }]
               : [{ text: 'Save ₹1,600' }, { text: '5 drops live' }];
-            /* Generate enough repeated slots for ~20 cycles */
-            const REPEATS = 20;
-            const capSlots = Array.from({ length: REPEATS }, (_, i) => capPair[i % 2]);
-            const headSlots = Array.from({ length: REPEATS }, (_, i) => headPair[i % 2]);
+            /* Append clone of first item so we can scroll past the last
+               real item and snap back invisibly */
+            const capSlots = [...caps, caps[0]];
+            const headSlots = [...heads, heads[0]];
+            /* tickIdx: 0 → 1 → 2 (clone) → snap to 0 → 1 → 2 → ... */
+            const tickIdx = cycle % 3;
+            /* tickIdx hitting the clone (2) triggers a snap-back in the
+               parent's next cycle. But we need to detect the snap frame
+               to disable transition. The snap happens when we go from
+               clone (2) back to 0. */
+            const isSnap = tickIdx === 0 && cycle >= 3;
             const maskStyle = {
               maskImage: 'linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%)',
               WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%)',
             };
-            /* cycle=0 shows slot 0, cycle=1 shows slot 1, etc — always moving up */
-            const capY = cycle * CAP_H;
-            const headY = cycle * HEAD_H;
             return (
               <>
                 <div style={{
@@ -4946,8 +4982,8 @@ import ReactDOM from 'react-dom';
                   height: CAP_H, overflow: 'hidden', ...maskStyle,
                 }}>
                   <div style={{
-                    transform: `translateY(-${capY}px)`,
-                    transition: cycle > 0 ? `transform 0.6s ${EASE}` : 'none',
+                    transform: `translateY(-${tickIdx * CAP_H}px)`,
+                    transition: (cycle > 0 && !isSnap) ? `transform 0.6s ${EASE}` : 'none',
                   }}>
                     {capSlots.map((c, i) => (
                       <div key={i} style={{ height: CAP_H, ...T.caption, color: 'rgba(255,255,255,0.85)' }}>{c}</div>
@@ -4959,8 +4995,8 @@ import ReactDOM from 'react-dom';
                   height: HEAD_H, overflow: 'hidden', ...maskStyle,
                 }}>
                   <div style={{
-                    transform: `translateY(-${headY}px)`,
-                    transition: cycle > 0 ? `transform 0.6s ${EASE} 0.06s` : 'none',
+                    transform: `translateY(-${tickIdx * HEAD_H}px)`,
+                    transition: (cycle > 0 && !isSnap) ? `transform 0.6s ${EASE} 0.06s` : 'none',
                   }}>
                     {headSlots.map((h, i) => (
                       <div key={i} style={{ height: HEAD_H, ...T.h4, color: '#FFFFFF' }}>
@@ -5018,19 +5054,19 @@ import ReactDOM from 'react-dom';
           <img src="/assets/monies_icon.png" width={32} height={32} alt=""
             style={{ display: 'block', flexShrink: 0 }} />
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ ...T.caption, color: 'rgba(0,0,0,0.5)' }}>Monies</div>
+            <div style={{ ...T.caption, color: 'rgba(0,0,0,0.5)' }}>Monies balance</div>
             <div style={{
               ...T.h4, color: 'rgba(0,0,0,0.9)', marginTop: 2,
               display: 'inline-flex', alignItems: 'center', gap: 4,
             }}>
-              <MoniesGlyph size={14} /> 6,522
+              <MoniesGlyph size={14} /> 66,522
             </div>
           </div>
           <span style={{
             ...T.caption, fontWeight: 500, color: '#D30AD7',
             background: '#FAE2FA', borderRadius: 100,
             padding: '3px 10px',
-          }}>1% rewards</span>
+          }}>1% reward rate</span>
         </button>
       </PagePad>
     );
@@ -5055,7 +5091,7 @@ import ReactDOM from 'react-dom';
             ...T.h4, color: 'rgba(0,0,0,0.9)',
             display: 'inline-flex', alignItems: 'center', gap: 4,
           }}>
-            <MoniesGlyph size={14} /> 6,522
+            <MoniesGlyph size={14} /> 66,522
           </div>
         </button>
       </PagePad>
@@ -5081,7 +5117,7 @@ import ReactDOM from 'react-dom';
             ...T.h4, color: 'rgba(0,0,0,0.9)',
             display: 'inline-flex', alignItems: 'center', gap: 4,
           }}>
-            <MoniesGlyph size={14} /> 6,522
+            <MoniesGlyph size={14} /> 66,522
           </div>
           <Chevron color="rgba(0,0,0,0.3)" />
         </button>
