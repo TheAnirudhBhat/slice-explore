@@ -6,6 +6,15 @@
       color-scheme: light;
     }
 
+    /* DLS 60% corner smoothing approximation.
+       Uses outline trick + slightly larger radius to visually
+       approximate iOS/Figma superellipse corners in browsers. */
+    .corner-smooth {
+      border-radius: 20px !important;
+      outline: 1px solid transparent;
+      outline-offset: -1px;
+    }
+
     /* FT_B reveal — Invite & earn card gets a tiny shake + a few
        coins raining down from the top edge when it scrolls into
        view for the first time. Subtle delight, not a circus. */

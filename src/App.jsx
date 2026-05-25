@@ -830,9 +830,11 @@ import ReactDOM from 'react-dom';
       const rootRef = React.useRef(null);
       const [play, setPlay] = React.useState(!animate);
       React.useEffect(() => {
-        if (!animate) return;
+        if (!animate) { setPlay(false); return; }
         const el = rootRef.current;
         if (!el) return;
+        /* Skip observer when startDelayMs is 0 — fire immediately */
+        if (startDelayMs === 0) { setPlay(true); return; }
         const obs = new IntersectionObserver(([entry]) => {
           if (entry.isIntersecting) {
             const t = setTimeout(() => setPlay(true), startDelayMs);
@@ -852,13 +854,13 @@ import ReactDOM from 'react-dom';
          well clear of the text block at card_x ≤ 76. */
       const BUBBLES = [
         { size: 32, right: 0,  bottom: 0,  delay: 0 },
-        { size: 24, right: 36, bottom: 4,  delay: 90 },
-        { size: 24, right: 4,  bottom: 36, delay: 180 },
-        { size: 24, right: 26, bottom: 26, delay: 270 },
-        { size: 20, right: 14, bottom: 54, delay: 360 },
+        { size: 24, right: 36, bottom: 4,  delay: 50 },
+        { size: 24, right: 4,  bottom: 36, delay: 100 },
+        { size: 24, right: 26, bottom: 26, delay: 150 },
+        { size: 20, right: 14, bottom: 54, delay: 200 },
       ];
-      const SPARK_ROTATE_MS = 820;
-      const BLOB_MS = 1120;
+      const SPARK_ROTATE_MS = 600;
+      const BLOB_MS = 700;
       return (
         <div ref={rootRef} style={{
           position: 'relative', width, height,
@@ -1169,6 +1171,9 @@ import ReactDOM from 'react-dom';
         heroImg: 'fy_3d_spends.png', centeredImg: 'fy_centered_spends.png', bannerImg: 'fy_banner_spends.png'
       },
     ];
+    /* Bills belong in the Bills section — filter them out of every
+       For You carousel so the two sections don't duplicate content. */
+    const FY_SLIDES_NO_BILLS = FY_SLIDES.filter(s => s.heroImg !== 'fy_3d_bill.png');
     const FY_SCHEMES = [
       ['#FCE3FC', '#F5C8F5', '#E5A8E5'],
       ['#E0F4E0', '#C2E6C2', '#9CD49C'],
@@ -1338,13 +1343,13 @@ import ReactDOM from 'react-dom';
       const slideBg = (s) => {
         return `linear-gradient(to bottom, #FFFFFF 0%, ${s[0]} 35%, ${s[1]} 60%, #FFFFFF 100%)`;
       };
-      const [ref, idx, progress] = useInfiniteCarousel(FY_SLIDES.length);
+      const [ref, idx, progress] = useInfiniteCarousel(FY_SLIDES_NO_BILLS.length);
       /* Wrapped progress → lo/hi schemes; hi wraps to 0 when crossing the last slide. */
       const lo = Math.floor(progress) % FY_SCHEMES.length;
       const hi = (lo + 1) % FY_SCHEMES.length;
       const t = progress - Math.floor(progress);
       const scheme = lerpScheme(FY_SCHEMES[lo], FY_SCHEMES[hi], t);
-      const renderedSlides = [FY_SLIDES[FY_SLIDES.length - 1], ...FY_SLIDES, FY_SLIDES[0]];
+      const renderedSlides = [FY_SLIDES_NO_BILLS[FY_SLIDES_NO_BILLS.length - 1], ...FY_SLIDES_NO_BILLS, FY_SLIDES_NO_BILLS[0]];
 
       return (
         <>
@@ -1395,7 +1400,7 @@ import ReactDOM from 'react-dom';
             </div>
             {/* The slide-bg gradient ends in white at its bottom, so no overlay
                 is needed — the CTA sits cleanly on the colored portion above. */}
-            <CarouselDots count={FY_SLIDES.length} activeIdx={idx} bottom={16} />
+            <CarouselDots count={FY_SLIDES_NO_BILLS.length} activeIdx={idx} bottom={16} />
           </div>
         </>
       );
@@ -1429,17 +1434,17 @@ import ReactDOM from 'react-dom';
           #FFFFFF
         `;
       };
-      const [ref, idx, progress] = useInfiniteCarousel(FY_SLIDES.length);
-      const lo = Math.floor(progress) % FY_SLIDES.length;
-      const hi = (lo + 1) % FY_SLIDES.length;
+      const [ref, idx, progress] = useInfiniteCarousel(FY_SLIDES_NO_BILLS.length);
+      const lo = Math.floor(progress) % FY_SLIDES_NO_BILLS.length;
+      const hi = (lo + 1) % FY_SLIDES_NO_BILLS.length;
       const t = progress - Math.floor(progress);
       /* BG scheme is driven by the slide's KIND (utility vs promo), not by a
          positional FY_SCHEMES index. Two-color palette means the wash cleanly
          signals "action item" vs "offer" without any text tag or chip. The
          lerp between adjacent slide schemes keeps the scroll-driven color
          shift smooth. */
-      const scheme = lerpScheme(fySchemeForSlide(FY_SLIDES[lo]), fySchemeForSlide(FY_SLIDES[hi]), t);
-      const renderedSlides = [FY_SLIDES[FY_SLIDES.length - 1], ...FY_SLIDES, FY_SLIDES[0]];
+      const scheme = lerpScheme(fySchemeForSlide(FY_SLIDES_NO_BILLS[lo]), fySchemeForSlide(FY_SLIDES_NO_BILLS[hi]), t);
+      const renderedSlides = [FY_SLIDES_NO_BILLS[FY_SLIDES_NO_BILLS.length - 1], ...FY_SLIDES_NO_BILLS, FY_SLIDES_NO_BILLS[0]];
 
       return (
         <>
@@ -1488,7 +1493,7 @@ import ReactDOM from 'react-dom';
                        rather than a Valentino stamp on every variant.
                        Fixed 12px gap below the sub-text (no space-between). */}
                     <button className="tap" style={{
-                      alignSelf: 'flex-start', marginTop: 12,
+                      alignSelf: 'flex-start', marginTop: 8,
                       background: 'transparent', border: 'none', padding: 0,
                       ...T.btnSm, color: meta.accent,
                       cursor: 'pointer', whiteSpace: 'nowrap',
@@ -1505,7 +1510,7 @@ import ReactDOM from 'react-dom';
                 );
               })}
             </div>
-            <CarouselDots count={FY_SLIDES.length} activeIdx={idx} bottom={12} />
+            <CarouselDots count={FY_SLIDES_NO_BILLS.length} activeIdx={idx} bottom={12} />
           </div>
         </>
       );
@@ -1590,12 +1595,12 @@ import ReactDOM from 'react-dom';
       const slideBg = (s) => (
         `linear-gradient(to bottom, ${s[0]} 0%, ${s[0]} 45%, ${s[1]} 85%, #FFFFFF 100%)`
       );
-      const [ref, idx, progress] = useInfiniteCarousel(FY_SLIDES.length);
-      const lo = Math.floor(progress) % FY_SLIDES.length;
-      const hi = (lo + 1) % FY_SLIDES.length;
+      const [ref, idx, progress] = useInfiniteCarousel(FY_SLIDES_NO_BILLS.length);
+      const lo = Math.floor(progress) % FY_SLIDES_NO_BILLS.length;
+      const hi = (lo + 1) % FY_SLIDES_NO_BILLS.length;
       const t = progress - Math.floor(progress);
-      const scheme = lerpScheme(fySchemeForSlide(FY_SLIDES[lo]), fySchemeForSlide(FY_SLIDES[hi]), t);
-      const renderedSlides = [FY_SLIDES[FY_SLIDES.length - 1], ...FY_SLIDES, FY_SLIDES[0]];
+      const scheme = lerpScheme(fySchemeForSlide(FY_SLIDES_NO_BILLS[lo]), fySchemeForSlide(FY_SLIDES_NO_BILLS[hi]), t);
+      const renderedSlides = [FY_SLIDES_NO_BILLS[FY_SLIDES_NO_BILLS.length - 1], ...FY_SLIDES_NO_BILLS, FY_SLIDES_NO_BILLS[0]];
       return (
         <>
           <div style={{ position: 'relative', marginTop: 'calc(-1 * var(--bar-overlap, 118px))', overflow: 'hidden' }}>
@@ -1629,7 +1634,7 @@ import ReactDOM from 'react-dom';
                 </div>
               ))}
             </div>
-            <CarouselDots count={FY_SLIDES.length} activeIdx={idx} bottom={16} />
+            <CarouselDots count={FY_SLIDES_NO_BILLS.length} activeIdx={idx} bottom={16} />
           </div>
         </>
       );
@@ -1642,7 +1647,7 @@ import ReactDOM from 'react-dom';
        horizontal carousel — no swipe, no auto-advance, no app-bar
        bleed. Reads as a 1-page rewards-style summary. */
     const FY_G = () => {
-      const slides = FY_SLIDES;
+      const slides = FY_SLIDES_NO_BILLS;
       const slideGradient = (s) => {
         const scheme = fySchemeForSlide(s);
         return `linear-gradient(180deg, ${scheme[0]} 0%, ${scheme[1]} 70%, ${scheme[2]} 100%)`;
@@ -1722,12 +1727,12 @@ import ReactDOM from 'react-dom';
          linear-gradient(to bottom, transparent 68%, #FFFFFF 100%),
          #FFFFFF`
       );
-      const [ref, idx, progress] = useInfiniteCarousel(FY_SLIDES.length, STRIDE);
-      const lo = Math.floor(progress) % FY_SLIDES.length;
-      const hi = (lo + 1) % FY_SLIDES.length;
+      const [ref, idx, progress] = useInfiniteCarousel(FY_SLIDES_NO_BILLS.length, STRIDE);
+      const lo = Math.floor(progress) % FY_SLIDES_NO_BILLS.length;
+      const hi = (lo + 1) % FY_SLIDES_NO_BILLS.length;
       const t = progress - Math.floor(progress);
-      const scheme = lerpScheme(fySchemeForSlide(FY_SLIDES[lo]), fySchemeForSlide(FY_SLIDES[hi]), t);
-      const renderedSlides = [FY_SLIDES[FY_SLIDES.length - 1], ...FY_SLIDES, FY_SLIDES[0]];
+      const scheme = lerpScheme(fySchemeForSlide(FY_SLIDES_NO_BILLS[lo]), fySchemeForSlide(FY_SLIDES_NO_BILLS[hi]), t);
+      const renderedSlides = [FY_SLIDES_NO_BILLS[FY_SLIDES_NO_BILLS.length - 1], ...FY_SLIDES_NO_BILLS, FY_SLIDES_NO_BILLS[0]];
       return (
         <div style={{ position: 'relative', marginTop: 'calc(-1 * var(--bar-overlap, 118px))', overflow: 'hidden' }}>
           <div style={{
@@ -1784,7 +1789,7 @@ import ReactDOM from 'react-dom';
               );
             })}
           </div>
-          <CarouselDots count={FY_SLIDES.length} activeIdx={idx} bottom={0} />
+          <CarouselDots count={FY_SLIDES_NO_BILLS.length} activeIdx={idx} bottom={0} />
         </div>
       );
     };
@@ -1815,12 +1820,12 @@ import ReactDOM from 'react-dom';
          linear-gradient(to bottom, transparent 90%, #FFFFFF 100%),
          #FFFFFF`
       );
-      const [ref, idx, progress] = useInfiniteCarousel(FY_SLIDES.length);
-      const lo = Math.floor(progress) % FY_SLIDES.length;
-      const hi = (lo + 1) % FY_SLIDES.length;
+      const [ref, idx, progress] = useInfiniteCarousel(FY_SLIDES_NO_BILLS.length);
+      const lo = Math.floor(progress) % FY_SLIDES_NO_BILLS.length;
+      const hi = (lo + 1) % FY_SLIDES_NO_BILLS.length;
       const t = progress - Math.floor(progress);
-      const scheme = lerpScheme(fySchemeForSlide(FY_SLIDES[lo]), fySchemeForSlide(FY_SLIDES[hi]), t);
-      const renderedSlides = [FY_SLIDES[FY_SLIDES.length - 1], ...FY_SLIDES, FY_SLIDES[0]];
+      const scheme = lerpScheme(fySchemeForSlide(FY_SLIDES_NO_BILLS[lo]), fySchemeForSlide(FY_SLIDES_NO_BILLS[hi]), t);
+      const renderedSlides = [FY_SLIDES_NO_BILLS[FY_SLIDES_NO_BILLS.length - 1], ...FY_SLIDES_NO_BILLS, FY_SLIDES_NO_BILLS[0]];
       return (
         <div style={{ position: 'relative', marginTop: 'calc(-1 * var(--bar-overlap, 118px))', overflow: 'hidden' }}>
           <div style={{
@@ -1839,7 +1844,7 @@ import ReactDOM from 'react-dom';
                  icon drifts AGAINST it (leading) at −40. Cross-fade keeps
                  only one slide visible at once so the parallax reads
                  cleanly without two text rows fighting across the seam. */
-              const { signed: wrappedOffset } = wrappedCarouselDistance(i - 1, progress, FY_SLIDES.length);
+              const { signed: wrappedOffset } = wrappedCarouselDistance(i - 1, progress, FY_SLIDES_NO_BILLS.length);
               const textX = wrappedOffset * 56;
               const iconX = wrappedOffset * -40;
               const slideOpacity = Math.max(0, 1 - Math.abs(wrappedOffset));
@@ -1889,7 +1894,7 @@ import ReactDOM from 'react-dom';
               );
             })}
           </div>
-          <CarouselDots count={FY_SLIDES.length} activeIdx={idx} bottom={0} />
+          <CarouselDots count={FY_SLIDES_NO_BILLS.length} activeIdx={idx} bottom={0} />
         </div>
       );
     };
@@ -1937,8 +1942,8 @@ import ReactDOM from 'react-dom';
       const MIN_H = overlap === 'bills' ? 292 : overlap === 'ab' ? 240 : 220;
       const SLIDE_PCT = 100;
       const TEXT_BOTTOM = overlap === 'bills' ? 108 : overlap === 'ab' ? 70 : 52;
-      const [ref, idx] = useInfiniteCarousel(FY_SLIDES.length);
-      const renderedSlides = [FY_SLIDES[FY_SLIDES.length - 1], ...FY_SLIDES, FY_SLIDES[0]];
+      const [ref, idx] = useInfiniteCarousel(FY_SLIDES_NO_BILLS.length);
+      const renderedSlides = [FY_SLIDES_NO_BILLS[FY_SLIDES_NO_BILLS.length - 1], ...FY_SLIDES_NO_BILLS, FY_SLIDES_NO_BILLS[0]];
       /* The active slide's scheme drives a parent-level absolute bg. As
          the carousel snaps to the next slide, the bg hard-cuts to the new
          scheme — no fade interpolation. The bg layer uses inset:0 + the
@@ -1992,7 +1997,7 @@ import ReactDOM from 'react-dom';
                 </div>
               ))}
             </div>
-            {!hideDots && <CarouselDots count={FY_SLIDES.length} activeIdx={idx} bottom={16} />}
+            {!hideDots && <CarouselDots count={FY_SLIDES_NO_BILLS.length} activeIdx={idx} bottom={16} />}
           </div>
         </>
       );
@@ -2025,19 +2030,19 @@ import ReactDOM from 'react-dom';
       /* Hero grown so the fade-to-white has a long, smooth runway
          (≥150px). Content sits centred; the lower band fades to white. */
       const MIN_H = 380;
-      const N = FY_SLIDES.length;
+      const N = FY_SLIDES_NO_BILLS.length;
       const [ref, idx, progress] = useInfiniteCarousel(N);
-      const renderedSlides = [FY_SLIDES[N - 1], ...FY_SLIDES, FY_SLIDES[0]];
+      const renderedSlides = [FY_SLIDES_NO_BILLS[N - 1], ...FY_SLIDES_NO_BILLS, FY_SLIDES_NO_BILLS[0]];
       /* Per-real-slide image opacity from wrapped progress — same trick
          as FY_L. Background deck lifts out of the scroller and crossfades
          in place, so the artwork doesn't slide past itself at the seam. */
-      const imageOpacities = FY_SLIDES.map((_, p) =>
+      const imageOpacities = FY_SLIDES_NO_BILLS.map((_, p) =>
         Math.max(0, 1 - wrappedCarouselDistance(p, progress, N).abs)
       );
       return (
         <>
           <div style={{ position: 'relative', marginTop: 'calc(-1 * var(--bar-overlap, 118px))', overflow: 'hidden' }}>
-            {FY_SLIDES.map((_, p) => (
+            {FY_SLIDES_NO_BILLS.map((_, p) => (
               <div key={p} aria-hidden style={{
                 position: 'absolute', inset: 0, zIndex: 0,
                 backgroundImage: `url(/assets/${FY_HERO_SLIDES[p % FY_HERO_SLIDES.length].bg})`,
@@ -2068,7 +2073,7 @@ import ReactDOM from 'react-dom';
                     display: 'flex', flexDirection: 'column',
                     alignItems: 'center', justifyContent: 'center',
                     textAlign: 'center',
-                    paddingTop: PAD_TOP_CSS, paddingRight: 36, paddingBottom: 64, paddingLeft: 36,
+                    paddingTop: PAD_TOP_CSS, paddingRight: 36, paddingBottom: 48, paddingLeft: 36,
                     boxSizing: 'border-box',
                     background: 'transparent',
                   }}>
@@ -2095,6 +2100,168 @@ import ReactDOM from 'react-dom';
                 );
               })}
             </div>
+          </div>
+        </>
+      );
+    };
+
+    /* FY_N — Shorter FY_F. Same centered image-hero carousel with
+       crossfade + bottom fade-to-white, but MIN_H reduced from 380
+       to 300 so it takes less vertical space. */
+    const FY_N = () => {
+      const PAD_TOP_CSS = 'calc(var(--bar-overlap, 118px) + 24px)';
+      const MIN_H = 300;
+      const N = FY_SLIDES_NO_BILLS.length;
+      const [ref, idx, progress] = useInfiniteCarousel(N);
+      const renderedSlides = [FY_SLIDES_NO_BILLS[N - 1], ...FY_SLIDES_NO_BILLS, FY_SLIDES_NO_BILLS[0]];
+      const imageOpacities = FY_SLIDES_NO_BILLS.map((_, p) =>
+        Math.max(0, 1 - wrappedCarouselDistance(p, progress, N).abs)
+      );
+      return (
+        <>
+          <div style={{ position: 'relative', marginTop: 'calc(-1 * var(--bar-overlap, 118px))', overflow: 'hidden' }}>
+            {FY_SLIDES_NO_BILLS.map((_, p) => (
+              <div key={p} aria-hidden style={{
+                position: 'absolute', inset: 0, zIndex: 0,
+                backgroundImage: `url(/assets/${FY_HERO_SLIDES[p % FY_HERO_SLIDES.length].bg})`,
+                backgroundSize: 'cover', backgroundPosition: 'center',
+                opacity: imageOpacities[p],
+                pointerEvents: 'none', willChange: 'opacity',
+              }} />
+            ))}
+            <div aria-hidden style={{
+              position: 'absolute', inset: 0, zIndex: 1,
+              background: 'linear-gradient(to bottom, rgba(255,255,255,0) 65%, rgba(255,255,255,0.3) 80%, rgba(255,255,255,0.7) 90%, #FFFFFF 96%, #FFFFFF 100%)',
+              pointerEvents: 'none',
+            }} />
+            <div ref={ref} style={{
+              position: 'relative', zIndex: 2,
+              display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
+              overscrollBehavior: 'none',
+            }} className="scrollbar-hide no-page-swipe">
+              {renderedSlides.map((s, i) => {
+                const { abs: dist, signed: wrappedOffset } = wrappedCarouselDistance(i - 1, progress, N);
+                const textOpacity = Math.max(0, 1 - dist * 2.6);
+                const parallaxX = wrappedOffset * 60;
+                return (
+                  <div key={i} style={{
+                    flex: '0 0 100%', scrollSnapAlign: 'start',
+                    minHeight: MIN_H, overflow: 'hidden',
+                    display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center',
+                    textAlign: 'center',
+                    paddingTop: PAD_TOP_CSS, paddingRight: 36, paddingBottom: 48, paddingLeft: 36,
+                    boxSizing: 'border-box',
+                    background: 'transparent',
+                  }}>
+                    <div style={{
+                      position: 'relative', zIndex: 3,
+                      transform: `translate(${parallaxX}px, -12px)`,
+                      opacity: textOpacity,
+                      willChange: 'transform, opacity',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    }}>
+                      <div style={{ ...T.h4, color: '#FFFFFF' }}>{s.title}</div>
+                      <div style={{
+                        ...T.caption, color: 'rgba(255,255,255,0.85)', marginTop: 4,
+                      }}>{s.sub}</div>
+                      <button className="tap" style={{
+                        marginTop: 12,
+                        padding: '5px 12px', background: '#FFFFFF', border: 'none', borderRadius: 100,
+                        ...T.caption, fontWeight: 500, color: 'rgba(0,0,0,0.9)', cursor: 'pointer', whiteSpace: 'nowrap',
+                      }}>{s.cta}</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      );
+    };
+
+    /* FY_P — FY_D layout (left-aligned text + DLS avatar, side-by-side)
+       but with FY_F's image backgrounds and bottom fade-to-white overlay
+       instead of D's mesh-gradient. Best of both: editorial photography
+       bg + compact informational layout. */
+    /* FY_P — D's left-aligned layout + colour mesh gradient (not images),
+       with F's bottom fade-to-white overlay. Blends D's informational
+       layout with F's soft bottom edge. */
+    const FY_P = () => {
+      const TEXT_TOP_CSS = 'calc(var(--bar-overlap, 118px) + 24px)';
+      const MIN_H = 260;
+      const SLIDE_PCT = 100;
+      const TEXT_BOTTOM = 42;
+      const slideBg = (s) => `
+        radial-gradient(ellipse 100% 70% at 8% 6%, ${s[0]} 0%, transparent 85%),
+        radial-gradient(ellipse 100% 70% at 95% 10%, ${s[1]} 0%, transparent 85%),
+        radial-gradient(ellipse 110% 60% at 50% 22%, ${s[2]} 0%, transparent 90%),
+        linear-gradient(to bottom, transparent 55%, rgba(255,255,255,0.5) 78%, #FFFFFF 92%),
+        #FFFFFF
+      `;
+      const N = FY_SLIDES_NO_BILLS.length;
+      const [ref, idx, progress] = useInfiniteCarousel(N);
+      const lo = Math.floor(progress) % N;
+      const hi = (lo + 1) % N;
+      const t = progress - Math.floor(progress);
+      const scheme = lerpScheme(fySchemeForSlide(FY_SLIDES_NO_BILLS[lo]), fySchemeForSlide(FY_SLIDES_NO_BILLS[hi]), t);
+      const renderedSlides = [FY_SLIDES_NO_BILLS[N - 1], ...FY_SLIDES_NO_BILLS, FY_SLIDES_NO_BILLS[0]];
+      return (
+        <>
+          <div style={{ position: 'relative', marginTop: 'calc(-1 * var(--bar-overlap, 118px))', overflow: 'hidden' }}>
+            <div style={{
+              position: 'absolute', inset: 0, background: slideBg(scheme),
+              pointerEvents: 'none', zIndex: 0,
+            }} />
+            <div ref={ref} style={{
+              position: 'relative', zIndex: 1,
+              display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
+              overscrollBehavior: 'none',
+            }} className="scrollbar-hide no-page-swipe">
+              {renderedSlides.map((s, i) => {
+                const meta = fyAvatarMeta(s.heroImg);
+                return (
+                  <div key={i} style={{
+                    flex: `0 0 ${SLIDE_PCT}%`, scrollSnapAlign: 'start',
+                    position: 'relative', minHeight: MIN_H, overflow: 'hidden',
+                    background: 'transparent',
+                  }}>
+                    <div style={{
+                      position: 'absolute', right: 24, top: TEXT_TOP_CSS, bottom: TEXT_BOTTOM,
+                      width: 60, display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+                      pointerEvents: 'none',
+                    }}>
+                      <FyDlsAvatar heroImg={s.heroImg} size={60} glyphSize={30} tone="subtle" />
+                    </div>
+                    <div style={{
+                      position: 'relative', width: '100%',
+                      paddingTop: TEXT_TOP_CSS, paddingRight: 110, paddingBottom: TEXT_BOTTOM, paddingLeft: 28,
+                      display: 'flex', flexDirection: 'column', justifyContent: 'flex-start',
+                      minHeight: MIN_H, boxSizing: 'border-box', zIndex: 1,
+                    }}>
+                      <div>
+                        <div style={{ ...T.h4, lineHeight: '20px' }}>{s.title}</div>
+                        <div style={{ ...T.caption, color: 'rgba(0,0,0,0.7)', marginTop: 4 }}>{s.sub}</div>
+                      </div>
+                      <button className="tap" style={{
+                        alignSelf: 'flex-start', marginTop: 8,
+                        background: 'transparent', border: 'none', padding: 0,
+                        ...T.btnSm, color: meta.accent,
+                        cursor: 'pointer', whiteSpace: 'nowrap',
+                        display: 'inline-flex', alignItems: 'center', gap: 4,
+                      }}>
+                        {s.cta}
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+                          <path d="M9 6l6 6-6 6" stroke={meta.accent} strokeWidth="2"
+                            strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <CarouselDots count={N} activeIdx={idx} bottom={12} />
           </div>
         </>
       );
@@ -2310,7 +2477,7 @@ import ReactDOM from 'react-dom';
          shuffle-deck engine drives both the For You stack (default
          FY_SLIDES + heroImg/title/sub recipe) and the bills card
          stack (bill items + amount-on-right recipe). */
-      const items = itemsProp || FY_SLIDES;
+      const items = itemsProp || FY_SLIDES_NO_BILLS;
       const N = items.length;
       const [order, setOrder] = React.useState(() => items.map((_, i) => i));
       const [drag, setDrag] = React.useState({ x: 0, y: 0 });
@@ -2800,7 +2967,7 @@ import ReactDOM from 'react-dom';
          (no theme overlay, no inline text). */
       const FY_B_SLIDES = [
         { banner: 'fy_b_banner.png', bannerAspect: '1074 / 528' },
-        ...FY_SLIDES,
+        ...FY_SLIDES_NO_BILLS,
       ];
       const N = FY_B_SLIDES.length;
       const renderedSlides = [FY_B_SLIDES[N - 1], ...FY_B_SLIDES, FY_B_SLIDES[0]];
@@ -3155,11 +3322,188 @@ import ReactDOM from 'react-dom';
     };
 
 
+    /* FY_Q — L's image-hero carousel constrained inside a card (like H).
+       Crossfading bg images, centered text + CTA, carousel dots — all
+       inside a rounded card with page padding instead of edge-to-edge. */
+    /* Shared card-carousel builder for FY_Q/R/S — accepts a style config
+       to avoid duplicating the scroll/crossfade mechanics. */
+    const FY_CardCarousel = ({ cardStyle, overlayGradient, bgType = 'image', slides: slidesProp }) => {
+      const slides = slidesProp || FY_HERO_SLIDES;
+      const [ref, idx, progress] = useInfiniteCarousel(slides.length);
+      const renderedSlides = [slides[slides.length - 1], ...slides, slides[0]];
+      const imageOpacities = slides.map((_, p) =>
+        Math.max(0, 1 - wrappedCarouselDistance(p, progress, slides.length).abs)
+      );
+      /* Per-slide mesh scheme for gradient bg types */
+      const lo = Math.floor(progress) % slides.length;
+      const hi = (lo + 1) % slides.length;
+      const t = progress - Math.floor(progress);
+      return (
+        <PagePad>
+          <div style={{ paddingTop: 8 }}>
+            <div style={{
+              position: 'relative', overflow: 'hidden',
+              borderRadius: cardStyle.radius || 16,
+              boxShadow: CARD_SHADOW,
+              background: cardStyle.baseBg || '#0d0317',
+              ...(cardStyle.border ? { border: cardStyle.border } : {}),
+              /* DLS 60% corner smoothing */
+              WebkitBorderRadius: cardStyle.radius || 16,
+              MozBorderRadius: cardStyle.radius || 16,
+            }} className="corner-smooth">
+              {/* Background layer */}
+              {bgType === 'image' && slides.map((s, p) => (
+                <div key={p} aria-hidden style={{
+                  position: 'absolute', inset: 0,
+                  backgroundImage: `url(/assets/${s.bg})`,
+                  backgroundSize: '100% auto', backgroundPosition: 'center calc(100% + 24px)',
+                  opacity: imageOpacities[p],
+                  pointerEvents: 'none', willChange: 'opacity',
+                }} />
+              ))}
+              {bgType === 'mesh' && (() => {
+                const scheme = lerpScheme(
+                  FY_SLIDE_SCHEMES[lo % FY_SLIDE_SCHEMES.length],
+                  FY_SLIDE_SCHEMES[hi % FY_SLIDE_SCHEMES.length], t);
+                return (
+                  <div aria-hidden style={{
+                    position: 'absolute', inset: 0, pointerEvents: 'none',
+                    background: `
+                      radial-gradient(ellipse 90% 80% at 10% 20%, ${scheme[0]} 0%, transparent 70%),
+                      radial-gradient(ellipse 80% 80% at 90% 30%, ${scheme[1]} 0%, transparent 70%),
+                      radial-gradient(ellipse 100% 60% at 50% 80%, ${scheme[2]} 0%, transparent 80%),
+                      ${cardStyle.baseBg || '#FFFFFF'}
+                    `,
+                  }} />
+                );
+              })()}
+              {bgType === 'valentino' && (() => {
+                const schemes = [
+                  ['#3B0060', '#6B1FB8', '#D30AD7'],
+                  ['#1A0040', '#4A0E8F', '#8B2FC8'],
+                  ['#260227', '#87068A', '#D30AD7'],
+                ];
+                const s0 = schemes[lo % schemes.length], s1 = schemes[hi % schemes.length];
+                const scheme = s0.map((c, i) => {
+                  const a = _hexToRgb(c), b = _hexToRgb(s1[i]);
+                  return `rgb(${a.map((v, j) => Math.round(v + (b[j] - v) * t)).join(',')})`;
+                });
+                return (
+                  <div aria-hidden style={{
+                    position: 'absolute', inset: 0, pointerEvents: 'none',
+                    background: `
+                      radial-gradient(ellipse 80% 70% at 15% 10%, ${scheme[0]} 0%, transparent 65%),
+                      radial-gradient(ellipse 70% 80% at 85% 25%, ${scheme[1]} 0%, transparent 65%),
+                      radial-gradient(ellipse 100% 50% at 50% 90%, ${scheme[2]}44 0%, transparent 70%),
+                      linear-gradient(160deg, #1A0040 0%, #260227 100%)
+                    `,
+                  }} />
+                );
+              })()}
+              {/* Optional overlay gradient (vignette, bottom fade, etc) */}
+              {overlayGradient && (
+                <div aria-hidden style={{
+                  position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1,
+                  background: overlayGradient,
+                }} />
+              )}
+              {/* Scroll container */}
+              <div ref={ref} style={{
+                position: 'relative', zIndex: 2,
+                display: 'flex', overflowX: 'auto',
+                scrollSnapType: 'x mandatory',
+                overscrollBehavior: 'none',
+              }} className="scrollbar-hide no-page-swipe">
+                {renderedSlides.map((s, i) => {
+                  const { abs: dist, signed: wrappedOffset } = wrappedCarouselDistance(i - 1, progress, slides.length);
+                  const textOpacity = Math.max(0, 1 - dist * 2.6);
+                  const parallaxX = wrappedOffset * 60;
+                  const isLight = bgType === 'mesh';
+                  const txtColor = isLight ? 'rgba(0,0,0,0.9)' : '#FFFFFF';
+                  const subColor = isLight ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.85)';
+                  const shadow = isLight ? 'none' : '0 1px 2px rgba(0,0,0,0.25)';
+                  const btnBg = isLight ? 'rgba(0,0,0,0.9)' : '#FFFFFF';
+                  const btnColor = isLight ? '#FFFFFF' : '#171A1F';
+                  return (
+                    <div key={i} style={{
+                      flex: '0 0 100%', scrollSnapAlign: 'start',
+                      position: 'relative', minHeight: cardStyle.minH || 180, overflow: 'hidden',
+                      display: 'flex', flexDirection: 'column',
+                      alignItems: 'center', justifyContent: 'flex-end',
+                      textAlign: 'center',
+                      padding: cardStyle.pad || '16px 24px 48px 24px',
+                      boxSizing: 'border-box',
+                      background: 'transparent',
+                    }}>
+                      <div style={{
+                        position: 'relative', zIndex: 2,
+                        display: 'flex', flexDirection: 'column', alignItems: 'center',
+                        transform: `translateX(${parallaxX}px)`,
+                        opacity: textOpacity,
+                        willChange: 'transform, opacity',
+                      }}>
+                        <div style={{
+                          fontFamily: 'Rubik', fontSize: cardStyle.titleSize || 20,
+                          fontWeight: 500, lineHeight: '24px', letterSpacing: '0.4px',
+                          color: txtColor, textShadow: shadow,
+                        }}>{s.title}</div>
+                        <div style={{
+                          ...T.caption, color: subColor, marginTop: 4,
+                          textShadow: shadow,
+                        }}>{s.sub}</div>
+                        <button className="tap" style={{
+                          marginTop: 12, padding: '6px 14px',
+                          background: btnBg, border: 'none', borderRadius: 100,
+                          ...T.caption, fontWeight: 500, color: btnColor,
+                          cursor: 'pointer', whiteSpace: 'nowrap',
+                        }}>{s.cta}</button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <CarouselDots count={slides.length} activeIdx={idx} bottom={12} />
+            </div>
+          </div>
+        </PagePad>
+      );
+    };
+
+    /* FY_Q — Image hero banner in card. Photo backgrounds, vignette overlay. */
+    const FY_Q = () => (
+      <FY_CardCarousel
+        bgType="image"
+        cardStyle={{ baseBg: '#0d0317', radius: 16, minH: 180, titleSize: 20,
+          pad: '16px 24px 48px 24px' }}
+        overlayGradient="radial-gradient(ellipse 120% 80% at 50% 100%, rgba(0,0,0,0.3) 0%, transparent 60%)"
+      />
+    );
+
+    /* FY_R — Valentino mesh gradient card. Deep purple animated mesh,
+       white text. Feels premium + on-brand. No photos. */
+    const FY_R = () => (
+      <FY_CardCarousel
+        bgType="valentino"
+        cardStyle={{ baseBg: '#1A0040', radius: 20, minH: 180, titleSize: 20,
+          pad: '20px 24px 48px 24px' }}
+      />
+    );
+
+    /* FY_S — Light DLS mesh card. Soft pastel mesh (like D's scheme
+       colours), dark text. Slice everyday feel, not promotional. */
+    const FY_S = () => (
+      <FY_CardCarousel
+        bgType="mesh"
+        cardStyle={{ baseBg: '#FFFFFF', radius: 16, minH: 172, titleSize: 18,
+          pad: '16px 24px 44px 24px', border: CARD_BORDER }}
+      />
+    );
+
     const ForYouSection = ({ variant, autoScroll, fyOverlap }) => {
       /* K = liquid-glass surface on the FY_I shuffle-deck engine. Same
          interactions, swapped material. */
       if (variant === 'K') return <FY_I autoScroll={autoScroll} surface="glass" />;
-      const C = { A: FY_A, B: FY_B, C: FY_C, D: FY_D, E: FY_E, F: FY_F, G: FY_G, H: FY_H, I: FY_I, J: FY_J, L: FY_L, M: FY_M, O: FY_O }[variant] || FY_I;
+      const C = { A: FY_A, B: FY_B, C: FY_C, D: FY_D, E: FY_E, F: FY_F, G: FY_G, H: FY_H, I: FY_I, J: FY_J, L: FY_L, M: FY_M, N: FY_N, O: FY_O, P: FY_P, Q: FY_Q }[variant] || FY_I;
       return <C autoScroll={autoScroll} overlap={fyOverlap} />;
     };
 
@@ -3567,8 +3911,151 @@ import ReactDOM from 'react-dom';
       </div>
     );
 
+    /* BL_N — Category grid on top, todo card stack below. */
+    const BL_N = () => (
+      <div>
+        <PagePad>
+          <BillsShortcutGrid avatarVariant="outline" />
+        </PagePad>
+        <div style={{ height: 28 }} />
+        <BL_K autoScroll={true} showViewAll={false} />
+      </div>
+    );
+
+    /* BL_O — Todo card stack on top, category grid below.
+       Stack leads so the urgent bills are the first thing seen. */
+    const BL_O = () => (
+      <div>
+        <BL_K autoScroll={true} showViewAll={false} />
+        <div style={{ height: 20 }} />
+        <PagePad>
+          <BillsShortcutGrid avatarVariant="outline" />
+        </PagePad>
+      </div>
+    );
+
+    /* BL_P — Richer card-stack shuffle deck. Each card has a biller
+       icon, title, account number, a "Pay ₹X" button, and a due-date
+       tag. Inspired by CRED-style bill layout but in DLS 2.0 styling. */
+    const BL_P_ITEMS = [
+      { title: 'Electricity bill',  acct: 'A/C 3021 4456',     amount: '₹1,240', due: 'Due in 3 days', heroImg: 'bill_electric.png' },
+      { title: 'Mobile recharge',   acct: 'Jio · 98XXX 12345', amount: '₹299',   due: 'Expires today', heroImg: 'bill_mobile.png' },
+      { title: 'Credit card bill',  acct: 'XXXX 8842',         amount: '₹6,420', due: 'Due in 5 days', heroImg: 'bill_credit.png' },
+    ];
+    const BL_P = ({ autoScroll = true, showViewAll = true }) => (
+      <>
+        <FY_I
+          autoScroll={autoScroll}
+          items={BL_P_ITEMS}
+          outerPaddingTop={0}
+          renderContent={(it) => (
+            <>
+              <img src={`/assets/${it.heroImg}`} width={36} height={36} alt=""
+                style={{ display: 'block', borderRadius: 10, flexShrink: 0, objectFit: 'contain', pointerEvents: 'none', alignSelf: 'flex-start', marginTop: 6 }} />
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 1, alignSelf: 'flex-start', marginTop: 6 }}>
+                <div style={{
+                  ...T.btnSm, lineHeight: '18px',
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                }}>{it.title}</div>
+                <div style={{
+                  ...T.meta, color: 'rgba(0,0,0,0.4)', textTransform: 'none', letterSpacing: '0.2px',
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                }}>{it.acct}</div>
+              </div>
+              <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, alignSelf: 'flex-start', marginTop: 6, width: 96 }}>
+                <button className="tap" style={{
+                  padding: '5px 12px', borderRadius: 100,
+                  background: 'rgba(0,0,0,0.9)', border: 'none',
+                  ...T.caption, fontWeight: 500, color: '#FFFFFF',
+                  cursor: 'pointer', whiteSpace: 'nowrap',
+                  pointerEvents: 'auto',
+                }}>Pay {it.amount}</button>
+                <div style={{
+                  fontSize: 9, fontFamily: 'Rubik', fontWeight: 500,
+                  lineHeight: '12px', letterSpacing: '0.4px',
+                  textTransform: 'uppercase', color: '#C27511',
+                }}>{it.due}</div>
+              </div>
+            </>
+          )} />
+        {showViewAll && (
+          <PagePad>
+            <div style={{
+              marginTop: -19, position: 'relative', zIndex: 5,
+              display: 'flex', justifyContent: 'center',
+            }}>
+              <button className="tap" style={{
+                background: '#FFFFFF',
+                border: '1px solid rgba(0,0,0,0.05)',
+                borderRadius: 100, padding: '3px 10px',
+                cursor: 'pointer',
+                fontFamily: 'Rubik', fontSize: 11, fontWeight: 500,
+                lineHeight: '14px', letterSpacing: '0.22px',
+                color: 'rgba(0,0,0,0.9)',
+                display: 'inline-flex', alignItems: 'center',
+              }}>View all</button>
+            </div>
+          </PagePad>
+        )}
+      </>
+    );
+
+    /* BL_Q — Category grid on top, rich card stack below. */
+    const BL_Q = () => (
+      <div>
+        <PagePad>
+          <BillsShortcutGrid avatarVariant="outline" />
+        </PagePad>
+        <div style={{ height: 24 }} />
+        <BL_P autoScroll={true} showViewAll={false} />
+      </div>
+    );
+
+    /* BL_R — Minimal card-stack shuffle deck. Each card: circular biller
+       icon (grey ring) + "Title xx1234" heading + "₹X overdue/due" subtitle
+       in warning colour + chevron on right. Inspired by CRED bill rows. */
+    const BL_R_ITEMS = [
+      { title: 'Credit card xx8842',    sub: '₹6,420 due in 5 days',     color: '#C27511', heroImg: 'bill_credit.png' },
+      { title: 'Electricity A/C 4456',  sub: '₹1,240 overdue by 2 days', color: '#CE1D26', heroImg: 'bill_electric.png' },
+      { title: 'Mobile Jio 12345',      sub: '₹299 expires today',       color: '#C27511', heroImg: 'bill_mobile.png' },
+    ];
+    const BL_R = ({ autoScroll = true, showViewAll = false }) => (
+      <FY_I
+        autoScroll={autoScroll}
+        items={BL_R_ITEMS}
+        outerPaddingTop={0}
+        renderContent={(it) => (
+          <>
+            <img src={`/assets/${it.heroImg}`} width={40} height={40} alt=""
+              style={{ display: 'block', borderRadius: 12, flexShrink: 0, objectFit: 'contain' }} />
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <div style={{
+                ...T.btnSm,
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              }}>{it.title}</div>
+              <div style={{
+                ...T.caption, color: it.color,
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              }}>{it.sub}</div>
+            </div>
+            <Chevron color="rgba(0,0,0,0.3)" />
+          </>
+        )} />
+    );
+
+    /* BL_S — Grid on top + BL_R minimal stack below. */
+    const BL_S = () => (
+      <div>
+        <PagePad>
+          <BillsShortcutGrid avatarVariant="outline" />
+        </PagePad>
+        <div style={{ height: 26 }} />
+        <BL_R />
+      </div>
+    );
+
     const BillsSection = ({ variant, isInCard }) => {
-      const C = { A: BL_A, B: BL_B, C: BL_C, D: BL_D, E: BL_E, F: BL_F, J: BL_J, K: BL_K, L: BL_L, M: BL_M }[variant];
+      const C = { A: BL_A, B: BL_B, C: BL_C, D: BL_D, E: BL_E, F: BL_F, J: BL_J, K: BL_K, L: BL_L, M: BL_M, N: BL_N, P: BL_P, Q: BL_Q, R: BL_R, S: BL_S }[variant];
       return <C isInCard={isInCard} />;
     };
 
@@ -4308,74 +4795,313 @@ import ReactDOM from 'react-dom';
       </div>
     );
 
-    /* RW_X — RW_U's portrait-card scroll on top, RW_R's Monies
-       landscape banner below. Cards in the scroll: Fire, Spark, Refer
-       (no Monies — that takes the banner slot). */
-    const RW_X_SCROLL = [
-      { bg: 'rw_card_fire.png',  caption: 'Play & win',    headline: '3 fires' },
-      { bg: 'rw_card_spark.png', caption: 'Sparks',        headline: '5 drops live' },
-      { bg: 'rw_card_refer.png', caption: 'Refer friends', headline: '₹500 each' },
-    ];
-    const RW_X = () => (
-      <div>
-        <div className="scrollbar-hide no-page-swipe" style={{
-          display: 'flex', overflowX: 'auto',
-          scrollSnapType: 'x mandatory',
-          overscrollBehavior: 'none',
-          paddingLeft: 24, paddingRight: 24,
-          scrollPaddingLeft: 24, scrollPaddingRight: 24,
-          gap: 12,
+    /* RW_X portrait cards with 2-state cycling animation.
+       Fire card: state 0 = original poster, state 1 = leaderboard leader (Aman, purple gradient, 40×40 avatar).
+       Spark card: state 0 = original poster, state 1 = brand showcase (orange gradient + merchant logos).
+       3s per state, crossfade via opacity transition. */
+    const RW_X_Card = ({ cardKey }) => {
+      const cardRef = React.useRef(null);
+      const [visible, setVisible] = React.useState(false);
+      const [cycle, setCycle] = React.useState(0);
+      /* Start cycling only when card is fully visible in top 80% of viewport */
+      React.useEffect(() => {
+        const el = cardRef.current;
+        if (!el) return;
+        const obs = new IntersectionObserver(([entry]) => {
+          if (entry.isIntersecting) { setVisible(true); obs.disconnect(); }
+        }, { threshold: 1.0, rootMargin: '0px 0px -20% 0px' });
+        obs.observe(el);
+        return () => obs.disconnect();
+      }, []);
+      React.useEffect(() => {
+        if (!visible) return;
+        let intervalId;
+        const delay = setTimeout(() => {
+          setCycle(1);
+          intervalId = setInterval(() => setCycle(c => c + 1), 3000);
+        }, 100);
+        return () => { clearTimeout(delay); if (intervalId) clearInterval(intervalId); };
+      }, [visible]);
+      const phase = cycle % 2; // 0 = poster, 1 = alt
+      const isFire = cardKey === 'fire';
+      const isSpark = cardKey === 'spark';
+      /* Spark: cycles continuously like fire */
+      const showAlt = (isSpark || isFire) ? (phase === 1) : false;
+      /* Fire avatar rotation: -90→0 on appear, 0→90 on disappear.
+         Before first show (cycle 0): hidden at -90.
+         Showing (phase 1): 0. After dismiss (phase 0, cycle≥2): 90. */
+      const fireRotation = showAlt ? 'rotate(0deg)' : (cycle === 0 ? 'rotate(-90deg)' : 'rotate(90deg)');
+      const T_MS = '0.6s';
+      const EASE = 'cubic-bezier(0.25, 0.1, 0.25, 1)';
+      return (
+        <button ref={cardRef} className="tap" style={{
+          flex: '0 0 132px', height: 174,
+          borderRadius: 16, border: 'none', boxShadow: CARD_SHADOW,
+          scrollSnapAlign: 'start',
+          textAlign: 'left', cursor: 'pointer', position: 'relative',
+          display: 'flex', flexDirection: 'column',
+          overflow: 'hidden', backgroundColor: '#000',
+          padding: 0,
         }}>
-          {RW_X_SCROLL.map((card) => (
-            <button key={card.bg} className="tap" style={{
-              flex: '0 0 132px', height: 174,
-              padding: '20px 16px 16px 16px',
-              borderRadius: 16,
-              border: 'none', boxShadow: CARD_SHADOW,
-              backgroundImage: `url(/assets/${card.bg})`,
-              backgroundSize: 'cover', backgroundPosition: 'center',
-              backgroundColor: '#000',
-              scrollSnapAlign: 'start',
-              textAlign: 'left', cursor: 'pointer', position: 'relative',
-              display: 'flex', flexDirection: 'column',
-            }}>
-              <div style={{ ...T.caption, color: 'rgba(255,255,255,0.85)' }}>
-                {card.caption}
-              </div>
-              <div style={{ ...T.h4, color: '#FFFFFF', marginTop: 4 }}>
-                {card.headline}
-              </div>
-            </button>
-          ))}
-        </div>
-        <PagePad>
-          <div style={{ marginTop: 20 }}>
-            {/* Single-row Monies balance — small leading icon +
-               compact "Monies balance" label on the left, 240
-               value on the right. White card with subtle DLS card
-               shadow so it lifts off the page. */}
-            <button className="tap" style={{
-              width: '100%', height: 52, padding: '10px 14px',
-              borderRadius: 16,
-              background: '#FFFFFF', border: CARD_BORDER, boxShadow: CARD_SHADOW,
-              textAlign: 'left', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 10,
-              position: 'relative', overflow: 'hidden',
-            }}>
-              <img src="/assets/monies_icon.png" width={24} height={24} alt=""
-                style={{ display: 'block', flexShrink: 0 }} />
+          {/* === BACKGROUND LAYERS === */}
+          {/* State 0 — poster image */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            backgroundImage: isFire ? 'url(/assets/rw_card_fire.png)'
+              : isSpark ? 'url(/assets/rw_card_spark.png)'
+              : 'url(/assets/rw_card_refer.png)',
+            backgroundSize: 'cover', backgroundPosition: 'center',
+            opacity: showAlt ? 0 : 1,
+            transition: `opacity ${T_MS} ${EASE}`,
+          }} />
+          {/* State 1 — gradient bg */}
+          {isFire && <div style={{
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(160deg, #1A0040 0%, #3B0D7A 40%, #6B1FB8 100%)',
+            opacity: showAlt ? 1 : 0,
+            transition: `opacity ${T_MS} ${EASE}`,
+          }} />}
+          {isSpark && <div style={{
+            position: 'absolute', inset: 0,
+            backgroundImage: 'url(/assets/spark_bg_gradient.png)',
+            backgroundSize: 'cover', backgroundPosition: 'center',
+            opacity: showAlt ? 1 : 0,
+            transition: `opacity ${T_MS} ${EASE}`,
+          }} />}
+
+          {/* === FIRE: radial glow + avatar (64×64, 22px inset) === */}
+          {isFire && (
+            <>
               <div style={{
-                ...T.bodySm, flex: 1, minWidth: 0, color: 'rgba(0,0,0,0.9)',
-              }}>Monies balance</div>
+                position: 'absolute', right: -10, bottom: -10,
+                width: 140, height: 140,
+                background: 'radial-gradient(circle, rgba(211,10,215,0.45) 0%, rgba(211,10,215,0) 65%)',
+                opacity: showAlt ? 1 : 0,
+                transition: `opacity ${T_MS} ${EASE}`,
+                pointerEvents: 'none',
+              }} />
+              <img src="/assets/leaderboard_aman.png" alt="" style={{
+                position: 'absolute', right: 14, bottom: 10,
+                width: 64, height: 64, objectFit: 'contain',
+                borderRadius: 32, pointerEvents: 'none',
+                opacity: showAlt ? 1 : 0,
+                transform: `${fireRotation} scale(${showAlt ? 1 : 0.6})`,
+                transformOrigin: 'center center',
+                transition: `opacity ${T_MS} ${EASE}, transform ${T_MS} ${EASE}`,
+              }} />
+            </>
+          )}
+
+          {/* === SPARK: brand bubbles only visible during alt state === */}
+          {isSpark && (
+            <div style={{
+              position: 'absolute', right: 14, bottom: 16,
+              pointerEvents: 'none',
+              opacity: showAlt ? 1 : 0,
+              transition: `opacity ${T_MS} ${EASE}`,
+            }}>
+              <SparkBubbleCloud animate={showAlt} width={72} height={72} iconSize={0} startDelayMs={0} />
+            </div>
+          )}
+
+          {/* === TEXT — vertical ticker (like FY_F spark card) ===
+             Both text states stack vertically inside a masked container.
+             On transition the whole stack slides up. Fade masks on top
+             and bottom edges soften the clip. */}
+          {/* Refer: static text */}
+          {!isFire && !isSpark && (
+            <div style={{ position: 'absolute', left: 16, top: 20, right: 16, zIndex: 1 }}>
+              <div style={{ ...T.caption, color: 'rgba(255,255,255,0.85)' }}>Refer friends</div>
+              <div style={{ ...T.h4, color: '#FFFFFF', marginTop: 4 }}>₹500 each</div>
+            </div>
+          )}
+          {/* Fire + Spark: one-directional vertical ticker.
+             Always slides UP. Uses cycle count to keep translating
+             upward through repeated text slots. Never reverses. */}
+          {(isFire || isSpark) && (() => {
+            const CAP_H = 16;
+            const HEAD_H = 20;
+            const capPair = isFire ? ['Play & win', 'Aman leading'] : ['Sparks', 'Sparks'];
+            const headPair = isFire
+              ? [{ text: '3 fires' },
+                 { node: (<span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                   <MoniesGlyph size={14} color="#FFFFFF" /> 8,435
+                 </span>) }]
+              : [{ text: 'Save ₹1,600' }, { text: '5 drops live' }];
+            /* Generate enough repeated slots for ~20 cycles */
+            const REPEATS = 20;
+            const capSlots = Array.from({ length: REPEATS }, (_, i) => capPair[i % 2]);
+            const headSlots = Array.from({ length: REPEATS }, (_, i) => headPair[i % 2]);
+            const maskStyle = {
+              maskImage: 'linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%)',
+            };
+            /* cycle=0 shows slot 0, cycle=1 shows slot 1, etc — always moving up */
+            const capY = cycle * CAP_H;
+            const headY = cycle * HEAD_H;
+            return (
+              <>
+                <div style={{
+                  position: 'absolute', left: 16, top: 20, right: 16, zIndex: 1,
+                  height: CAP_H, overflow: 'hidden', ...maskStyle,
+                }}>
+                  <div style={{
+                    transform: `translateY(-${capY}px)`,
+                    transition: cycle > 0 ? `transform 0.6s ${EASE}` : 'none',
+                  }}>
+                    {capSlots.map((c, i) => (
+                      <div key={i} style={{ height: CAP_H, ...T.caption, color: 'rgba(255,255,255,0.85)' }}>{c}</div>
+                    ))}
+                  </div>
+                </div>
+                <div style={{
+                  position: 'absolute', left: 16, top: 40, right: 16, zIndex: 1,
+                  height: HEAD_H, overflow: 'hidden', ...maskStyle,
+                }}>
+                  <div style={{
+                    transform: `translateY(-${headY}px)`,
+                    transition: cycle > 0 ? `transform 0.6s ${EASE} 0.06s` : 'none',
+                  }}>
+                    {headSlots.map((h, i) => (
+                      <div key={i} style={{ height: HEAD_H, ...T.h4, color: '#FFFFFF' }}>
+                        {h.node || h.text}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            );
+          })()}
+          {/* Legacy fire headline kept for reference — replaced by ticker above */}
+          {false && isFire && (
+            <div style={{
+              position: 'absolute', left: 16, top: 38, right: 16, zIndex: 1,
+            }}>
               <div style={{
-                ...T.bodySm, fontWeight: 500, color: 'rgba(0,0,0,0.9)',
+                ...T.h4, color: '#FFFFFF',
                 display: 'inline-flex', alignItems: 'center', gap: 4,
               }}>
-                <MoniesGlyph size={12} /> 240
+                <MoniesGlyph size={14} color="#FFFFFF" /> 8,435
               </div>
-            </button>
+            </div>
+          )}
+        </button>
+      );
+    };
+
+    /* Shared scroll strip used by all RW_X Monies variants */
+    const RW_X_ScrollStrip = () => (
+      <div className="scrollbar-hide no-page-swipe" style={{
+        display: 'flex', overflowX: 'auto',
+        scrollSnapType: 'x mandatory',
+        overscrollBehavior: 'none',
+        paddingLeft: 24, paddingRight: 24,
+        scrollPaddingLeft: 24, scrollPaddingRight: 24,
+        gap: 12,
+      }}>
+        {['fire', 'spark', 'refer'].map(k => <RW_X_Card key={k} cardKey={k} />)}
+      </div>
+    );
+
+    /* ----- Monies — independent section, decoupled from Rewards ----- */
+
+    /* MN_A — "Monies" label, amount below, 1% tag on right */
+    const MN_A = () => (
+      <PagePad>
+        <button className="tap" style={{
+          width: '100%', padding: '14px 16px',
+          borderRadius: 16,
+          background: '#FFFFFF', border: CARD_BORDER, boxShadow: CARD_SHADOW,
+          textAlign: 'left', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', gap: 14,
+        }}>
+          <img src="/assets/monies_icon.png" width={32} height={32} alt=""
+            style={{ display: 'block', flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ ...T.caption, color: 'rgba(0,0,0,0.5)' }}>Monies</div>
+            <div style={{
+              ...T.h4, color: 'rgba(0,0,0,0.9)', marginTop: 2,
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+            }}>
+              <MoniesGlyph size={14} /> 6,522
+            </div>
           </div>
-        </PagePad>
+          <span style={{
+            ...T.caption, fontWeight: 500, color: '#D30AD7',
+            background: '#FAE2FA', borderRadius: 100,
+            padding: '3px 10px',
+          }}>1% rewards</span>
+        </button>
+      </PagePad>
+    );
+
+    /* MN_B — "Monies" heading, "rewarded at 1%" subtitle, amount on right */
+    const MN_B = () => (
+      <PagePad>
+        <button className="tap" style={{
+          width: '100%', padding: '14px 16px',
+          borderRadius: 16,
+          background: '#FFFFFF', border: CARD_BORDER, boxShadow: CARD_SHADOW,
+          textAlign: 'left', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', gap: 14,
+        }}>
+          <img src="/assets/monies_icon.png" width={32} height={32} alt=""
+            style={{ display: 'block', flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ ...T.h4, color: 'rgba(0,0,0,0.9)' }}>Monies</div>
+            <div style={{ ...T.caption, color: 'rgba(0,0,0,0.5)', marginTop: 2 }}>rewarded at 1%</div>
+          </div>
+          <div style={{
+            ...T.h4, color: 'rgba(0,0,0,0.9)',
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+          }}>
+            <MoniesGlyph size={14} /> 6,522
+          </div>
+        </button>
+      </PagePad>
+    );
+
+    /* MN_C — "Monies" heading, "rewarded at 1%" subtitle, amount + chevron */
+    const MN_C = () => (
+      <PagePad>
+        <button className="tap" style={{
+          width: '100%', padding: '14px 16px',
+          borderRadius: 16,
+          background: '#FFFFFF', border: CARD_BORDER, boxShadow: CARD_SHADOW,
+          textAlign: 'left', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', gap: 14,
+        }}>
+          <img src="/assets/monies_icon.png" width={32} height={32} alt=""
+            style={{ display: 'block', flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ ...T.h4, color: 'rgba(0,0,0,0.9)' }}>Monies</div>
+            <div style={{ ...T.caption, color: 'rgba(0,0,0,0.5)', marginTop: 2 }}>rewarded at 1%</div>
+          </div>
+          <div style={{
+            ...T.h4, color: 'rgba(0,0,0,0.9)',
+            display: 'inline-flex', alignItems: 'center', gap: 4,
+          }}>
+            <MoniesGlyph size={14} /> 6,522
+          </div>
+          <Chevron color="rgba(0,0,0,0.3)" />
+        </button>
+      </PagePad>
+    );
+
+    const MoniesSection = ({ variant }) => {
+      const C = { A: MN_A, B: MN_B, C: MN_C }[variant] || MN_A;
+      return <C />;
+    };
+
+    const RW_X = () => (
+      <div>
+        <RW_X_ScrollStrip />
+      </div>
+    );
+    const RW_X2 = () => RW_X();
+    const RW_X3 = () => (
+      <div>
+        <RW_X_ScrollStrip />
       </div>
     );
 
@@ -4752,15 +5478,13 @@ import ReactDOM from 'react-dom';
               gap: 16,
             }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>May spends</div>
+                <div style={T.caption}>May spends</div>
                 <div style={{
-                  fontFamily: 'Rubik', fontSize: 28, fontWeight: 500,
-                  lineHeight: '32px', letterSpacing: '-0.2px',
-                  color: 'rgba(0,0,0,0.9)', marginTop: 4,
+                  ...T.h3, color: 'rgba(0,0,0,0.9)', marginTop: 4,
                 }}>₹18,400</div>
                 <div style={{
                   ...T.caption, fontWeight: 500,
-                  color: '#00A63E', marginTop: 6,
+                  color: '#00A63E', marginTop: 8,
                 }}>↓ 16% vs Apr</div>
               </div>
               <svg width={VB_W} height={VB_H} viewBox={`0 0 ${VB_W} ${VB_H}`}
@@ -5509,7 +6233,7 @@ import ReactDOM from 'react-dom';
     const ExplorePage = ({ sections, headerStyle, activeSection, separateMore, autoScroll, onScrollPast }) => {
       const isInCard = headerStyle === 'None';
       const isActive = (k) => activeSection === k;
-      const isGradientFY = sections.forYou === 'D' || sections.forYou === 'E' || sections.forYou === 'F' || sections.forYou === 'J' || sections.forYou === 'L' || sections.forYou === 'M' || sections.forYou === 'O';
+      const isGradientFY = sections.forYou === 'D' || sections.forYou === 'E' || sections.forYou === 'F' || sections.forYou === 'J' || sections.forYou === 'L' || sections.forYou === 'M' || sections.forYou === 'N' || sections.forYou === 'O' || sections.forYou === 'P';
       /* I, K (card-stack engine + glass material) and H (single hero
          card) all finish flush against the next section, so downstream
          spacers need the same 28px gap before Bills. */
@@ -5549,7 +6273,7 @@ import ReactDOM from 'react-dom';
           )
         : React.Fragment;
       return (
-        <ScreenShell transparentAppBar={isGradientFY} darkBg={sections.forYou === 'L' || sections.forYou === 'F'}
+        <ScreenShell transparentAppBar={isGradientFY} darkBg={sections.forYou === 'L' || sections.forYou === 'F' || sections.forYou === 'N'}
           /* App-bar fill + status-bar colour flip kick in when the
              kiosk's rounded TOP edge reaches the app-bar bottom
              (viewport Y=118). At scrollTop=0 the kiosk top sits at
@@ -5557,7 +6281,7 @@ import ReactDOM from 'react-dom';
              So the threshold is 300 − 118 = 182. (Earlier 64 was a
              flow/viewport-coord mix-up that fired the flip way too
              early.) */
-          scrollThreshold={sections.forYou === 'L' ? 182 : 0}
+          scrollThreshold={sections.forYou === 'L' ? 182 : (sections.forYou === 'N' || sections.forYou === 'F') ? 120 : 0}
           onPastThreshold={onScrollPast}>
           {sections.forYou !== 'None' && (
             <>
@@ -5602,38 +6326,48 @@ import ReactDOM from 'react-dom';
           )}
           <SectionAnchor id="bills" />
           <SectionBlock id="bills" active={isActive('bills')}>
-            {sections.forYou === 'J' && sections.aiBanker === 'None' && sections.bills === 'J' ? (
-              /* FY=J + AB=None + bills=J combo: render BL_J flush against
-                 the carousel with NO section header and NO inter-section
-                 spacer. BL_J's own negative marginTop pulls the card so its
-                 vertical center lands on the carousel's hard bottom edge. */
-              <BillsSection variant={sections.bills} isInCard={isInCard} />
-            ) : (sections.aiBanker === 'None' || sections.forYou === 'L') ? (
-              <>
-                {/* AI banker hidden (or FY_L kiosk) → explicit pre-Bills
-                    gap. Each variant tunes the gap to its own bottom
-                    edge: FY_F's own fade-to-white ends flush, so 0. */}
-                {(() => {
-                  let h = 4;
-                  if (isUtilityFY) h = 28;
-                  else if (sections.forYou === 'L') h = 24;
-                  else if (sections.forYou === 'F') h = 0;
-                  else if (isGradientFY) h = 32;
-                  return <Spacer h={h} />;
-                })()}
-                <SectionWrap title="Bills & Recharges" cta={sections.bills === 'L' ? 'View all' : undefined} headerStyle={headerStyle} isFirst>
+            {/* When For You = X (None) and headerStyle = List, suppress
+               the Bills & Recharges heading — the section content speaks
+               for itself when it's the first thing on screen. */}
+            {(() => {
+              const hideBillsHeader = sections.forYou === 'None' && headerStyle === 'List';
+              const billsHeaderStyle = hideBillsHeader ? 'None' : headerStyle;
+              const billsCta = sections.bills === 'L' ? 'View all' : undefined;
+              if (sections.forYou === 'J' && sections.aiBanker === 'None' && sections.bills === 'J') {
+                /* FY=J + AB=None + bills=J combo: render BL_J flush against
+                   the carousel with NO section header and NO inter-section
+                   spacer. BL_J's own negative marginTop pulls the card so its
+                   vertical center lands on the carousel's hard bottom edge. */
+                return <BillsSection variant={sections.bills} isInCard={isInCard} />;
+              }
+              if (sections.aiBanker === 'None' || sections.forYou === 'L') {
+                let h = 4;
+                if (hideBillsHeader) h = 12;
+                else if (isUtilityFY) h = 28;
+                else if (sections.forYou === 'L') h = 24;
+                else if (sections.forYou === 'F' || sections.forYou === 'P') h = 0;
+                else if (sections.forYou === 'N') h = 16;
+                else if (sections.forYou === 'Q') h = 32;
+                else if (isGradientFY) h = 32;
+                return (
+                  <>
+                    <Spacer h={h} />
+                    <SectionWrap title="Bills & Recharges" cta={billsCta} headerStyle={billsHeaderStyle} isFirst>
+                      <BillsSection variant={sections.bills} isInCard={isInCard} />
+                      {headerStyle === 'Bold' && <Spacer h={8} />}
+                      {headerStyle === 'List' && !hideBillsHeader && <Spacer h={4} />}
+                    </SectionWrap>
+                  </>
+                );
+              }
+              return (
+                <SectionWrap title="Bills & Recharges" cta={billsCta} headerStyle={billsHeaderStyle}>
                   <BillsSection variant={sections.bills} isInCard={isInCard} />
                   {headerStyle === 'Bold' && <Spacer h={8} />}
-              {headerStyle === 'List' && <Spacer h={4} />}
+                  {headerStyle === 'List' && !hideBillsHeader && <Spacer h={4} />}
                 </SectionWrap>
-              </>
-            ) : (
-              <SectionWrap title="Bills & Recharges" cta={sections.bills === 'L' ? 'View all' : undefined} headerStyle={headerStyle}>
-                <BillsSection variant={sections.bills} isInCard={isInCard} />
-                {headerStyle === 'Bold' && <Spacer h={8} />}
-              {headerStyle === 'List' && <Spacer h={4} />}
-              </SectionWrap>
-            )}
+              );
+            })()}
           </SectionBlock>
           <SectionAnchor id="rewards" />
           <SectionBlock id="rewards" active={isActive('rewards')}>
@@ -5646,6 +6380,13 @@ import ReactDOM from 'react-dom';
               headerStyle={(sections.rewards === 'S' || sections.rewards === 'V') ? 'None' : headerStyle}>
               <RewardsSection variant={sections.rewards} isInCard={isInCard} headerStyle={headerStyle} />
             </SectionWrap>
+            {sections.monies !== 'None' && (
+              <>
+                <Spacer h={20} />
+                <SectionAnchor id="monies" />
+                <MoniesSection variant={sections.monies} />
+              </>
+            )}
           </SectionBlock>
           <SectionAnchor id="stats" />
           <SectionBlock id="stats" active={isActive('stats')}>
@@ -5853,9 +6594,10 @@ import ReactDOM from 'react-dom';
     const SECTION_META = [
       {
         key: 'forYou', label: 'For You', variants: {
-          I: 'Card stack · shuffle', H: 'Single card', B: 'Horizontal strip',
-          D: 'Full-bleed (top-tinted, PWA)',
-          F: 'Centered carousel', L: 'Image hero carousel',
+          H: 'Single card', B: 'Horizontal strip',
+          F: 'Centered carousel', N: 'Centered carousel · short',
+          P: 'D layout · F bg + fade',
+          L: 'Image hero carousel', Q: 'Image hero · card',
           None: 'X',
         },
         archived: {
@@ -5878,17 +6620,27 @@ import ReactDOM from 'react-dom';
         key: 'bills', label: 'Bills & Recharges', variants: {
           C: 'Grid (outline avatars)', B: 'Grid in card',
           K: 'Card stack · shuffle', L: 'Card stack · view all',
-          J: 'Floating card (overlap)',
+          J: 'Floating card (overlap)', N: 'Grid + stack below',
+          Q: 'Grid + rich stack',
+          S: 'Grid + minimal stack',
         },
         archived: {
           A: 'Grid',
         },
       },
       {
+        key: 'monies', label: 'Monies', variants: {
+          A: 'Label + amount + tag',
+          B: 'Heading + subtitle + amount',
+          C: 'Heading + subtitle + amount + chevron',
+          None: 'X',
+        },
+      },
+      {
         key: 'rewards', label: 'Rewards & Benefits', variants: {
           K: 'Triptych palette', G: 'Fire hero + 2 below', F: 'Featured Large + 2 Med',
           R: 'Fire+Spark · Monies banner',
-          U: 'Portrait card carousel', X: 'Portrait scroll · Monies banner',
+          U: 'Portrait card carousel', X: 'Leaderboard · Monies subtitle',
         },
         archived: {
           O: 'Source breakdown',
@@ -5939,12 +6691,12 @@ import ReactDOM from 'react-dom';
       V0: {
         label: 'Current',
         headerStyle: 'List',
-        sections: { forYou: 'B', aiBanker: 'E', bills: 'B', rewards: 'F', stats: 'A', more: 'A', footer: 'None' },
+        sections: { forYou: 'B', aiBanker: 'E', bills: 'B', rewards: 'F', monies: 'None', stats: 'A', more: 'A', footer: 'None' },
       },
       V1: {
         label: 'Exploration',
         headerStyle: 'List',
-        sections: { forYou: 'F', aiBanker: 'None', bills: 'C', rewards: 'X', stats: 'N', more: 'A', footer: 'B' },
+        sections: { forYou: 'Q', aiBanker: 'None', bills: 'S', rewards: 'X', monies: 'A', stats: 'N', more: 'A', footer: 'None' },
       },
     };
 
@@ -6502,7 +7254,7 @@ import ReactDOM from 'react-dom';
                        Explore → follows the FY-variant rule. */}
                     <StatusBar dark={
                       activePage === 2 /* Home Valentino */
-                      || (activePage === 1 && !useOriginal && (sections.forYou === 'L' || sections.forYou === 'F') && !heroScrolledPast)
+                      || (activePage === 1 && !useOriginal && (sections.forYou === 'L' || sections.forYou === 'F' || sections.forYou === 'N') && !heroScrolledPast)
                     } />
                     {useOriginal
                       ? <OriginalExplore />
