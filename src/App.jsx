@@ -899,11 +899,16 @@ import ReactDOM from 'react-dom';
                 width: b.size, height: b.size,
                 borderRadius: '50%', overflow: 'hidden',
                 boxShadow: '0 0 0 2px #fff, 0 2px 8px rgba(0,0,0,0.08)',
-                opacity: animate ? 0 : 1,
-                animation: animate && play
+                /* First bubble already visible on play. Rest pop in
+                   immediately with just a short stagger — no spark-rotate wait. */
+                opacity: (i === 0 && animate) ? (play ? 1 : 0) : (animate ? 0 : 1),
+                transition: (i === 0 && animate) ? 'opacity 0s' : 'none',
+                animation: animate && play && i > 0
                   ? `spark-blob-in ${BLOB_MS}ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards 1`
                   : 'none',
-                animationDelay: animate && play ? `${(SPARK_ROTATE_MS - 80) + b.delay}ms` : '0ms',
+                animationDelay: animate && play && i > 0
+                  ? `${b.delay}ms`
+                  : '0ms',
                 /* Later bubbles render ON TOP — keeps the smaller satellite
                    pills (notably the pink Nykaa at i=4) from getting hidden
                    behind the bigger overlapping bubbles in the cluster. */
@@ -1227,6 +1232,8 @@ import ReactDOM from 'react-dom';
       const [progress, setProgress] = useState(0);
       const paused = React.useRef(false);
       const teleporting = React.useRef(false);
+      const scrolling = React.useRef(false);
+      const scrollEndTimer = React.useRef(null);
 
       React.useEffect(() => {
         const el = ref.current;
@@ -1257,6 +1264,10 @@ import ReactDOM from 'react-dom';
           });
         };
         const onScroll = () => {
+          /* Track scroll activity — auto-advance skips if scrolling */
+          scrolling.current = true;
+          clearTimeout(scrollEndTimer.current);
+          scrollEndTimer.current = setTimeout(() => { scrolling.current = false; }, 300);
           const cw = el.offsetWidth * strideRatio;
           if (cw === 0) return;
           const raw = el.scrollLeft / cw; /* 0..N+1 */
@@ -1275,9 +1286,8 @@ import ReactDOM from 'react-dom';
         };
         el.addEventListener('scroll', onScroll, { passive: true });
         /* Interaction pause: keep paused while the user is touching the
-           carousel AND for 7s after they release. The longer post-release
-           hold gives them time to read the card they just landed on before
-           the auto-advance pulls it away. */
+           carousel AND for 7s after they release. Listens on both pointer
+           and touch events so mobile swipes are caught reliably. */
         let releaseTimer;
         const onDown = () => {
           paused.current = true;
@@ -1290,6 +1300,8 @@ import ReactDOM from 'react-dom';
         el.addEventListener('pointerdown', onDown);
         el.addEventListener('pointerup', onUp);
         el.addEventListener('pointercancel', onUp);
+        el.addEventListener('touchstart', onDown, { passive: true });
+        el.addEventListener('touchend', onUp);
         return () => {
           clearTimeout(settleTimer);
           clearTimeout(releaseTimer);
@@ -1297,6 +1309,8 @@ import ReactDOM from 'react-dom';
           el.removeEventListener('pointerdown', onDown);
           el.removeEventListener('pointerup', onUp);
           el.removeEventListener('pointercancel', onUp);
+          el.removeEventListener('touchstart', onDown);
+          el.removeEventListener('touchend', onUp);
         };
       }, [slideCount, strideRatio]);
 
@@ -1304,7 +1318,7 @@ import ReactDOM from 'react-dom';
         const el = ref.current;
         if (!el) return;
         const t = setInterval(() => {
-          if (paused.current) return;
+          if (paused.current || scrolling.current) return;
           const cw = el.offsetWidth * strideRatio;
           if (cw === 0) return;
           el.scrollBy({ left: cw, behavior: 'smooth' });
@@ -2481,17 +2495,27 @@ import ReactDOM from 'react-dom';
       const [order, setOrder] = React.useState(() => items.map((_, i) => i));
       const [drag, setDrag] = React.useState({ x: 0, y: 0 });
       const [dragging, setDragging] = React.useState(false);
-      /* Pause auto-scroll when deck is near the top of the viewport
-         (top 20%) — shuffling while partially offscreen looks off. */
+      /* Pause auto-scroll when deck is in the top 25% of the scroll
+         container. Uses state so the auto-cycle effect re-triggers
+         when the deck scrolls back into the safe zone. */
       const deckRef = React.useRef(null);
-      const [inView, setInView] = React.useState(true);
+      const [deckVisible, setDeckVisible] = React.useState(true);
       React.useEffect(() => {
         const el = deckRef.current;
         if (!el) return;
-        const obs = new IntersectionObserver(([e]) => setInView(e.isIntersecting),
-          { threshold: 0.8, rootMargin: '-20% 0px 0px 0px' });
-        obs.observe(el);
-        return () => obs.disconnect();
+        const scroller = el.closest('.screen-scroll');
+        if (!scroller) return;
+        let last = true;
+        const check = () => {
+          const scrollerRect = scroller.getBoundingClientRect();
+          const deckRect = el.getBoundingClientRect();
+          const relTop = deckRect.top - scrollerRect.top;
+          const ok = relTop >= scrollerRect.height * 0.25;
+          if (ok !== last) { last = ok; setDeckVisible(ok); }
+        };
+        scroller.addEventListener('scroll', check, { passive: true });
+        check();
+        return () => scroller.removeEventListener('scroll', check);
       }, []);
       const start = React.useRef({ x: 0, y: 0 });
       const cardRefs = React.useRef({});
@@ -2584,7 +2608,7 @@ import ReactDOM from 'react-dom';
          the dragged card was getting clipped behind the app bar in some
          scroll positions. */
       React.useEffect(() => {
-        if (!autoScroll || dragging || cooldown || !inView) return;
+        if (!autoScroll || dragging || cooldown || !deckVisible) return;
         const id = setTimeout(() => {
           const topId = order[0];
           const topEl = cardRefs.current[topId];
@@ -2633,34 +2657,31 @@ import ReactDOM from 'react-dom';
                   { transform: `translate(0px, ${fromY}px) scale(${fromScale}) rotate(0deg)`, offset: APEX_AT, easing: DESCENT_EASE },
                   { transform: `translate(0px, ${toY}px) scale(${toScale}) rotate(0deg)`, offset: 1 },
                 ];
-            /* fill:none — the inline transform from React's render at the
-               end of the cycle (driven by setOrder + new stackPos) places
-               the card at its final rest. Forward-fill was leaving stale
-               keyframe-end transforms on the element after setOrder ran,
-               which overrode React's new inline transform and produced
-               cards stuck at the wrong stack position. */
-            el.animate(keyframes, { duration: DURATION, fill: 'none' });
+            /* fill:forwards holds the end transform until we cancel it
+               in the setOrder callback — no gap frame where the card
+               snaps to its old React position. */
+            el.animate(keyframes, { duration: DURATION, fill: 'forwards' });
           });
-          /* Z drops at the apex so the descending half passes UNDER. The
-             two inner timers are pushed into cycleTimers so a mid-cycle
-             cancel (e.g. user grabs the deck) can clear them — otherwise
-             the trailing setOrder fires AFTER the user's drag committed
-             and silently reshuffles the deck. */
           const tApex = setTimeout(() => {
             setZOverride({ id: topId, z: 0 });
           }, DURATION * APEX_AT);
           cycleTimers.current.push(tApex);
           const tEnd = setTimeout(() => {
+            /* Cancel all forwards-filled animations RIGHT BEFORE
+               React re-renders with new positions — zero gap. */
+            Object.values(cardRefs.current).forEach((el) => {
+              if (el && el.getAnimations) el.getAnimations().forEach((a) => a.cancel());
+            });
             setOrder(newOrder);
             setZOverride(null);
-          }, DURATION + 30);
+          }, DURATION);
           cycleTimers.current.push(tEnd);
         }, 2500);
         return () => {
           clearTimeout(id);
           clearCycleTimers();
         };
-      }, [autoScroll, dragging, cooldown, inView, order]);
+      }, [autoScroll, dragging, cooldown, deckVisible, order]);
 
       const onPointerDown = (e) => {
         if (dragging) return;
@@ -3506,7 +3527,7 @@ import ReactDOM from 'react-dom';
       <FY_CardCarousel
         bgType="image"
         cardStyle={{ baseBg: '#0d0317', radius: 16, minH: 180, titleSize: 18,
-          pad: '16px 24px 48px 24px' }}
+          pad: '12px 24px 52px 24px' }}
         overlayGradient="radial-gradient(ellipse 120% 80% at 50% 100%, rgba(0,0,0,0.3) 0%, transparent 60%)"
       />
     );
@@ -4835,6 +4856,7 @@ import ReactDOM from 'react-dom';
       const cardRef = React.useRef(null);
       const [visible, setVisible] = React.useState(false);
       const [cycle, setCycle] = React.useState(0);
+      const [cardInView, setCardInView] = React.useState(true);
       /* Start cycling only when card is fully visible in top 80% of viewport */
       React.useEffect(() => {
         const el = cardRef.current;
@@ -4845,15 +4867,32 @@ import ReactDOM from 'react-dom';
         obs.observe(el);
         return () => obs.disconnect();
       }, []);
+      /* Pause cycling when card is in the top 25% of scroll container */
       React.useEffect(() => {
-        if (!visible) return;
+        const el = cardRef.current;
+        if (!el) return;
+        const scroller = el.closest('.screen-scroll');
+        if (!scroller) return;
+        let last = true;
+        const check = () => {
+          const sr = scroller.getBoundingClientRect();
+          const cr = el.getBoundingClientRect();
+          const ok = (cr.top - sr.top) >= sr.height * 0.25;
+          if (ok !== last) { last = ok; setCardInView(ok); }
+        };
+        scroller.addEventListener('scroll', check, { passive: true });
+        check();
+        return () => scroller.removeEventListener('scroll', check);
+      }, []);
+      React.useEffect(() => {
+        if (!visible || !cardInView) return;
         let intervalId;
         const delay = setTimeout(() => {
-          setCycle(1);
+          setCycle(c => c + 1);
           intervalId = setInterval(() => setCycle(c => c + 1), 4000);
         }, 100);
         return () => { clearTimeout(delay); if (intervalId) clearInterval(intervalId); };
-      }, [visible]);
+      }, [visible, cardInView]);
       const phase = cycle % 2; // 0 = poster, 1 = alt
       const isFire = cardKey === 'fire';
       const isSpark = cardKey === 'spark';
@@ -4876,7 +4915,9 @@ import ReactDOM from 'react-dom';
           padding: 0,
         }}>
           {/* === BACKGROUND LAYERS === */}
-          {/* State 0 — poster image */}
+          {/* State 0 — poster image.
+             Fade out slow (0.6s), fade back in fast (0.3s) so the
+             poster is opaque before the gradient fully disappears. */}
           <div style={{
             position: 'absolute', inset: 0,
             backgroundImage: isFire ? 'url(/assets/rw_card_fire.png)'
@@ -4884,7 +4925,7 @@ import ReactDOM from 'react-dom';
               : 'url(/assets/rw_card_refer.png)',
             backgroundSize: 'cover', backgroundPosition: 'center',
             opacity: showAlt ? 0 : 1,
-            transition: `opacity ${T_MS} ${EASE}`,
+            transition: showAlt ? `opacity ${T_MS} ${EASE}` : `opacity 0.3s ${EASE}`,
           }} />
           {/* State 1 — gradient bg */}
           {isFire && <div style={{
@@ -4898,7 +4939,9 @@ import ReactDOM from 'react-dom';
             backgroundImage: 'url(/assets/spark_bg_gradient.png)',
             backgroundSize: 'cover', backgroundPosition: 'center',
             opacity: showAlt ? 1 : 0,
-            transition: `opacity ${T_MS} ${EASE}`,
+            /* Fade in fast (0.3s) so gradient is opaque before poster
+               finishes fading out — no black gap in the middle. */
+            transition: showAlt ? `opacity 0.3s ${EASE}` : `opacity 0.4s ${EASE} 0.1s`,
           }} />}
 
           {/* === FIRE: radial glow + avatar (64×64, 22px inset) === */}
