@@ -119,14 +119,16 @@ import ReactDOM from 'react-dom';
            lets the white follow the home indicator on iPhones. */
         <div style={{
           position: 'absolute', left: 0, right: 0, bottom: 0,
-          background: 'transparent',
-          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
           zIndex: 5, pointerEvents: 'none',
         }}>
           <img src="/assets/bottom_nav_v3.png" alt="" onClick={openDebug} style={{
             width: '100%', display: 'block',
-            position: 'relative', marginBottom: 0,
             pointerEvents: 'auto', cursor: 'pointer',
+          }} />
+          {/* White fill below nav image for iOS safe area */}
+          <div style={{
+            height: 'env(safe-area-inset-bottom, 0px)',
+            background: '#FFFFFF',
           }} />
         </div>
       );
@@ -1267,7 +1269,7 @@ import ReactDOM from 'react-dom';
           /* Track scroll activity — auto-advance skips if scrolling */
           scrolling.current = true;
           clearTimeout(scrollEndTimer.current);
-          scrollEndTimer.current = setTimeout(() => { scrolling.current = false; }, 300);
+          scrollEndTimer.current = setTimeout(() => { scrolling.current = false; }, 5000);
           const cw = el.offsetWidth * strideRatio;
           if (cw === 0) return;
           const raw = el.scrollLeft / cw; /* 0..N+1 */
@@ -1317,11 +1319,16 @@ import ReactDOM from 'react-dom';
       React.useEffect(() => {
         const el = ref.current;
         if (!el) return;
+        let advancing = false;
         const t = setInterval(() => {
-          if (paused.current || scrolling.current) return;
+          if (paused.current || scrolling.current || advancing) return;
           const cw = el.offsetWidth * strideRatio;
           if (cw === 0) return;
+          advancing = true;
           el.scrollBy({ left: cw, behavior: 'smooth' });
+          /* Lock out the next auto-advance until the smooth scroll
+             settles (800ms covers even slow mobile browsers). */
+          setTimeout(() => { advancing = false; }, 800);
         }, 4000);
         return () => clearInterval(t);
       }, [strideRatio]);
@@ -3409,7 +3416,7 @@ import ReactDOM from 'react-dom';
                 <div key={p} aria-hidden style={{
                   position: 'absolute', inset: 0,
                   backgroundImage: `url(/assets/${s.bg})`,
-                  backgroundSize: '100% auto', backgroundPosition: 'center calc(100% + 24px)',
+                  backgroundSize: 'cover', backgroundPosition: 'center 75%',
                   opacity: imageOpacities[p],
                   pointerEvents: 'none', willChange: 'opacity',
                 }} />
@@ -3479,7 +3486,7 @@ import ReactDOM from 'react-dom';
                   const btnColor = isLight ? '#FFFFFF' : '#171A1F';
                   return (
                     <div key={i} style={{
-                      flex: '0 0 100%', scrollSnapAlign: 'start',
+                      flex: '0 0 100%', scrollSnapAlign: 'start', scrollSnapStop: 'always',
                       position: 'relative', minHeight: cardStyle.minH || 180, overflow: 'hidden',
                       display: 'flex', flexDirection: 'column',
                       alignItems: 'center', justifyContent: 'flex-end',
