@@ -136,9 +136,10 @@ import ReactDOM from 'react-dom';
             position: 'relative',
             pointerEvents: 'auto', cursor: 'pointer',
           }} />
-          {/* Safe area fill */}
+          {/* Safe area fill — overlaps image by 2px to kill sub-pixel gap in iOS webapp */}
           <div style={{
-            height: 'env(safe-area-inset-bottom, 0px)',
+            height: 'calc(env(safe-area-inset-bottom, 0px) + 2px)',
+            marginTop: -2,
             background: '#FFFFFF', position: 'relative',
           }} />
         </div>
