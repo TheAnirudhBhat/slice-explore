@@ -120,17 +120,26 @@ import ReactDOM from 'react-dom';
         <div style={{
           position: 'absolute', left: 0, right: 0, bottom: 0,
           zIndex: 5, pointerEvents: 'none',
-          /* White background covers everything including safe area —
-             no gap possible between nav image and bottom edge. */
-          background: '#FFFFFF',
-          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         }}>
+          {/* White band behind the nav bar — sits below the image's
+              top fade so the fade is transparent-to-page, but covers
+              from the icon row down through the iOS safe area. */}
+          <div style={{
+            position: 'absolute', left: 0, right: 0, bottom: 0,
+            /* Covers the bottom ~60% of the nav image (solid white part)
+               plus the full safe area below. */
+            height: 'calc(48px + env(safe-area-inset-bottom, 0px))',
+            background: '#FFFFFF',
+          }} />
           <img src="/assets/bottom_nav_v3.png" alt="" onClick={openDebug} style={{
             width: '100%', display: 'block',
-            /* Pull image down so it sits flush at the bottom of
-               the white band, not floating above it. */
-            marginTop: -1,
+            position: 'relative',
             pointerEvents: 'auto', cursor: 'pointer',
+          }} />
+          {/* Safe area fill */}
+          <div style={{
+            height: 'env(safe-area-inset-bottom, 0px)',
+            background: '#FFFFFF', position: 'relative',
           }} />
         </div>
       );
