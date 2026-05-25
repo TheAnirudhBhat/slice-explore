@@ -6347,7 +6347,7 @@ import ReactDOM from 'react-dom';
                 else if (sections.forYou === 'L') h = 24;
                 else if (sections.forYou === 'F' || sections.forYou === 'P') h = 0;
                 else if (sections.forYou === 'N') h = 16;
-                else if (sections.forYou === 'Q') h = 32;
+                else if (sections.forYou === 'Q') h = 28;
                 else if (isGradientFY) h = 32;
                 return (
                   <>
