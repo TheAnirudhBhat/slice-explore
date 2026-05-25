@@ -10,9 +10,19 @@
        Uses outline trick + slightly larger radius to visually
        approximate iOS/Figma superellipse corners in browsers. */
     .corner-smooth {
-      border-radius: 20px !important;
+      border-radius: 18px !important;
       outline: 1px solid transparent;
       outline-offset: -1px;
+      /* iOS Safari supports continuous corners (superellipse) */
+      -webkit-border-radius: 18px;
+      border-radius: 18px !important;
+    }
+    @supports (-webkit-touch-callout: none) {
+      /* iOS-only: enable continuous/smooth corners */
+      .corner-smooth {
+        -webkit-mask-composite: source-in;
+        mask-composite: intersect;
+      }
     }
 
     /* FT_B reveal — Invite & earn card gets a tiny shake + a few

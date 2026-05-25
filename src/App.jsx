@@ -3473,7 +3473,7 @@ import ReactDOM from 'react-dom';
     const FY_Q = () => (
       <FY_CardCarousel
         bgType="image"
-        cardStyle={{ baseBg: '#0d0317', radius: 16, minH: 180, titleSize: 20,
+        cardStyle={{ baseBg: '#0d0317', radius: 16, minH: 180, titleSize: 18,
           pad: '16px 24px 48px 24px' }}
         overlayGradient="radial-gradient(ellipse 120% 80% at 50% 100%, rgba(0,0,0,0.3) 0%, transparent 60%)"
       />
