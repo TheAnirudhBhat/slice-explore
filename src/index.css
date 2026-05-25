@@ -6,6 +6,26 @@
       color-scheme: light;
     }
 
+    /* Physics-based mascot + star. Mascot has a heavy, grounded sway
+       (slow ease into peaks, snappy return). Star follows real toss
+       physics: fast launch, slow at apex, accelerates on descent.
+       Squash-and-stretch via scaleY at impact/launch points. */
+    /* Mascot's hand rocks back to toss, slight lean on catch.
+       The hand goes back (rotate negative = lean left/back) to fling
+       the star up, then returns and absorbs the catch. */
+    /* Minimal keyframes — browser does the smoothing.
+       Star: simple arc up then down. Mascot: subtle lean-back to toss, lean-in to catch. */
+    /* alternate mode: browser smoothly ping-pongs between from/to.
+       No duplicate keyframes, no loop-point pause. */
+    @keyframes fire-mascot-rock {
+      from { transform: rotate(-1.5deg); }  /* leaned back = tossing */
+      to   { transform: rotate(0.5deg); }   /* leaned forward = catching */
+    }
+    @keyframes fire-star-bounce {
+      from { transform: translateY(-11px) rotate(10deg); }  /* airborne, tilted right (tossed) */
+      to   { transform: translateY(0) rotate(-6deg); }      /* in hand, tilted left (caught) */
+    }
+
     /* DLS 60% corner smoothing approximation.
        Uses outline trick + slightly larger radius to visually
        approximate iOS/Figma superellipse corners in browsers. */

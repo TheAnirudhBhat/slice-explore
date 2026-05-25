@@ -4809,7 +4809,7 @@ import ReactDOM from 'react-dom';
       { bg: 'rw_card_monies.png', caption: 'Monies',      headline: '240 monies' },
       { bg: 'rw_card_fire.png',   caption: 'Play & win',  headline: '3 fires' },
       { bg: 'rw_card_spark.png',  caption: 'Sparks',      headline: '5 drops live' },
-      { bg: 'rw_card_refer.png',  caption: 'Refer friends', headline: '₹500 each' },
+      { bg: 'rw_card_refer.png',  caption: 'Invite & earn', headline: '₹500 each' },
     ];
     const RW_U = () => (
       <div style={{ marginTop: -4 }}>
@@ -4859,47 +4859,9 @@ import ReactDOM from 'react-dom';
        Fire card: state 0 = original poster, state 1 = leaderboard leader (Aman, purple gradient, 40×40 avatar).
        Spark card: state 0 = original poster, state 1 = brand showcase (orange gradient + merchant logos).
        3s per state, crossfade via opacity transition. */
-    const RW_X_Card = ({ cardKey }) => {
+    const RW_X_Card = ({ cardKey, sharedCycle = 0, visible = false }) => {
       const cardRef = React.useRef(null);
-      const [visible, setVisible] = React.useState(false);
-      const [cycle, setCycle] = React.useState(0);
-      const [cardInView, setCardInView] = React.useState(true);
-      /* Start cycling only when card is fully visible in top 80% of viewport */
-      React.useEffect(() => {
-        const el = cardRef.current;
-        if (!el) return;
-        const obs = new IntersectionObserver(([entry]) => {
-          if (entry.isIntersecting) { setVisible(true); obs.disconnect(); }
-        }, { threshold: 1.0, rootMargin: '0px 0px -20% 0px' });
-        obs.observe(el);
-        return () => obs.disconnect();
-      }, []);
-      /* Pause cycling when card is in the top 25% of scroll container */
-      React.useEffect(() => {
-        const el = cardRef.current;
-        if (!el) return;
-        const scroller = el.closest('.screen-scroll');
-        if (!scroller) return;
-        let last = true;
-        const check = () => {
-          const sr = scroller.getBoundingClientRect();
-          const cr = el.getBoundingClientRect();
-          const ok = (cr.top - sr.top) >= sr.height * 0.25;
-          if (ok !== last) { last = ok; setCardInView(ok); }
-        };
-        scroller.addEventListener('scroll', check, { passive: true });
-        check();
-        return () => scroller.removeEventListener('scroll', check);
-      }, []);
-      React.useEffect(() => {
-        if (!visible || !cardInView) return;
-        let intervalId;
-        const delay = setTimeout(() => {
-          setCycle(c => c + 1);
-          intervalId = setInterval(() => setCycle(c => c + 1), 4000);
-        }, 100);
-        return () => { clearTimeout(delay); if (intervalId) clearInterval(intervalId); };
-      }, [visible, cardInView]);
+      const cycle = sharedCycle;
       const phase = cycle % 2; // 0 = poster, 1 = alt
       const isFire = cardKey === 'fire';
       const isSpark = cardKey === 'spark';
@@ -4922,18 +4884,41 @@ import ReactDOM from 'react-dom';
           padding: 0,
         }}>
           {/* === BACKGROUND LAYERS === */}
-          {/* State 0 — poster image.
-             Fade out slow (0.6s), fade back in fast (0.3s) so the
-             poster is opaque before the gradient fully disappears. */}
-          <div style={{
-            position: 'absolute', inset: 0,
-            backgroundImage: isFire ? 'url(/assets/rw_card_fire.png)'
-              : isSpark ? 'url(/assets/rw_card_spark.png)'
-              : 'url(/assets/rw_card_refer.png)',
-            backgroundSize: 'cover', backgroundPosition: 'center',
-            opacity: showAlt ? 0 : 1,
-            transition: showAlt ? `opacity ${T_MS} ${EASE}` : `opacity 0.3s ${EASE}`,
-          }} />
+          {/* State 0 — poster. Invite & earn uses layered bg + mascot + star.
+             Others use single poster image. */}
+          {(!isFire && !isSpark) ? (
+            <div style={{
+              position: 'absolute', inset: 0,
+            }}>
+              {/* Blue gradient bg */}
+              <img src="/assets/fire_card_bg.png" alt="" style={{
+                position: 'absolute', inset: 0, width: '100%', height: '100%',
+                objectFit: 'cover', pointerEvents: 'none',
+              }} />
+              {/* Mascot — 120px tall, cut off at bottom-right edge */}
+              <img src="/assets/fire_mascot.png" alt="" style={{
+                position: 'absolute', right: -12, bottom: -22,
+                height: 110, width: 'auto', pointerEvents: 'none',
+                transformOrigin: 'center bottom',
+                animation: visible ? 'fire-mascot-rock 1.5s ease-in-out infinite alternate' : 'none',
+              }} />
+              {/* Star — bounces to the left of mascot's hand */}
+              <img src="/assets/fire_star.png" alt="" style={{
+                position: 'absolute', right: 74, bottom: 30,
+                width: 20, height: 20, pointerEvents: 'none',
+                animation: visible ? 'fire-star-bounce 1.5s ease-in-out infinite alternate' : 'none',
+              }} />
+            </div>
+          ) : (
+            <div style={{
+              position: 'absolute', inset: 0,
+              backgroundImage: isFire ? 'url(/assets/rw_card_fire.png)'
+                : 'url(/assets/rw_card_spark.png)',
+              backgroundSize: 'cover', backgroundPosition: 'center',
+              opacity: showAlt ? 0 : 1,
+              transition: showAlt ? `opacity ${T_MS} ${EASE}` : `opacity 0.3s ${EASE}`,
+            }} />
+          )}
           {/* State 1 — gradient bg */}
           {isFire && <div style={{
             position: 'absolute', inset: 0,
@@ -4993,7 +4978,7 @@ import ReactDOM from 'react-dom';
           {/* Refer: static text */}
           {!isFire && !isSpark && (
             <div style={{ position: 'absolute', left: 16, top: 20, right: 16, zIndex: 1 }}>
-              <div style={{ ...T.caption, color: 'rgba(255,255,255,0.85)' }}>Refer friends</div>
+              <div style={{ ...T.caption, color: 'rgba(255,255,255,0.85)' }}>Invite & earn</div>
               <div style={{ ...T.h4, color: '#FFFFFF', marginTop: 4 }}>₹500 each</div>
             </div>
           )}
@@ -5076,18 +5061,66 @@ import ReactDOM from 'react-dom';
     };
 
     /* Shared scroll strip used by all RW_X Monies variants */
-    const RW_X_ScrollStrip = () => (
-      <div className="scrollbar-hide no-page-swipe" style={{
-        display: 'flex', overflowX: 'auto',
-        scrollSnapType: 'x mandatory',
-        overscrollBehavior: 'none',
-        paddingLeft: 24, paddingRight: 24,
-        scrollPaddingLeft: 24, scrollPaddingRight: 24,
-        gap: 12,
-      }}>
-        {['fire', 'spark', 'refer'].map(k => <RW_X_Card key={k} cardKey={k} />)}
-      </div>
-    );
+    /* Shared cycle + visibility for all RW_X cards so fire/spark
+       stay perfectly in sync. Cycle only runs when the strip is
+       fully visible (not cut off by top 25% of scroll container). */
+    const RW_X_ScrollStrip = () => {
+      const stripRef = React.useRef(null);
+      const [stripVisible, setStripVisible] = React.useState(false);
+      const [stripInView, setStripInView] = React.useState(true);
+      const [sharedCycle, setSharedCycle] = React.useState(0);
+      /* Detect first visibility */
+      React.useEffect(() => {
+        const el = stripRef.current;
+        if (!el) return;
+        const obs = new IntersectionObserver(([e]) => {
+          if (e.isIntersecting) { setStripVisible(true); obs.disconnect(); }
+        }, { threshold: 1.0, rootMargin: '0px 0px -20% 0px' });
+        obs.observe(el);
+        return () => obs.disconnect();
+      }, []);
+      /* Pause when in top 25% of scroll container */
+      React.useEffect(() => {
+        const el = stripRef.current;
+        if (!el) return;
+        const scroller = el.closest('.screen-scroll');
+        if (!scroller) return;
+        let last = true;
+        const check = () => {
+          const sr = scroller.getBoundingClientRect();
+          const cr = el.getBoundingClientRect();
+          const ok = (cr.top - sr.top) >= sr.height * 0.25;
+          if (ok !== last) { last = ok; setStripInView(ok); }
+        };
+        scroller.addEventListener('scroll', check, { passive: true });
+        check();
+        return () => scroller.removeEventListener('scroll', check);
+      }, []);
+      /* Single shared cycle timer */
+      React.useEffect(() => {
+        if (!stripVisible || !stripInView) return;
+        let intervalId;
+        const delay = setTimeout(() => {
+          setSharedCycle(c => c + 1);
+          intervalId = setInterval(() => setSharedCycle(c => c + 1), 4000);
+        }, 100);
+        return () => { clearTimeout(delay); if (intervalId) clearInterval(intervalId); };
+      }, [stripVisible, stripInView]);
+      return (
+        <div ref={stripRef} className="scrollbar-hide no-page-swipe" style={{
+          display: 'flex', overflowX: 'auto',
+          scrollSnapType: 'x mandatory',
+          overscrollBehavior: 'none',
+          paddingLeft: 24, paddingRight: 24,
+          scrollPaddingLeft: 24, scrollPaddingRight: 24,
+          gap: 12,
+        }}>
+          {['fire', 'spark', 'refer'].map(k =>
+            <RW_X_Card key={k} cardKey={k} sharedCycle={sharedCycle} visible={stripVisible} />
+          )}
+        </div>
+      );
+    };
 
     /* ----- Monies — independent section, decoupled from Rewards ----- */
 
