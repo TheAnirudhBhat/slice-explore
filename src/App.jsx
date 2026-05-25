@@ -117,30 +117,26 @@ import ReactDOM from 'react-dom';
            height. Painting the wrapper itself white removes the seam
            outright, and `paddingBottom: env(safe-area-inset-bottom)`
            lets the white follow the home indicator on iPhones. */
-        <div style={{
+        <div onClick={openDebug} style={{
           position: 'absolute', left: 0, right: 0, bottom: 0,
-          zIndex: 5, pointerEvents: 'none',
+          zIndex: 5,
+          backgroundColor: '#FFFFFF',
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          cursor: 'pointer',
+          transform: 'translateZ(0)',
         }}>
-          {/* White band behind the nav bar — sits below the image's
-              top fade so the fade is transparent-to-page, but covers
-              from the icon row down through the iOS safe area. */}
-          <div style={{
-            position: 'absolute', left: 0, right: 0, bottom: 0,
-            /* Covers the bottom ~60% of the nav image (solid white part)
-               plus the full safe area below. */
-            height: 'calc(48px + env(safe-area-inset-bottom, 0px))',
-            background: '#FFFFFF',
+          {/* Invisible img for sizing; background-image does the rendering
+              so there's zero seam between the nav and the white fill. */}
+          <img src="/assets/bottom_nav_v3.png" alt="" style={{
+            width: '100%', display: 'block', visibility: 'hidden',
           }} />
-          <img src="/assets/bottom_nav_v3.png" alt="" onClick={openDebug} style={{
-            width: '100%', display: 'block',
-            position: 'relative',
-            pointerEvents: 'auto', cursor: 'pointer',
-          }} />
-          {/* Safe area fill — overlaps image by 2px to kill sub-pixel gap in iOS webapp */}
           <div style={{
-            height: 'calc(env(safe-area-inset-bottom, 0px) + 2px)',
-            marginTop: -2,
-            background: '#FFFFFF', position: 'relative',
+            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundImage: 'url(/assets/bottom_nav_v3.png)',
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: '100% auto',
+            backgroundPosition: 'top center',
+            pointerEvents: 'none',
           }} />
         </div>
       );
