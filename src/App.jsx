@@ -2500,7 +2500,7 @@ import ReactDOM from 'react-dom';
       const EASE = 'cubic-bezier(0.16, 1, 0.3, 1)';
       const CARD_H = 76;
       const PEEK = 14;
-      const stackHeight = CARD_H + (N - 1) * PEEK + 4;
+      const stackHeight = CARD_H + (N - 1) * PEEK;
 
       const cancelInProgress = (origIdx) => {
         const el = cardRefs.current[origIdx];
