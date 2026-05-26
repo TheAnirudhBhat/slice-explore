@@ -117,26 +117,29 @@ import ReactDOM from 'react-dom';
            height. Painting the wrapper itself white removes the seam
            outright, and `paddingBottom: env(safe-area-inset-bottom)`
            lets the white follow the home indicator on iPhones. */
-        <div onClick={openDebug} style={{
+        <div style={{
           position: 'absolute', left: 0, right: 0, bottom: 0,
-          zIndex: 5,
-          backgroundColor: '#FFFFFF',
-          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-          cursor: 'pointer',
+          zIndex: 5, pointerEvents: 'none',
           transform: 'translateZ(0)',
         }}>
-          {/* Invisible img for sizing; background-image does the rendering
-              so there's zero seam between the nav and the white fill. */}
-          <img src="/assets/bottom_nav_v3.png" alt="" style={{
-            width: '100%', display: 'block', visibility: 'hidden',
-          }} />
+          {/* The nav PNG has a transparent fade on its top half and
+              solid white on its bottom half. We only put white behind
+              the BOTTOM 50% so the top fade stays see-through. */}
           <div style={{
-            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundImage: 'url(/assets/bottom_nav_v3.png)',
-            backgroundRepeat: 'no-repeat',
-            backgroundSize: '100% auto',
-            backgroundPosition: 'top center',
-            pointerEvents: 'none',
+            position: 'absolute', left: 0, right: 0, bottom: 0,
+            height: 'calc(50% + env(safe-area-inset-bottom, 0px))',
+            background: '#FFFFFF',
+          }} />
+          <img src="/assets/bottom_nav_v3.png" alt="" onClick={openDebug} style={{
+            width: '100%', display: 'block', position: 'relative',
+            pointerEvents: 'auto', cursor: 'pointer',
+          }} />
+          {/* Safe area — overlaps image by 1px to prevent sub-pixel gap */}
+          <div style={{
+            height: 'calc(env(safe-area-inset-bottom, 0px) + 1px)',
+            marginTop: -1,
+            background: '#FFFFFF', position: 'relative',
+            transform: 'translateZ(0)',
           }} />
         </div>
       );
