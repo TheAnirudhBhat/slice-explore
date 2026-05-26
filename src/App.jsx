@@ -7053,7 +7053,7 @@ import ReactDOM from 'react-dom';
       V1: {
         label: 'Exploration',
         headerStyle: 'List',
-        sections: { forYou: 'Q', aiBanker: 'None', bills: 'S', rewards: 'X', monies: 'A', stats: 'N', more: 'A', footer: 'None' },
+        sections: { forYou: 'U', aiBanker: 'None', bills: 'S', rewards: 'X', monies: 'A', stats: 'N', more: 'A', footer: 'None' },
       },
     };
 
