@@ -3432,7 +3432,7 @@ import ReactDOM from 'react-dom';
                 <div key={p} aria-hidden style={{
                   position: 'absolute', inset: 0,
                   backgroundImage: `url(/assets/${s.bg})`,
-                  backgroundSize: 'cover', backgroundPosition: 'center 75%',
+                  backgroundSize: 'cover', backgroundPosition: cardStyle.bgPos || 'center 75%',
                   opacity: imageOpacities[p],
                   pointerEvents: 'none', willChange: 'opacity',
                 }} />
@@ -3662,7 +3662,7 @@ import ReactDOM from 'react-dom';
         bgType="image"
         slides={FY_U_SLIDES}
         cardStyle={{ baseBg: '#1A0040', radius: 16, minH: 180, titleSize: 18,
-          pad: '20px 24px 48px 24px', align: 'left', valign: 'top' }}
+          pad: '20px 24px 48px 24px', align: 'left', valign: 'top', bgPos: 'right bottom' }}
       />
     );
 
