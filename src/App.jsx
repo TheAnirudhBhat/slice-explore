@@ -5006,17 +5006,13 @@ import ReactDOM from 'react-dom';
                    <MoniesGlyph size={14} color="#FFFFFF" /> 8,435
                  </span>) }]
               : [{ text: 'Save ₹1,600' }, { text: '5 drops live' }];
-            /* Append clone of first item so we can scroll past the last
-               real item and snap back invisibly */
-            const capSlots = [...caps, caps[0]];
-            const headSlots = [...heads, heads[0]];
-            /* tickIdx: 0 → 1 → 2 (clone) → snap to 0 → 1 → 2 → ... */
-            const tickIdx = cycle % 3;
-            /* tickIdx hitting the clone (2) triggers a snap-back in the
-               parent's next cycle. But we need to detect the snap frame
-               to disable transition. The snap happens when we go from
-               clone (2) back to 0. */
-            const isSnap = tickIdx === 0 && cycle >= 3;
+            /* 4 slots: [A, B, clone-A, clone-B]. 4 is a multiple of 2
+               so the ticker stays perfectly in sync with the 2-state
+               bg toggle (cycle % 2). Snap happens at slot 0 every 4 cycles. */
+            const capSlots = [caps[0], caps[1], caps[0], caps[1]];
+            const headSlots = [heads[0], heads[1], heads[0], heads[1]];
+            const tickIdx = cycle % 4;
+            const isSnap = tickIdx === 0 && cycle >= 4;
             const maskStyle = {
               maskImage: 'linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%)',
               WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%)',
@@ -5114,7 +5110,7 @@ import ReactDOM from 'react-dom';
         const delay = setTimeout(() => {
           setSharedCycle(c => c + 1);
           intervalId = setInterval(() => setSharedCycle(c => c + 1), 4000);
-        }, 100);
+        }, 2000);
         return () => { clearTimeout(delay); if (intervalId) clearInterval(intervalId); };
       }, [stripVisible, stripInView]);
       return (
