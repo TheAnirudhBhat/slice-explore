@@ -2298,6 +2298,11 @@ import ReactDOM from 'react-dom';
             </div>
             <CarouselDots count={N} activeIdx={idx} bottom={12} />
           </div>
+          {/* Divider below paginator */}
+          <div style={{
+            height: 1, background: 'rgba(0,0,0,0.05)',
+            marginLeft: 24, marginRight: 24, marginTop: 12,
+          }} />
         </>
       );
     };
@@ -3500,15 +3505,17 @@ import ReactDOM from 'react-dom';
                       flex: '0 0 100%', scrollSnapAlign: 'start', scrollSnapStop: 'always',
                       position: 'relative', minHeight: cardStyle.minH || 180, overflow: 'hidden',
                       display: 'flex', flexDirection: 'column',
-                      alignItems: 'center', justifyContent: 'flex-end',
-                      textAlign: 'center',
+                      alignItems: cardStyle.align === 'left' ? 'flex-start' : 'center',
+                      justifyContent: 'flex-end',
+                      textAlign: cardStyle.align === 'left' ? 'left' : 'center',
                       padding: cardStyle.pad || '16px 24px 48px 24px',
                       boxSizing: 'border-box',
                       background: 'transparent',
                     }}>
                       <div style={{
                         position: 'relative', zIndex: 2,
-                        display: 'flex', flexDirection: 'column', alignItems: 'center',
+                        display: 'flex', flexDirection: 'column',
+                        alignItems: cardStyle.align === 'left' ? 'flex-start' : 'center',
                         transform: `translateX(${parallaxX}px)`,
                         opacity: textOpacity,
                         willChange: 'transform, opacity',
@@ -3570,11 +3577,94 @@ import ReactDOM from 'react-dom';
       />
     );
 
+    /* FY_T — F-style centered carousel with white/light hero images.
+       White bg, dark text. The illustration sits bottom-center with
+       white edges so it blends into the page. */
+    const FY_T_SLIDES = [
+      { bg: 'fy_hero_white.png', title: 'New Spark Drop', sub: 'Fresh rewards just dropped', cta: 'Explore' },
+      { bg: 'fy_hero_white.png', title: 'Spent ₹18K last month', sub: '22% higher than usual', cta: 'See report' },
+    ];
+    const FY_T = () => {
+      const PAD_TOP_CSS = 'calc(var(--bar-overlap, 118px) + 24px)';
+      const MIN_H = 300;
+      const slides = FY_T_SLIDES;
+      const N = slides.length;
+      const [ref, idx, progress] = useInfiniteCarousel(N);
+      const renderedSlides = [slides[N - 1], ...slides, slides[0]];
+      const imageOpacities = slides.map((_, p) =>
+        Math.max(0, 1 - wrappedCarouselDistance(p, progress, N).abs)
+      );
+      return (
+        <>
+          <div style={{ position: 'relative', marginTop: 'calc(-1 * var(--bar-overlap, 118px))', overflow: 'hidden', background: '#FFFFFF' }}>
+            {slides.map((s, p) => (
+              <div key={p} aria-hidden style={{
+                position: 'absolute', inset: 0, zIndex: 0,
+                backgroundImage: `url(/assets/${s.bg})`,
+                backgroundSize: 'cover', backgroundPosition: 'center bottom',
+                opacity: imageOpacities[p],
+                pointerEvents: 'none', willChange: 'opacity',
+              }} />
+            ))}
+            <div ref={ref} style={{
+              position: 'relative', zIndex: 2,
+              display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
+              overscrollBehavior: 'none',
+            }} className="scrollbar-hide no-page-swipe">
+              {renderedSlides.map((s, i) => {
+                const { abs: dist, signed: wrappedOffset } = wrappedCarouselDistance(i - 1, progress, N);
+                const textOpacity = Math.max(0, 1 - dist * 2.6);
+                const parallaxX = wrappedOffset * 60;
+                return (
+                  <div key={i} style={{
+                    flex: '0 0 100%', scrollSnapAlign: 'start',
+                    minHeight: MIN_H, overflow: 'hidden',
+                    display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center',
+                    textAlign: 'center',
+                    paddingTop: PAD_TOP_CSS, paddingRight: 36, paddingBottom: 48, paddingLeft: 36,
+                    boxSizing: 'border-box', background: 'transparent',
+                  }}>
+                    <div style={{
+                      position: 'relative', zIndex: 3,
+                      transform: `translate(${parallaxX}px, -12px)`,
+                      opacity: textOpacity,
+                      willChange: 'transform, opacity',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    }}>
+                      <div style={{ ...T.h4, color: 'rgba(0,0,0,0.9)' }}>{s.title}</div>
+                      <div style={{ ...T.caption, color: 'rgba(0,0,0,0.5)', marginTop: 4 }}>{s.sub}</div>
+                      <button className="tap" style={{
+                        marginTop: 12, padding: '5px 12px',
+                        background: 'rgba(0,0,0,0.9)', border: 'none', borderRadius: 100,
+                        ...T.caption, fontWeight: 500, color: '#FFFFFF', cursor: 'pointer', whiteSpace: 'nowrap',
+                      }}>{s.cta}</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <CarouselDots count={N} activeIdx={idx} bottom={12} />
+          </div>
+        </>
+      );
+    };
+
+    /* FY_U — Q layout but with text + CTA left-aligned (DLS margin). */
+    const FY_U = () => (
+      <FY_CardCarousel
+        bgType="image"
+        cardStyle={{ baseBg: '#0d0317', radius: 16, minH: 180, titleSize: 18,
+          pad: '12px 24px 52px 24px', align: 'left' }}
+        overlayGradient="radial-gradient(ellipse 120% 80% at 50% 100%, rgba(0,0,0,0.3) 0%, transparent 60%)"
+      />
+    );
+
     const ForYouSection = ({ variant, autoScroll, fyOverlap }) => {
       /* K = liquid-glass surface on the FY_I shuffle-deck engine. Same
          interactions, swapped material. */
       if (variant === 'K') return <FY_I autoScroll={autoScroll} surface="glass" />;
-      const C = { A: FY_A, B: FY_B, C: FY_C, D: FY_D, E: FY_E, F: FY_F, G: FY_G, H: FY_H, I: FY_I, J: FY_J, L: FY_L, M: FY_M, N: FY_N, O: FY_O, P: FY_P, Q: FY_Q }[variant] || FY_I;
+      const C = { A: FY_A, B: FY_B, C: FY_C, D: FY_D, E: FY_E, F: FY_F, G: FY_G, H: FY_H, I: FY_I, J: FY_J, L: FY_L, M: FY_M, N: FY_N, O: FY_O, P: FY_P, Q: FY_Q, T: FY_T, U: FY_U }[variant] || FY_I;
       return <C autoScroll={autoScroll} overlap={fyOverlap} />;
     };
 
@@ -4125,8 +4215,24 @@ import ReactDOM from 'react-dom';
       </div>
     );
 
+    /* BL_T — Grid inside a card + minimal stack below */
+    const BL_T = () => (
+      <div>
+        <PagePad>
+          <div style={{
+            background: '#FFFFFF', boxShadow: CARD_SHADOW, border: CARD_BORDER,
+            borderRadius: 16, padding: '20px 16px 16px',
+          }}>
+            <BillsShortcutGrid avatarVariant="outline" />
+          </div>
+        </PagePad>
+        <div style={{ height: 24 }} />
+        <BL_R />
+      </div>
+    );
+
     const BillsSection = ({ variant, isInCard }) => {
-      const C = { A: BL_A, B: BL_B, C: BL_C, D: BL_D, E: BL_E, F: BL_F, J: BL_J, K: BL_K, L: BL_L, M: BL_M, N: BL_N, P: BL_P, Q: BL_Q, R: BL_R, S: BL_S }[variant];
+      const C = { A: BL_A, B: BL_B, C: BL_C, D: BL_D, E: BL_E, F: BL_F, J: BL_J, K: BL_K, L: BL_L, M: BL_M, N: BL_N, P: BL_P, Q: BL_Q, R: BL_R, S: BL_S, T: BL_T }[variant];
       return <C isInCard={isInCard} />;
     };
 
@@ -4554,11 +4660,11 @@ import ReactDOM from 'react-dom';
         value: '5 drops',
       },
       {
-        key: 'monies',
+        key: 'refer',
         surface: 'card',
-        iconAsset: 'monies_icon.png',
-        label: 'Monies',
-        valueNode: <><MoniesGlyph size={14} /> 240</>,
+        iconAsset: 'invite_magnet.png',
+        label: 'Invite & earn',
+        value: '₹500',
       },
     ];
     const RW_K = () => (
@@ -5214,8 +5320,39 @@ import ReactDOM from 'react-dom';
       </PagePad>
     );
 
+    /* MN_D — Valentino gradient strip matching RW_X card aesthetic */
+    const MN_D = () => (
+      <PagePad>
+        <button className="tap" style={{
+          width: '100%', padding: '14px 16px',
+          borderRadius: 16, border: 'none',
+          background: 'linear-gradient(135deg, #D30AD7 0%, #87068A 100%)',
+          boxShadow: CARD_SHADOW,
+          textAlign: 'left', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', gap: 14,
+        }}>
+          <img src="/assets/monies_icon.png" width={32} height={32} alt=""
+            style={{ display: 'block', flexShrink: 0, filter: 'brightness(10)' }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ ...T.caption, color: 'rgba(255,255,255,0.7)' }}>Monies balance</div>
+            <div style={{
+              ...T.h4, color: '#FFFFFF', marginTop: 2,
+              display: 'inline-flex', alignItems: 'center', gap: 4,
+            }}>
+              <MoniesGlyph size={14} color="#FFFFFF" /> 66,522
+            </div>
+          </div>
+          <span style={{
+            ...T.caption, fontWeight: 500, color: '#FFFFFF',
+            background: 'rgba(255,255,255,0.2)', borderRadius: 100,
+            padding: '3px 10px',
+          }}>1% reward rate</span>
+        </button>
+      </PagePad>
+    );
+
     const MoniesSection = ({ variant }) => {
-      const C = { A: MN_A, B: MN_B, C: MN_C }[variant] || MN_A;
+      const C = { A: MN_A, B: MN_B, C: MN_C, D: MN_D }[variant] || MN_A;
       return <C />;
     };
 
@@ -5669,7 +5806,7 @@ import ReactDOM from 'react-dom';
     const ST_F = ({ isInCard }) => (
       <PagePad>
         <div style={{ background: 'white', boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16, padding: 24 }}>
-          {isInCard && <InCardHeader title="Statistics" icon={<GlyphChart color="#D30AD7" />} />}
+          {isInCard && <InCardHeader title="Analytics" icon={<GlyphChart color="#D30AD7" />} />}
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
             <div>
               <div style={{ ...T.btnSm, color: 'rgba(0,0,0,0.5)' }}>May spends</div>
@@ -6234,9 +6371,23 @@ import ReactDOM from 'react-dom';
       <PagePad>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           <ExploreMedium subtext="Autopay" title="3 active"
-            icon={<img src="/assets/autopay_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
+            icon={
+              <div style={{ display: 'flex', flexDirection: 'row' }}>
+                {['brand_a.png', 'brand_b.png', 'brand_c.png'].map((b, i) => (
+                  <img key={b} src={`/assets/${b}`} alt="" style={{
+                    width: 36, height: 36, borderRadius: 18,
+                    border: '2px solid #FFFFFF', objectFit: 'cover',
+                    marginLeft: i > 0 ? -10 : 0,
+                  }} />
+                ))}
+              </div>
+            } />
           <ExploreMedium subtext="Credit score" title="778"
             icon={<img src="/assets/credit_score_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
+        </div>
+        <div style={{ marginTop: 16 }}>
+          <ExploreMedium subtext="Insurance · 1 plan active" title="Premium due 12 Jul"
+            icon={<GlyphShield color="#2B6ACF" />} />
         </div>
       </PagePad>
     );
@@ -6516,7 +6667,7 @@ import ReactDOM from 'react-dom';
           </SectionBlock>
           <SectionAnchor id="stats" />
           <SectionBlock id="stats" active={isActive('stats')}>
-            <SectionWrap title="Statistics" headerStyle={headerStyle}>
+            <SectionWrap title="Analytics" headerStyle={headerStyle}>
               <StatsSection variant={sections.stats} isInCard={isInCard} />
               {!separateMore && (
                 <>
@@ -6724,6 +6875,7 @@ import ReactDOM from 'react-dom';
           F: 'Centered carousel', N: 'Centered carousel · short',
           P: 'D layout · F bg + fade',
           L: 'Image hero carousel', Q: 'Image hero · card',
+          T: 'White hero centered', U: 'Image hero · card · left',
           None: 'X',
         },
         archived: {
@@ -6748,7 +6900,7 @@ import ReactDOM from 'react-dom';
           K: 'Card stack · shuffle', L: 'Card stack · view all',
           J: 'Floating card (overlap)', N: 'Grid + stack below',
           Q: 'Grid + rich stack',
-          S: 'Grid + minimal stack',
+          S: 'Grid + minimal stack', T: 'Grid in card + stack',
         },
         archived: {
           A: 'Grid',
@@ -6759,6 +6911,7 @@ import ReactDOM from 'react-dom';
           A: 'Label + amount + tag',
           B: 'Heading + subtitle + amount',
           C: 'Heading + subtitle + amount + chevron',
+          D: 'Valentino gradient strip',
           None: 'X',
         },
       },
