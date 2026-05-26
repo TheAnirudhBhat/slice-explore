@@ -3661,8 +3661,8 @@ import ReactDOM from 'react-dom';
       <FY_CardCarousel
         bgType="image"
         slides={FY_U_SLIDES}
-        cardStyle={{ baseBg: '#1A0040', radius: 16, minH: 180, titleSize: 18,
-          pad: '20px 24px 48px 24px', align: 'left', valign: 'top', bgPos: 'right bottom' }}
+        cardStyle={{ baseBg: '#1A0040', radius: 16, minH: 160, titleSize: 18,
+          pad: '24px 24px 44px 24px', align: 'left', valign: 'top', bgPos: 'right bottom' }}
       />
     );
 
@@ -4237,8 +4237,79 @@ import ReactDOM from 'react-dom';
       </div>
     );
 
+    /* BL_U — Single card: grid icons on top, divider, then horizontal
+       paginated bill items below. Each bill row fills the card width,
+       swipe left/right to see more. */
+    const BL_U = () => {
+      const items = BL_R_ITEMS;
+      const [billIdx, setBillIdx] = React.useState(0);
+      const scrollRef = React.useRef(null);
+      React.useEffect(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+        const onScroll = () => {
+          const cw = el.offsetWidth;
+          if (cw === 0) return;
+          setBillIdx(Math.round(el.scrollLeft / cw));
+        };
+        el.addEventListener('scroll', onScroll, { passive: true });
+        return () => el.removeEventListener('scroll', onScroll);
+      }, []);
+      return (
+        <PagePad>
+          <div style={{
+            background: '#FFFFFF', boxShadow: CARD_SHADOW, border: CARD_BORDER,
+            borderRadius: 16, overflow: 'hidden',
+          }}>
+            {/* Grid icons */}
+            <div style={{ padding: '20px 16px 16px' }}>
+              <BillsShortcutGrid avatarVariant="outline" />
+            </div>
+            {/* Divider */}
+            <div style={{ height: 1, background: 'rgba(0,0,0,0.05)', marginLeft: 16, marginRight: 16 }} />
+            {/* Horizontal paginated bills */}
+            <div ref={scrollRef} className="scrollbar-hide" style={{
+              display: 'flex', overflowX: 'auto',
+              scrollSnapType: 'x mandatory',
+              overscrollBehavior: 'none',
+            }}>
+              {items.map((it, i) => (
+                <div key={i} style={{
+                  flex: '0 0 100%', scrollSnapAlign: 'start', scrollSnapStop: 'always',
+                  padding: '14px 16px',
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  boxSizing: 'border-box',
+                }}>
+                  <img src={`/assets/${it.heroImg}`} width={40} height={40} alt=""
+                    style={{ display: 'block', borderRadius: 12, flexShrink: 0, objectFit: 'contain' }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ ...T.btnSm, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.title}</div>
+                    <div style={{ ...T.caption, color: it.color, marginTop: 2 }}>{it.sub}</div>
+                  </div>
+                  <Chevron color="rgba(0,0,0,0.3)" />
+                </div>
+              ))}
+            </div>
+            {/* Pagination dots */}
+            <div style={{
+              display: 'flex', justifyContent: 'center', gap: 4,
+              paddingBottom: 12,
+            }}>
+              {items.map((_, i) => (
+                <div key={i} style={{
+                  width: i === billIdx ? 12 : 4, height: 4, borderRadius: 2,
+                  background: i === billIdx ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.1)',
+                  transition: 'width 200ms, background 200ms',
+                }} />
+              ))}
+            </div>
+          </div>
+        </PagePad>
+      );
+    };
+
     const BillsSection = ({ variant, isInCard }) => {
-      const C = { A: BL_A, B: BL_B, C: BL_C, D: BL_D, E: BL_E, F: BL_F, J: BL_J, K: BL_K, L: BL_L, M: BL_M, N: BL_N, P: BL_P, Q: BL_Q, R: BL_R, S: BL_S, T: BL_T }[variant];
+      const C = { A: BL_A, B: BL_B, C: BL_C, D: BL_D, E: BL_E, F: BL_F, J: BL_J, K: BL_K, L: BL_L, M: BL_M, N: BL_N, P: BL_P, Q: BL_Q, R: BL_R, S: BL_S, T: BL_T, U: BL_U }[variant];
       return <C isInCard={isInCard} />;
     };
 
@@ -6907,6 +6978,7 @@ import ReactDOM from 'react-dom';
           J: 'Floating card (overlap)', N: 'Grid + stack below',
           Q: 'Grid + rich stack',
           S: 'Grid + minimal stack', T: 'Grid in card + stack',
+          U: 'Single card · grid + paginated bills',
         },
         archived: {
           A: 'Grid',
