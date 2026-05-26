@@ -3606,6 +3606,12 @@ import ReactDOM from 'react-dom';
                 pointerEvents: 'none', willChange: 'opacity',
               }} />
             ))}
+            {/* Bottom fade to white */}
+            <div aria-hidden style={{
+              position: 'absolute', inset: 0, zIndex: 1,
+              background: 'linear-gradient(to bottom, transparent 60%, rgba(255,255,255,0.4) 80%, #FFFFFF 95%)',
+              pointerEvents: 'none',
+            }} />
             <div ref={ref} style={{
               position: 'relative', zIndex: 2,
               display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
@@ -6464,7 +6470,7 @@ import ReactDOM from 'react-dom';
         </div>
         <div style={{ marginTop: 16 }}>
           <ExploreMedium subtext="Insurance · 1 plan active" title="Premium due 12 Jul"
-            icon={<GlyphShield color="#2B6ACF" />} />
+            icon={<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#2B6ACF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3 4 6v6c0 5 3.5 8.5 8 9 4.5-.5 8-4 8-9V6l-8-3z" /></svg>} />
         </div>
       </PagePad>
     );
@@ -6950,9 +6956,9 @@ import ReactDOM from 'react-dom';
         key: 'forYou', label: 'For You', variants: {
           H: 'Single card', B: 'Horizontal strip',
           F: 'Centered carousel', N: 'Centered carousel · short',
-          P: 'D layout · F bg + fade',
+          P: 'D layout · F bg + fade', T: 'White hero centered',
           L: 'Image hero carousel', Q: 'Image hero · card',
-          T: 'White hero centered', U: 'Image hero · card · left',
+          U: 'Image hero · card · left',
           None: 'X',
         },
         archived: {
