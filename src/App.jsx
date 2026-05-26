@@ -3506,7 +3506,7 @@ import ReactDOM from 'react-dom';
                       position: 'relative', minHeight: cardStyle.minH || 180, overflow: 'hidden',
                       display: 'flex', flexDirection: 'column',
                       alignItems: cardStyle.align === 'left' ? 'flex-start' : 'center',
-                      justifyContent: 'flex-end',
+                      justifyContent: cardStyle.valign === 'top' ? 'flex-start' : 'flex-end',
                       textAlign: cardStyle.align === 'left' ? 'left' : 'center',
                       padding: cardStyle.pad || '16px 24px 48px 24px',
                       boxSizing: 'border-box',
@@ -3650,13 +3650,19 @@ import ReactDOM from 'react-dom';
       );
     };
 
-    /* FY_U — Q layout but with text + CTA left-aligned (DLS margin). */
+    /* FY_U — Card carousel with left-aligned illustrations + top-left text.
+       Uses dedicated banner images with artwork on the bottom-right. */
+    const FY_U_SLIDES = [
+      { bg: 'fy_u_spark.png',    title: 'New Spark Drop',       sub: 'Fresh rewards just dropped', cta: 'Explore' },
+      { bg: 'fy_u_cashback.png', title: 'UPI cashback drop',    sub: 'Tap to grab ₹40 back',      cta: 'Claim' },
+      { bg: 'fy_u_drop.png',     title: 'Friday flash drop',    sub: '₹100 back on Swiggy',       cta: 'Grab now' },
+    ];
     const FY_U = () => (
       <FY_CardCarousel
         bgType="image"
-        cardStyle={{ baseBg: '#0d0317', radius: 16, minH: 180, titleSize: 18,
-          pad: '12px 24px 52px 24px', align: 'left' }}
-        overlayGradient="radial-gradient(ellipse 120% 80% at 50% 100%, rgba(0,0,0,0.3) 0%, transparent 60%)"
+        slides={FY_U_SLIDES}
+        cardStyle={{ baseBg: '#1A0040', radius: 16, minH: 180, titleSize: 18,
+          pad: '20px 24px 48px 24px', align: 'left', valign: 'top' }}
       />
     );
 
@@ -6624,7 +6630,7 @@ import ReactDOM from 'react-dom';
                 else if (sections.forYou === 'L') h = 24;
                 else if (sections.forYou === 'F' || sections.forYou === 'P') h = 0;
                 else if (sections.forYou === 'N') h = 16;
-                else if (sections.forYou === 'Q') h = 28;
+                else if (sections.forYou === 'Q' || sections.forYou === 'U' || sections.forYou === 'T') h = 28;
                 else if (isGradientFY) h = 32;
                 return (
                   <>
