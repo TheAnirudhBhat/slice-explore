@@ -882,10 +882,10 @@ import ReactDOM from 'react-dom';
       ];
       const BUBBLES_LEFT = [
         { size: 32, right: 0,  bottom: 0,  delay: 0 },
-        { size: 24, right: 32, bottom: 10, delay: 50 },
-        { size: 24, right: 56, bottom: 0,  delay: 100 },
-        { size: 24, right: 44, bottom: 26, delay: 150 },
-        { size: 20, right: 76, bottom: 14, delay: 200 },
+        { size: 24, right: 28, bottom: 6,  delay: 50 },
+        { size: 20, right: 10, bottom: 30, delay: 100 },
+        { size: 24, right: 50, bottom: 2,  delay: 150 },
+        { size: 20, right: 70, bottom: 8,  delay: 200 },
       ];
       const BUBBLES = fanLeft ? BUBBLES_LEFT : BUBBLES_UP;
       const SPARK_ROTATE_MS = 600;
@@ -4427,7 +4427,7 @@ import ReactDOM from 'react-dom';
             <div ref={scrollRef} className="scrollbar-hide" style={{
               display: 'flex', overflowX: 'auto',
               scrollSnapType: 'x mandatory',
-              overscrollBehavior: 'none', marginTop: 8,
+              overscrollBehavior: 'none', marginTop: 12,
             }}>
               {items.map((it, i) => (
                 <div key={i} style={{
@@ -5932,7 +5932,7 @@ import ReactDOM from 'react-dom';
           {/* Spark: brand bubbles — fan left in Y variant */}
           {!isFire && (
             <div style={{
-              position: 'absolute', right: 10, bottom: 14,
+              position: 'absolute', right: 16, bottom: 20,
               pointerEvents: 'none',
               opacity: showAlt ? 1 : 0,
               transition: showAlt ? `opacity 0.4s ${EASE} 0.2s` : `opacity 0.2s ${EASE}`,
@@ -7351,7 +7351,7 @@ import ReactDOM from 'react-dom';
       V1: {
         label: 'Exploration',
         headerStyle: 'List',
-        sections: { forYou: 'U', aiBanker: 'None', bills: 'W', rewards: 'X', monies: 'A', stats: 'N', more: 'A', footer: 'None' },
+        sections: { forYou: 'U', aiBanker: 'None', bills: 'W', rewards: 'Y', monies: 'A', stats: 'N', more: 'A', footer: 'A' },
       },
     };
 
