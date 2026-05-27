@@ -4267,9 +4267,9 @@ import ReactDOM from 'react-dom';
             background: '#FFFFFF', boxShadow: CARD_SHADOW, border: CARD_BORDER,
             borderRadius: 16, overflow: 'hidden',
           }}>
-            {/* Grid icons */}
+            {/* Grid icons — matches BL_B style */}
             <div style={{ padding: '16px 16px 14px' }}>
-              <BillsShortcutGrid avatarVariant="outline" />
+              <BillsShortcutGrid columnGap={20} />
             </div>
             {/* Divider */}
             <div style={{ height: 1, background: 'rgba(0,0,0,0.04)', marginLeft: 16, marginRight: 16 }} />
@@ -4278,6 +4278,7 @@ import ReactDOM from 'react-dom';
               display: 'flex', overflowX: 'auto',
               scrollSnapType: 'x mandatory',
               overscrollBehavior: 'none',
+              marginTop: 4,
             }}>
               {items.map((it, i) => (
                 <div key={i} style={{
@@ -4296,18 +4297,136 @@ import ReactDOM from 'react-dom';
                 </div>
               ))}
             </div>
-            {/* Subtle pagination — tiny dots, very low contrast */}
-            <div style={{
-              display: 'flex', justifyContent: 'center', gap: 3,
-              paddingBottom: 10, paddingTop: 2,
+            {/* No pagination — clean bottom edge */}
+            <div style={{ height: 4 }} />
+          </div>
+        </PagePad>
+      );
+    };
+
+    /* BL_V — Same as BL_U but with a right-aligned "1/3" counter */
+    const BL_V = () => {
+      const items = BL_R_ITEMS;
+      const [billIdx, setBillIdx] = React.useState(0);
+      const scrollRef = React.useRef(null);
+      React.useEffect(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+        const onScroll = () => {
+          const cw = el.offsetWidth;
+          if (cw === 0) return;
+          setBillIdx(Math.round(el.scrollLeft / cw));
+        };
+        el.addEventListener('scroll', onScroll, { passive: true });
+        return () => el.removeEventListener('scroll', onScroll);
+      }, []);
+      return (
+        <PagePad>
+          <div style={{
+            background: '#FFFFFF', boxShadow: CARD_SHADOW, border: CARD_BORDER,
+            borderRadius: 16, overflow: 'hidden',
+          }}>
+            <div style={{ padding: '16px 16px 14px' }}>
+              <BillsShortcutGrid columnGap={20} />
+            </div>
+            <div style={{ height: 1, background: 'rgba(0,0,0,0.04)', marginLeft: 16, marginRight: 16 }} />
+            <div ref={scrollRef} className="scrollbar-hide" style={{
+              display: 'flex', overflowX: 'auto',
+              scrollSnapType: 'x mandatory',
+              overscrollBehavior: 'none', marginTop: 4,
             }}>
-              {items.map((_, i) => (
+              {items.map((it, i) => (
                 <div key={i} style={{
-                  width: i === billIdx ? 10 : 3, height: 3, borderRadius: 1.5,
-                  background: i === billIdx ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.06)',
-                  transition: 'width 200ms, background 200ms',
-                }} />
+                  flex: '0 0 100%', scrollSnapAlign: 'start', scrollSnapStop: 'always',
+                  padding: '12px 16px',
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  boxSizing: 'border-box',
+                }}>
+                  <img src={`/assets/${it.heroImg}`} width={40} height={40} alt=""
+                    style={{ display: 'block', borderRadius: 12, flexShrink: 0, objectFit: 'contain' }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ ...T.btnSm, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.title}</div>
+                    <div style={{ ...T.caption, color: it.color, marginTop: 2 }}>{it.sub}</div>
+                  </div>
+                  <Chevron color="rgba(0,0,0,0.3)" />
+                </div>
               ))}
+            </div>
+            {/* Right-aligned counter */}
+            <div style={{
+              display: 'flex', justifyContent: 'flex-end',
+              padding: '4px 16px 10px',
+            }}>
+              <span style={{ ...T.meta, color: 'rgba(0,0,0,0.25)', textTransform: 'none' }}>
+                {billIdx + 1}/{items.length}
+              </span>
+            </div>
+          </div>
+        </PagePad>
+      );
+    };
+
+    /* BL_W — Same card but with a thin progress bar instead of dots */
+    const BL_W = () => {
+      const items = BL_R_ITEMS;
+      const [billIdx, setBillIdx] = React.useState(0);
+      const scrollRef = React.useRef(null);
+      React.useEffect(() => {
+        const el = scrollRef.current;
+        if (!el) return;
+        const onScroll = () => {
+          const cw = el.offsetWidth;
+          if (cw === 0) return;
+          setBillIdx(Math.round(el.scrollLeft / cw));
+        };
+        el.addEventListener('scroll', onScroll, { passive: true });
+        return () => el.removeEventListener('scroll', onScroll);
+      }, []);
+      return (
+        <PagePad>
+          <div style={{
+            background: '#FFFFFF', boxShadow: CARD_SHADOW, border: CARD_BORDER,
+            borderRadius: 16, overflow: 'hidden',
+          }}>
+            <div style={{ padding: '16px 16px 14px' }}>
+              <BillsShortcutGrid columnGap={20} />
+            </div>
+            <div style={{ height: 1, background: 'rgba(0,0,0,0.04)', marginLeft: 16, marginRight: 16 }} />
+            <div ref={scrollRef} className="scrollbar-hide" style={{
+              display: 'flex', overflowX: 'auto',
+              scrollSnapType: 'x mandatory',
+              overscrollBehavior: 'none', marginTop: 4,
+            }}>
+              {items.map((it, i) => (
+                <div key={i} style={{
+                  flex: '0 0 100%', scrollSnapAlign: 'start', scrollSnapStop: 'always',
+                  padding: '12px 16px',
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  boxSizing: 'border-box',
+                }}>
+                  <img src={`/assets/${it.heroImg}`} width={40} height={40} alt=""
+                    style={{ display: 'block', borderRadius: 12, flexShrink: 0, objectFit: 'contain' }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ ...T.btnSm, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{it.title}</div>
+                    <div style={{ ...T.caption, color: it.color, marginTop: 2 }}>{it.sub}</div>
+                  </div>
+                  <Chevron color="rgba(0,0,0,0.3)" />
+                </div>
+              ))}
+            </div>
+            {/* Thin progress bar */}
+            <div style={{ padding: '4px 16px 10px' }}>
+              <div style={{
+                height: 2, borderRadius: 1, background: 'rgba(0,0,0,0.04)',
+                overflow: 'hidden',
+              }}>
+                <div style={{
+                  height: '100%', borderRadius: 1,
+                  background: 'rgba(0,0,0,0.15)',
+                  width: `${((billIdx + 1) / items.length) * 100}%`,
+                  transition: 'width 200ms ease',
+                }} />
+              </div>
             </div>
           </div>
         </PagePad>
@@ -4315,7 +4434,7 @@ import ReactDOM from 'react-dom';
     };
 
     const BillsSection = ({ variant, isInCard }) => {
-      const C = { A: BL_A, B: BL_B, C: BL_C, D: BL_D, E: BL_E, F: BL_F, J: BL_J, K: BL_K, L: BL_L, M: BL_M, N: BL_N, P: BL_P, Q: BL_Q, R: BL_R, S: BL_S, T: BL_T, U: BL_U }[variant];
+      const C = { A: BL_A, B: BL_B, C: BL_C, D: BL_D, E: BL_E, F: BL_F, J: BL_J, K: BL_K, L: BL_L, M: BL_M, N: BL_N, P: BL_P, Q: BL_Q, R: BL_R, S: BL_S, T: BL_T, U: BL_U, V: BL_V, W: BL_W }[variant];
       return <C isInCard={isInCard} />;
     };
 
@@ -6984,7 +7103,8 @@ import ReactDOM from 'react-dom';
           J: 'Floating card (overlap)', N: 'Grid + stack below',
           Q: 'Grid + rich stack',
           S: 'Grid + minimal stack', T: 'Grid in card + stack',
-          U: 'Single card · grid + paginated bills',
+          U: 'Card · no pagination',
+          V: 'Card · right counter', W: 'Card · progress bar',
         },
         archived: {
           A: 'Grid',
