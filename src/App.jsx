@@ -4375,15 +4375,15 @@ import ReactDOM from 'react-dom';
     /* BL_W — Same card but with a thin progress bar instead of dots */
     const BL_W = () => {
       const items = BL_R_ITEMS;
-      const [billIdx, setBillIdx] = React.useState(0);
+      const [scrollPct, setScrollPct] = React.useState(0);
       const scrollRef = React.useRef(null);
       React.useEffect(() => {
         const el = scrollRef.current;
         if (!el) return;
         const onScroll = () => {
-          const cw = el.offsetWidth;
-          if (cw === 0) return;
-          setBillIdx(Math.round(el.scrollLeft / cw));
+          const maxScroll = el.scrollWidth - el.offsetWidth;
+          if (maxScroll <= 0) return;
+          setScrollPct(el.scrollLeft / maxScroll);
         };
         el.addEventListener('scroll', onScroll, { passive: true });
         return () => el.removeEventListener('scroll', onScroll);
@@ -4397,23 +4397,20 @@ import ReactDOM from 'react-dom';
             <div style={{ padding: '16px 16px 14px' }}>
               <BillsShortcutGrid columnGap={20} />
             </div>
-            {/* Sliding glow divider — a highlight slides smoothly via transform */}
-            <div style={{ padding: '0 16px', position: 'relative', height: 1.5 }}>
-              {/* Base track */}
+            {/* Sliding glow divider — tracks scroll position smoothly */}
+            <div style={{ margin: '4px 16px 0', position: 'relative', height: 1.5 }}>
               <div style={{
                 position: 'absolute', inset: 0,
                 borderRadius: 1, background: 'rgba(0,0,0,0.03)',
               }} />
-              {/* Sliding highlight — positioned via translateX, width = 1/N of track */}
               <div style={{
                 position: 'absolute', top: 0, bottom: 0,
                 width: `${100 / items.length}%`,
-                transform: `translateX(${billIdx * 100}%)`,
-                transition: 'transform 300ms cubic-bezier(0.25, 0.1, 0.25, 1)',
+                left: `${scrollPct * (100 - 100 / items.length)}%`,
               }}>
                 <div style={{
                   width: '100%', height: '100%',
-                  background: 'radial-gradient(ellipse 100% 100% at center, rgba(0,0,0,0.14) 0%, rgba(0,0,0,0.02) 80%, transparent 100%)',
+                  background: 'radial-gradient(ellipse 100% 100% at center, rgba(0,0,0,0.08) 0%, transparent 75%)',
                   borderRadius: 1,
                 }} />
               </div>
@@ -4440,7 +4437,7 @@ import ReactDOM from 'react-dom';
                 </div>
               ))}
             </div>
-            <div style={{ height: 4 }} />
+            <div style={{ height: 12 }} />
           </div>
         </PagePad>
       );
@@ -5856,8 +5853,167 @@ import ReactDOM from 'react-dom';
       );
     };
 
+    /* RW_Y — Two square cards side by side (Fire + Spark) with the same
+       2-state animation as RW_X cards. No carousel, no Monies. */
+    const RW_Y_Card = ({ type, sharedCycle, visible }) => {
+      const cycle = sharedCycle;
+      const phase = cycle % 2;
+      const showAlt = phase === 1;
+      const isFire = type === 'fire';
+      const T_MS = '0.6s';
+      const EASE = 'cubic-bezier(0.25, 0.1, 0.25, 1)';
+      const fireRotation = showAlt ? 'rotate(0deg)' : (cycle === 0 ? 'rotate(-90deg)' : 'rotate(90deg)');
+      /* Text ticker — 4 slots synced with 2-state bg */
+      const caps = isFire ? ['Play & win', 'Aman leading'] : ['Sparks', 'Sparks'];
+      const heads = isFire
+        ? [{ text: '3 fires' }, { node: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><MoniesGlyph size={14} color="#FFFFFF" /> 8,435</span> }]
+        : [{ text: 'Save ₹1,600' }, { text: '5 drops live' }];
+      const capSlots = [caps[0], caps[1], caps[0], caps[1]];
+      const headSlots = [heads[0], heads[1], heads[0], heads[1]];
+      const tickIdx = cycle % 4;
+      const isSnap = tickIdx === 0 && cycle >= 4;
+      const CAP_H = 16, HEAD_H = 20;
+      const maskStyle = {
+        maskImage: 'linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%)',
+        WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%)',
+      };
+      return (
+        <div style={{
+          aspectRatio: '1 / 1', borderRadius: 16, position: 'relative',
+          overflow: 'hidden', boxShadow: CARD_SHADOW,
+        }}>
+          {/* State 0 — poster */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            backgroundImage: isFire ? 'url(/assets/rw_sq_fire.png)' : 'url(/assets/rw_sq_spark.png)',
+            backgroundSize: 'cover', backgroundPosition: 'center',
+            opacity: showAlt ? 0 : 1,
+            transition: showAlt ? `opacity ${T_MS} ${EASE}` : `opacity 0.3s ${EASE}`,
+          }} />
+          {/* State 1 — gradient */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: isFire
+              ? 'linear-gradient(160deg, #1A0040 0%, #3B0D7A 40%, #6B1FB8 100%)'
+              : undefined,
+            backgroundImage: !isFire ? 'url(/assets/spark_bg_gradient.png)' : undefined,
+            backgroundSize: 'cover', backgroundPosition: 'center',
+            opacity: showAlt ? 1 : 0,
+            transition: isFire ? `opacity ${T_MS} ${EASE}` : (showAlt ? `opacity 0.3s ${EASE}` : `opacity 0.4s ${EASE} 0.1s`),
+          }} />
+          {/* Fire: avatar */}
+          {isFire && (
+            <>
+              <div style={{
+                position: 'absolute', right: -10, bottom: -10,
+                width: 140, height: 140,
+                background: 'radial-gradient(circle, rgba(211,10,215,0.45) 0%, rgba(211,10,215,0) 65%)',
+                opacity: showAlt ? 1 : 0, transition: `opacity ${T_MS} ${EASE}`,
+                pointerEvents: 'none',
+              }} />
+              <img src="/assets/leaderboard_aman.png" alt="" style={{
+                position: 'absolute', right: 14, bottom: 14,
+                width: 56, height: 56, objectFit: 'contain',
+                borderRadius: 28, pointerEvents: 'none',
+                opacity: showAlt ? 1 : 0,
+                transform: `${fireRotation} scale(${showAlt ? 1 : 0.6})`,
+                transformOrigin: 'center center',
+                transition: `opacity ${T_MS} ${EASE}, transform ${T_MS} ${EASE}`,
+              }} />
+            </>
+          )}
+          {/* Spark: brand bubbles */}
+          {!isFire && (
+            <div style={{
+              position: 'absolute', right: 14, bottom: 16,
+              pointerEvents: 'none',
+              opacity: showAlt ? 1 : 0,
+              transition: showAlt ? `opacity 0.4s ${EASE} 0.2s` : `opacity 0.2s ${EASE}`,
+            }}>
+              <SparkBubbleCloud animate={showAlt} width={72} height={72} iconSize={0} startDelayMs={0} />
+            </div>
+          )}
+          {/* Text ticker */}
+          <div style={{
+            position: 'absolute', left: 16, top: 16, right: 16, zIndex: 1,
+            height: CAP_H, overflow: 'hidden', ...maskStyle,
+          }}>
+            <div style={{
+              transform: `translateY(-${tickIdx * CAP_H}px)`,
+              transition: (cycle > 0 && !isSnap) ? `transform 0.6s ${EASE}` : 'none',
+            }}>
+              {capSlots.map((c, i) => (
+                <div key={i} style={{ height: CAP_H, ...T.caption, color: 'rgba(255,255,255,0.85)' }}>{c}</div>
+              ))}
+            </div>
+          </div>
+          <div style={{
+            position: 'absolute', left: 16, top: 36, right: 16, zIndex: 1,
+            height: HEAD_H, overflow: 'hidden', ...maskStyle,
+          }}>
+            <div style={{
+              transform: `translateY(-${tickIdx * HEAD_H}px)`,
+              transition: (cycle > 0 && !isSnap) ? `transform 0.6s ${EASE} 0.06s` : 'none',
+            }}>
+              {headSlots.map((h, i) => (
+                <div key={i} style={{ height: HEAD_H, ...T.h4, color: '#FFFFFF' }}>{h.node || h.text}</div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    };
+    const RW_Y = () => {
+      const stripRef = React.useRef(null);
+      const [stripVisible, setStripVisible] = React.useState(false);
+      const [stripInView, setStripInView] = React.useState(true);
+      const [sharedCycle, setSharedCycle] = React.useState(0);
+      React.useEffect(() => {
+        const el = stripRef.current;
+        if (!el) return;
+        const obs = new IntersectionObserver(([e]) => {
+          if (e.isIntersecting) { setStripVisible(true); obs.disconnect(); }
+        }, { threshold: 1.0, rootMargin: '0px 0px -20% 0px' });
+        obs.observe(el);
+        return () => obs.disconnect();
+      }, []);
+      React.useEffect(() => {
+        const el = stripRef.current;
+        if (!el) return;
+        const scroller = el.closest('.screen-scroll');
+        if (!scroller) return;
+        let last = true;
+        const check = () => {
+          const sr = scroller.getBoundingClientRect();
+          const cr = el.getBoundingClientRect();
+          const ok = (cr.top - sr.top) >= sr.height * 0.25;
+          if (ok !== last) { last = ok; setStripInView(ok); }
+        };
+        scroller.addEventListener('scroll', check, { passive: true });
+        check();
+        return () => scroller.removeEventListener('scroll', check);
+      }, []);
+      React.useEffect(() => {
+        if (!stripVisible || !stripInView) return;
+        let intervalId;
+        const delay = setTimeout(() => {
+          setSharedCycle(c => c + 1);
+          intervalId = setInterval(() => setSharedCycle(c => c + 1), 4000);
+        }, 2000);
+        return () => { clearTimeout(delay); if (intervalId) clearInterval(intervalId); };
+      }, [stripVisible, stripInView]);
+      return (
+        <PagePad>
+          <div ref={stripRef} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <RW_Y_Card type="fire" sharedCycle={sharedCycle} visible={stripVisible} />
+            <RW_Y_Card type="spark" sharedCycle={sharedCycle} visible={stripVisible} />
+          </div>
+        </PagePad>
+      );
+    };
+
     const RewardsSection = ({ variant, isInCard, headerStyle }) => {
-      const C = { A: RW_A, B: RW_B, E: RW_E, F: RW_F, G: RW_G, H: RW_H, I: RW_I, K: RW_K, N: RW_N, O: RW_O, P: RW_P, Q: RW_Q, R: RW_R, S: RW_S, T: RW_T, U: RW_U, V: RW_V, W: RW_W, X: RW_X }[variant] || RW_F;
+      const C = { A: RW_A, B: RW_B, E: RW_E, F: RW_F, G: RW_G, H: RW_H, I: RW_I, K: RW_K, N: RW_N, O: RW_O, P: RW_P, Q: RW_Q, R: RW_R, S: RW_S, T: RW_T, U: RW_U, V: RW_V, W: RW_W, X: RW_X, Y: RW_Y }[variant] || RW_F;
       return <C isInCard={isInCard} headerStyle={headerStyle} />;
     };
 
@@ -7137,6 +7293,7 @@ import ReactDOM from 'react-dom';
           K: 'Triptych palette', G: 'Fire hero + 2 below', F: 'Featured Large + 2 Med',
           R: 'Fire+Spark · Monies banner',
           U: 'Portrait card carousel', X: 'Leaderboard · Monies subtitle',
+          Y: 'Square grid · 2 cards',
         },
         archived: {
           O: 'Source breakdown',
