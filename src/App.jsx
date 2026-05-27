@@ -4268,11 +4268,11 @@ import ReactDOM from 'react-dom';
             borderRadius: 16, overflow: 'hidden',
           }}>
             {/* Grid icons */}
-            <div style={{ padding: '20px 16px 16px' }}>
+            <div style={{ padding: '16px 16px 14px' }}>
               <BillsShortcutGrid avatarVariant="outline" />
             </div>
             {/* Divider */}
-            <div style={{ height: 1, background: 'rgba(0,0,0,0.05)', marginLeft: 16, marginRight: 16 }} />
+            <div style={{ height: 1, background: 'rgba(0,0,0,0.04)', marginLeft: 16, marginRight: 16 }} />
             {/* Horizontal paginated bills */}
             <div ref={scrollRef} className="scrollbar-hide" style={{
               display: 'flex', overflowX: 'auto',
@@ -4282,7 +4282,7 @@ import ReactDOM from 'react-dom';
               {items.map((it, i) => (
                 <div key={i} style={{
                   flex: '0 0 100%', scrollSnapAlign: 'start', scrollSnapStop: 'always',
-                  padding: '14px 16px',
+                  padding: '12px 16px',
                   display: 'flex', alignItems: 'center', gap: 12,
                   boxSizing: 'border-box',
                 }}>
@@ -4296,15 +4296,15 @@ import ReactDOM from 'react-dom';
                 </div>
               ))}
             </div>
-            {/* Pagination dots */}
+            {/* Subtle pagination — tiny dots, very low contrast */}
             <div style={{
-              display: 'flex', justifyContent: 'center', gap: 4,
-              paddingBottom: 12,
+              display: 'flex', justifyContent: 'center', gap: 3,
+              paddingBottom: 10, paddingTop: 2,
             }}>
               {items.map((_, i) => (
                 <div key={i} style={{
-                  width: i === billIdx ? 12 : 4, height: 4, borderRadius: 2,
-                  background: i === billIdx ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.1)',
+                  width: i === billIdx ? 10 : 3, height: 3, borderRadius: 1.5,
+                  background: i === billIdx ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.06)',
                   transition: 'width 200ms, background 200ms',
                 }} />
               ))}
