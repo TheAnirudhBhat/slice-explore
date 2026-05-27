@@ -76,7 +76,7 @@ import ReactDOM from 'react-dom';
       return (
         <div className="app-bar-l0" style={{
           position: 'absolute', top: 0, left: 0, right: 0, zIndex: 30,
-          paddingTop: 52, height: 52 + 64,
+          paddingTop: 50, height: 50 + 64,
           paddingLeft: 24, paddingRight: 20,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           background: 'transparent',
@@ -92,7 +92,7 @@ import ReactDOM from 'react-dom';
             transition: 'opacity 200ms ease',
           }} />
           <h1 style={{
-            ...T.h2, fontSize: 28, lineHeight: '34px',
+            ...T.h2, fontSize: 26, lineHeight: '32px',
             position: 'relative', zIndex: 1, marginTop: -2,
             color: titleColor,
             transition: 'color 50ms linear',
