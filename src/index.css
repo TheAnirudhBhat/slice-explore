@@ -4,7 +4,7 @@
 
     :root {
       color-scheme: light;
-      --appbar-top: 50px;
+      --appbar-top: 54px;
     }
     /* Real mobile (standalone webapp) — tighter app bar */
     @media (max-width: 430px) {
