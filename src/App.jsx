@@ -80,8 +80,8 @@ import ReactDOM from 'react-dom';
           paddingLeft: 24, paddingRight: 20,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           background: 'transparent',
-          boxShadow: scrolled ? '0 6px 8px 0 rgba(0,0,0,0.05)' : 'none',
-          transition: 'box-shadow 50ms linear',
+          boxShadow: scrolled ? '0 6px 8px 0 rgba(0,0,0,0.05)' : '0 6px 8px 0 rgba(0,0,0,0)',
+          transition: 'box-shadow 200ms ease',
         }}>
           <div style={{
             position: 'absolute', inset: 0,
@@ -89,7 +89,7 @@ import ReactDOM from 'react-dom';
             opacity: opaque ? 1 : 0,
             pointerEvents: 'none', zIndex: 0,
             willChange: 'opacity',
-            transition: 'opacity 50ms linear',
+            transition: 'opacity 200ms ease',
           }} />
           <h1 style={{
             ...T.h2, fontSize: 28, lineHeight: '34px',
@@ -6931,7 +6931,7 @@ import ReactDOM from 'react-dom';
           )
         : React.Fragment;
       return (
-        <ScreenShell transparentAppBar={isGradientFY || sections.forYou === 'U' || sections.forYou === 'Q'} darkBg={sections.forYou === 'L' || sections.forYou === 'F' || sections.forYou === 'N'}
+        <ScreenShell transparentAppBar={isGradientFY} darkBg={sections.forYou === 'L' || sections.forYou === 'F' || sections.forYou === 'N'}
           /* App-bar fill + status-bar colour flip kick in when the
              kiosk's rounded TOP edge reaches the app-bar bottom
              (viewport Y=118). At scrollTop=0 the kiosk top sits at
