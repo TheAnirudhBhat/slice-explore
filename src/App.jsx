@@ -6939,7 +6939,7 @@ import ReactDOM from 'react-dom';
              So the threshold is 300 − 118 = 182. (Earlier 64 was a
              flow/viewport-coord mix-up that fired the flip way too
              early.) */
-          scrollThreshold={sections.forYou === 'L' ? 182 : (sections.forYou === 'N' || sections.forYou === 'F') ? 120 : (sections.forYou === 'T') ? 10 : (sections.forYou === 'U' || sections.forYou === 'Q') ? 60 : 0}
+          scrollThreshold={sections.forYou === 'L' ? 182 : (sections.forYou === 'N' || sections.forYou === 'F') ? 120 : (sections.forYou === 'T') ? 10 : (sections.forYou === 'U' || sections.forYou === 'Q') ? 12 : 0}
           onPastThreshold={onScrollPast}>
           {sections.forYou !== 'None' && (
             <>
