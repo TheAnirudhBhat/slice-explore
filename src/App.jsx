@@ -4397,15 +4397,21 @@ import ReactDOM from 'react-dom';
             <div style={{ padding: '16px 16px 14px' }}>
               <BillsShortcutGrid columnGap={20} />
             </div>
-            {/* Segmented divider — each segment lights up for the active bill */}
-            <div style={{ display: 'flex', gap: 2, padding: '0 16px' }}>
-              {items.map((_, i) => (
-                <div key={i} style={{
-                  flex: 1, height: 1.5, borderRadius: 1,
-                  background: i === billIdx ? 'rgba(0,0,0,0.12)' : 'rgba(0,0,0,0.03)',
-                  transition: 'background 250ms ease',
-                }} />
-              ))}
+            {/* Gradient divider — a soft glow slides to the active segment */}
+            <div style={{ padding: '0 16px' }}>
+              <div style={{
+                height: 1.5, borderRadius: 1,
+                background: (() => {
+                  const pct = (billIdx / (items.length - 1)) * 100;
+                  return `linear-gradient(90deg,
+                    rgba(0,0,0,0.02) 0%,
+                    rgba(0,0,0,0.02) ${Math.max(0, pct - 20)}%,
+                    rgba(0,0,0,0.12) ${pct}%,
+                    rgba(0,0,0,0.02) ${Math.min(100, pct + 20)}%,
+                    rgba(0,0,0,0.02) 100%)`;
+                })(),
+                transition: 'background 300ms ease',
+              }} />
             </div>
             <div ref={scrollRef} className="scrollbar-hide" style={{
               display: 'flex', overflowX: 'auto',
