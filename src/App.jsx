@@ -76,7 +76,8 @@ import ReactDOM from 'react-dom';
       return (
         <div className="app-bar-l0" style={{
           position: 'absolute', top: 0, left: 0, right: 0, zIndex: 30,
-          paddingTop: 46, height: 46 + 64,
+          /* 50px on desktop (phone shell), 46px on real mobile via media query below */
+          paddingTop: 'var(--appbar-top, 50px)', height: 'calc(var(--appbar-top, 50px) + 64px)',
           paddingLeft: 24, paddingRight: 20,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           background: 'transparent',
@@ -98,7 +99,7 @@ import ReactDOM from 'react-dom';
             transition: 'color 50ms linear',
           }}>Explore</h1>
           <div style={{ width: 56, height: 56, display: 'grid', placeItems: 'center', position: 'relative', zIndex: 1 }}>
-            <img src="/assets/avatar_only.png" width={52} height={52} alt=""
+            <img src="/assets/avatar_only.png" width={46} height={46} alt=""
               style={{ display: 'block' }} />
           </div>
         </div>
