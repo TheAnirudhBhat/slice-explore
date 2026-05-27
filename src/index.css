@@ -6,9 +6,13 @@
       color-scheme: light;
       --appbar-top: 54px;
     }
-    /* Real mobile (standalone webapp) — tighter app bar */
+    /* Real mobile (standalone webapp) — app bar sits right below status bar */
     @media (max-width: 430px) {
-      :root { --appbar-top: 46px; }
+      :root { --appbar-top: 44px; }
+    }
+    /* iOS standalone webapp — use safe area for status bar height */
+    @media (display-mode: standalone) {
+      :root { --appbar-top: env(safe-area-inset-top, 44px); }
     }
 
     /* Physics-based mascot + star. Mascot has a heavy, grounded sway
