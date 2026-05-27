@@ -76,7 +76,7 @@ import ReactDOM from 'react-dom';
       return (
         <div className="app-bar-l0" style={{
           position: 'absolute', top: 0, left: 0, right: 0, zIndex: 30,
-          paddingTop: 54, height: 54 + 64,
+          paddingTop: 52, height: 52 + 64,
           paddingLeft: 24, paddingRight: 20,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           background: 'transparent',
