@@ -4418,7 +4418,7 @@ import ReactDOM from 'react-dom';
             <div ref={scrollRef} className="scrollbar-hide" style={{
               display: 'flex', overflowX: 'auto',
               scrollSnapType: 'x mandatory',
-              overscrollBehavior: 'none', marginTop: 4,
+              overscrollBehavior: 'none', marginTop: 8,
             }}>
               {items.map((it, i) => (
                 <div key={i} style={{
