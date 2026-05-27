@@ -880,12 +880,13 @@ import ReactDOM from 'react-dom';
         { size: 24, right: 26, bottom: 26, delay: 150 },
         { size: 20, right: 14, bottom: 54, delay: 200 },
       ];
+      /* Converge at bottom-right, fan out toward top-left (biased left) */
       const BUBBLES_LEFT = [
-        { size: 32, right: 0,  bottom: 0,  delay: 0 },
-        { size: 24, right: 28, bottom: 6,  delay: 50 },
-        { size: 20, right: 10, bottom: 30, delay: 100 },
-        { size: 24, right: 50, bottom: 2,  delay: 150 },
-        { size: 20, right: 70, bottom: 8,  delay: 200 },
+        { size: 28, right: 0,  bottom: 0,  delay: 0 },
+        { size: 24, right: 24, bottom: 4,  delay: 50 },
+        { size: 22, right: 46, bottom: 2,  delay: 100 },
+        { size: 20, right: 34, bottom: 22, delay: 150 },
+        { size: 18, right: 64, bottom: 12, delay: 200 },
       ];
       const BUBBLES = fanLeft ? BUBBLES_LEFT : BUBBLES_UP;
       const SPARK_ROTATE_MS = 600;
@@ -5572,14 +5573,13 @@ import ReactDOM from 'react-dom';
       </PagePad>
     );
 
-    const MoniesSection = ({ variant }) => {
-      const C = { A: MN_A, B: MN_B, C: MN_C, D: MN_D }[variant] || MN_A;
-      return <C />;
-    };
+    const MoniesSection = () => <MN_A />;
 
     const RW_X = () => (
       <div>
         <RW_X_ScrollStrip />
+        <Spacer h={20} />
+        <MN_A />
       </div>
     );
     const RW_X2 = () => RW_X();
@@ -6010,12 +6010,16 @@ import ReactDOM from 'react-dom';
         return () => { clearTimeout(delay); if (intervalId) clearInterval(intervalId); };
       }, [stripVisible, stripInView]);
       return (
-        <PagePad>
-          <div ref={stripRef} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <RW_Y_Card type="fire" sharedCycle={sharedCycle} visible={stripVisible} />
-            <RW_Y_Card type="spark" sharedCycle={sharedCycle} visible={stripVisible} />
-          </div>
-        </PagePad>
+        <div>
+          <PagePad>
+            <div ref={stripRef} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <RW_Y_Card type="fire" sharedCycle={sharedCycle} visible={stripVisible} />
+              <RW_Y_Card type="spark" sharedCycle={sharedCycle} visible={stripVisible} />
+            </div>
+          </PagePad>
+          <Spacer h={20} />
+          <MN_A />
+        </div>
       );
     };
 
@@ -7034,13 +7038,6 @@ import ReactDOM from 'react-dom';
               headerStyle={(sections.rewards === 'S' || sections.rewards === 'V') ? 'None' : headerStyle}>
               <RewardsSection variant={sections.rewards} isInCard={isInCard} headerStyle={headerStyle} />
             </SectionWrap>
-            {sections.monies !== 'None' && (
-              <>
-                <Spacer h={20} />
-                <SectionAnchor id="monies" />
-                <MoniesSection variant={sections.monies} />
-              </>
-            )}
           </SectionBlock>
           <SectionAnchor id="stats" />
           <SectionBlock id="stats" active={isActive('stats')}>
@@ -7279,15 +7276,6 @@ import ReactDOM from 'react-dom';
         },
         archived: {
           A: 'Grid',
-        },
-      },
-      {
-        key: 'monies', label: 'Monies', variants: {
-          A: 'Label + amount + tag',
-          B: 'Heading + subtitle + amount',
-          C: 'Heading + subtitle + amount + chevron',
-          D: 'Valentino gradient strip',
-          None: 'X',
         },
       },
       {
