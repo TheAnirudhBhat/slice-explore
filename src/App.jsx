@@ -5923,12 +5923,15 @@ import ReactDOM from 'react-dom';
           {/* Spark: brand bubbles */}
           {!isFire && (
             <div style={{
-              position: 'absolute', right: 14, bottom: 16,
+              position: 'absolute', right: 10, bottom: 14,
               pointerEvents: 'none',
               opacity: showAlt ? 1 : 0,
               transition: showAlt ? `opacity 0.4s ${EASE} 0.2s` : `opacity 0.2s ${EASE}`,
+              /* Wider container biases bubbles leftward */
+              transform: 'scaleX(1.3) scaleY(0.85)',
+              transformOrigin: 'right bottom',
             }}>
-              <SparkBubbleCloud animate={showAlt} width={72} height={72} iconSize={0} startDelayMs={0} />
+              <SparkBubbleCloud animate={showAlt} width={80} height={64} iconSize={0} startDelayMs={0} />
             </div>
           )}
           {/* Text ticker */}
