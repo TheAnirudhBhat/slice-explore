@@ -7339,7 +7339,7 @@ import ReactDOM from 'react-dom';
       V1: {
         label: 'Exploration',
         headerStyle: 'List',
-        sections: { forYou: 'U', aiBanker: 'None', bills: 'W', rewards: 'Y', monies: 'A', stats: 'N', more: 'A', footer: 'A' },
+        sections: { forYou: 'U', aiBanker: 'None', bills: 'W', rewards: 'Y', monies: 'A', stats: 'N', more: 'A', footer: 'None' },
       },
     };
 
