@@ -92,12 +92,13 @@ import ReactDOM from 'react-dom';
             transition: 'opacity 50ms linear',
           }} />
           <h1 style={{
-            ...T.h2, position: 'relative', zIndex: 1,
+            ...T.h2, fontSize: 28, lineHeight: '34px',
+            position: 'relative', zIndex: 1, marginTop: -2,
             color: titleColor,
             transition: 'color 50ms linear',
           }}>Explore</h1>
           <div style={{ width: 56, height: 56, display: 'grid', placeItems: 'center', position: 'relative', zIndex: 1 }}>
-            <img src="/assets/avatar_only.png" width={48} height={48} alt=""
+            <img src="/assets/avatar_only.png" width={52} height={52} alt=""
               style={{ display: 'block' }} />
           </div>
         </div>
@@ -3432,7 +3433,7 @@ import ReactDOM from 'react-dom';
       const t = progress - Math.floor(progress);
       return (
         <PagePad>
-          <div style={{ paddingTop: 12 }}>
+          <div style={{ paddingTop: 16 }}>
             <div style={{
               position: 'relative', overflow: 'hidden',
               borderRadius: cardStyle.radius || 16,
