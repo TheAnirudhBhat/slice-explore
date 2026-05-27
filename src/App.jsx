@@ -947,7 +947,7 @@ import ReactDOM from 'react-dom';
       <button className="tap bg-white relative overflow-hidden"
         style={{
           boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16,
-          width: '100%', height: 148, padding: 16,
+          width: '100%', height: 148, padding: '24px 16px 16px 20px',
           display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
           textAlign: 'left'
         }}>
@@ -3422,7 +3422,7 @@ import ReactDOM from 'react-dom';
       const t = progress - Math.floor(progress);
       return (
         <PagePad>
-          <div style={{ paddingTop: 8 }}>
+          <div style={{ paddingTop: 12 }}>
             <div style={{
               position: 'relative', overflow: 'hidden',
               borderRadius: cardStyle.radius || 16,
@@ -5927,11 +5927,11 @@ import ReactDOM from 'react-dom';
               pointerEvents: 'none',
               opacity: showAlt ? 1 : 0,
               transition: showAlt ? `opacity 0.4s ${EASE} 0.2s` : `opacity 0.2s ${EASE}`,
-              /* Wider container biases bubbles leftward */
-              transform: 'scaleX(1.3) scaleY(0.85)',
+              /* Rotated 90° so the bubble cluster fans left instead of up */
+              transform: 'rotate(-90deg)',
               transformOrigin: 'right bottom',
             }}>
-              <SparkBubbleCloud animate={showAlt} width={80} height={64} iconSize={0} startDelayMs={0} />
+              <SparkBubbleCloud animate={showAlt} width={72} height={72} iconSize={0} startDelayMs={0} />
             </div>
           )}
           {/* Text ticker */}
@@ -6995,7 +6995,7 @@ import ReactDOM from 'react-dom';
                 else if (sections.forYou === 'L') h = 24;
                 else if (sections.forYou === 'F' || sections.forYou === 'P') h = 0;
                 else if (sections.forYou === 'N') h = 16;
-                else if (sections.forYou === 'Q' || sections.forYou === 'U' || sections.forYou === 'T') h = 36;
+                else if (sections.forYou === 'Q' || sections.forYou === 'U' || sections.forYou === 'T') h = 44;
                 else if (isGradientFY) h = 32;
                 return (
                   <>
