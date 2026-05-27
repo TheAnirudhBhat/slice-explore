@@ -6741,7 +6741,9 @@ import ReactDOM from 'react-dom';
        caption subtext + H4 title + 52×52 icon pinned bottom-right. */
     const MR_A = () => (
       <PagePad>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <ExploreMedium subtext="Insurance · 1 plan active" title="Premium due 12 Jul"
+            icon={<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#2B6ACF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3 4 6v6c0 5 3.5 8.5 8 9 4.5-.5 8-4 8-9V6l-8-3z" /></svg>} />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
           <ExploreMedium subtext="Autopay" title="3 active"
             icon={
               <div style={{ display: 'flex', flexDirection: 'row' }}>
@@ -6756,10 +6758,6 @@ import ReactDOM from 'react-dom';
             } />
           <ExploreMedium subtext="Credit score" title="778"
             icon={<img src="/assets/credit_score_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
-        </div>
-        <div style={{ marginTop: 16 }}>
-          <ExploreMedium subtext="Insurance · 1 plan active" title="Premium due 12 Jul"
-            icon={<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#2B6ACF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3 4 6v6c0 5 3.5 8.5 8 9 4.5-.5 8-4 8-9V6l-8-3z" /></svg>} />
         </div>
       </PagePad>
     );
