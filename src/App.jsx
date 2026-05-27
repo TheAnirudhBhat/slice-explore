@@ -384,7 +384,7 @@ import ReactDOM from 'react-dom';
           fontSize: 10, fontFamily: 'Rubik', fontWeight: 500,
           lineHeight: '12px', letterSpacing: '0.2px',
           color: '#00A63E', background: '#E0F4E8',
-          borderRadius: 100, padding: '2px 8px',
+          borderRadius: 100, padding: '2px 8px', marginRight: 2,
         }}>{tag}</span>}
         {cta && (
           /* Chevron-only affordance — quieter than a "View all" label
