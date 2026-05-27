@@ -374,12 +374,18 @@ import ReactDOM from 'react-dom';
         }}>{cta}</button>}
       </div>
     );
-    const SectionHeaderList = ({ title, cta }) => (
+    const SectionHeaderList = ({ title, cta, tag }) => (
       <div style={{
         paddingLeft: 28, paddingRight: 24, lineHeight: '12px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <span style={T.meta}>{title}</span>
+        {tag && <span style={{
+          fontSize: 8, fontFamily: 'Rubik', fontWeight: 500,
+          lineHeight: '10px', letterSpacing: '0.3px',
+          color: '#00A63E', background: '#E0F4E8',
+          borderRadius: 4, padding: '2px 5px',
+        }}>{tag}</span>}
         {cta && (
           /* Chevron-only affordance — quieter than a "View all" label
              at this metadata-sized header. The whole title row already
@@ -403,7 +409,7 @@ import ReactDOM from 'react-dom';
        Header bottom padding = 16 → 16 between header and section content.
        'None' (In-card): title is handled by the section component itself (injected via inCardTitle prop),
        so SectionWrap just renders the spacer + children. */
-    const SectionWrap = ({ title, cta, headerStyle, isFirst, children }) => {
+    const SectionWrap = ({ title, cta, tag, headerStyle, isFirst, children }) => {
       const { gapNone, gapHeaderAbove, gapHeaderBelow } = useSpacing();
       if (headerStyle === 'None') {
         return <>{!isFirst && <Spacer h={gapNone} label="section" />}{children}</>;
@@ -412,7 +418,7 @@ import ReactDOM from 'react-dom';
         return (
           <>
             {!isFirst && <Spacer h={gapHeaderAbove} label="section" />}
-            <SectionHeaderList title={title} cta={cta} />
+            <SectionHeaderList title={title} cta={cta} tag={tag} />
             <Spacer h={gapHeaderBelow} label="header→content" />
             {children}
           </>
@@ -4391,7 +4397,20 @@ import ReactDOM from 'react-dom';
             <div style={{ padding: '16px 16px 14px' }}>
               <BillsShortcutGrid columnGap={20} />
             </div>
-            <div style={{ height: 1, background: 'rgba(0,0,0,0.04)', marginLeft: 16, marginRight: 16 }} />
+            {/* Progress bar replaces the divider — more subtle */}
+            <div style={{ padding: '0 16px' }}>
+              <div style={{
+                height: 1.5, borderRadius: 1, background: 'rgba(0,0,0,0.03)',
+                overflow: 'hidden',
+              }}>
+                <div style={{
+                  height: '100%', borderRadius: 1,
+                  background: 'rgba(0,0,0,0.1)',
+                  width: `${((billIdx + 1) / items.length) * 100}%`,
+                  transition: 'width 250ms ease',
+                }} />
+              </div>
+            </div>
             <div ref={scrollRef} className="scrollbar-hide" style={{
               display: 'flex', overflowX: 'auto',
               scrollSnapType: 'x mandatory',
@@ -4414,27 +4433,14 @@ import ReactDOM from 'react-dom';
                 </div>
               ))}
             </div>
-            {/* Thin progress bar */}
-            <div style={{ padding: '4px 16px 10px' }}>
-              <div style={{
-                height: 2, borderRadius: 1, background: 'rgba(0,0,0,0.04)',
-                overflow: 'hidden',
-              }}>
-                <div style={{
-                  height: '100%', borderRadius: 1,
-                  background: 'rgba(0,0,0,0.15)',
-                  width: `${((billIdx + 1) / items.length) * 100}%`,
-                  transition: 'width 200ms ease',
-                }} />
-              </div>
-            </div>
+            <div style={{ height: 4 }} />
           </div>
         </PagePad>
       );
     };
 
     const BillsSection = ({ variant, isInCard }) => {
-      const C = { A: BL_A, B: BL_B, C: BL_C, D: BL_D, E: BL_E, F: BL_F, J: BL_J, K: BL_K, L: BL_L, M: BL_M, N: BL_N, P: BL_P, Q: BL_Q, R: BL_R, S: BL_S, T: BL_T, U: BL_U, V: BL_V, W: BL_W }[variant];
+      const C = { A: BL_A, B: BL_B, C: BL_C, D: BL_D, E: BL_E, F: BL_F, J: BL_J, K: BL_K, L: BL_L, M: BL_M, N: BL_N, P: BL_P, R: BL_R, S: BL_S, T: BL_T, U: BL_U, W: BL_W }[variant];
       return <C isInCard={isInCard} />;
     };
 
@@ -6812,6 +6818,7 @@ import ReactDOM from 'react-dom';
               const hideBillsHeader = sections.forYou === 'None' && headerStyle === 'List';
               const billsHeaderStyle = hideBillsHeader ? 'None' : headerStyle;
               const billsCta = sections.bills === 'L' ? 'View all' : undefined;
+              const billsTag = (sections.bills === 'U' || sections.bills === 'W') ? '0% FEE' : undefined;
               if (sections.forYou === 'J' && sections.aiBanker === 'None' && sections.bills === 'J') {
                 /* FY=J + AB=None + bills=J combo: render BL_J flush against
                    the carousel with NO section header and NO inter-section
@@ -6831,7 +6838,7 @@ import ReactDOM from 'react-dom';
                 return (
                   <>
                     <Spacer h={h} />
-                    <SectionWrap title="Bills & Recharges" cta={billsCta} headerStyle={billsHeaderStyle} isFirst>
+                    <SectionWrap title="Bills & Recharges" cta={billsCta} tag={billsTag} headerStyle={billsHeaderStyle} isFirst>
                       <BillsSection variant={sections.bills} isInCard={isInCard} />
                       {headerStyle === 'Bold' && <Spacer h={8} />}
                       {headerStyle === 'List' && !hideBillsHeader && <Spacer h={4} />}
@@ -6840,7 +6847,7 @@ import ReactDOM from 'react-dom';
                 );
               }
               return (
-                <SectionWrap title="Bills & Recharges" cta={billsCta} headerStyle={billsHeaderStyle}>
+                <SectionWrap title="Bills & Recharges" cta={billsCta} tag={billsTag} headerStyle={billsHeaderStyle}>
                   <BillsSection variant={sections.bills} isInCard={isInCard} />
                   {headerStyle === 'Bold' && <Spacer h={8} />}
                   {headerStyle === 'List' && !hideBillsHeader && <Spacer h={4} />}
@@ -7101,10 +7108,9 @@ import ReactDOM from 'react-dom';
           C: 'Grid (outline avatars)', B: 'Grid in card',
           K: 'Card stack · shuffle', L: 'Card stack · view all',
           J: 'Floating card (overlap)', N: 'Grid + stack below',
-          Q: 'Grid + rich stack',
           S: 'Grid + minimal stack', T: 'Grid in card + stack',
           U: 'Card · no pagination',
-          V: 'Card · right counter', W: 'Card · progress bar',
+          W: 'Card · progress bar',
         },
         archived: {
           A: 'Grid',
