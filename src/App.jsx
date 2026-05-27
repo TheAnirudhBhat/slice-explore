@@ -846,6 +846,7 @@ import ReactDOM from 'react-dom';
       iconSize = 52,
       startDelayMs = 500,
       animate = false,
+      fanLeft = false,
     }) => {
       const rootRef = React.useRef(null);
       const [play, setPlay] = React.useState(!animate);
@@ -872,13 +873,21 @@ import ReactDOM from 'react-dom';
          B0/B1/B2 (the "5" dot of the die); B4 (20, smallest) sits cleanly
          upper-right, separated from the rest. Sizes 20-32, all bubbles
          well clear of the text block at card_x ≤ 76. */
-      const BUBBLES = [
+      const BUBBLES_UP = [
         { size: 32, right: 0,  bottom: 0,  delay: 0 },
         { size: 24, right: 36, bottom: 4,  delay: 50 },
         { size: 24, right: 4,  bottom: 36, delay: 100 },
         { size: 24, right: 26, bottom: 26, delay: 150 },
         { size: 20, right: 14, bottom: 54, delay: 200 },
       ];
+      const BUBBLES_LEFT = [
+        { size: 32, right: 0,  bottom: 0,  delay: 0 },
+        { size: 24, right: 32, bottom: 10, delay: 50 },
+        { size: 24, right: 56, bottom: 0,  delay: 100 },
+        { size: 24, right: 44, bottom: 26, delay: 150 },
+        { size: 20, right: 76, bottom: 14, delay: 200 },
+      ];
+      const BUBBLES = fanLeft ? BUBBLES_LEFT : BUBBLES_UP;
       const SPARK_ROTATE_MS = 600;
       const BLOB_MS = 700;
       return (
@@ -947,7 +956,7 @@ import ReactDOM from 'react-dom';
       <button className="tap bg-white relative overflow-hidden"
         style={{
           boxShadow: CARD_SHADOW, border: CARD_BORDER, borderRadius: 16,
-          width: '100%', height: 148, padding: '24px 16px 16px 20px',
+          width: '100%', height: 148, padding: '20px 16px 16px 20px',
           display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
           textAlign: 'left'
         }}>
@@ -5920,18 +5929,15 @@ import ReactDOM from 'react-dom';
               }} />
             </>
           )}
-          {/* Spark: brand bubbles */}
+          {/* Spark: brand bubbles — fan left in Y variant */}
           {!isFire && (
             <div style={{
               position: 'absolute', right: 10, bottom: 14,
               pointerEvents: 'none',
               opacity: showAlt ? 1 : 0,
               transition: showAlt ? `opacity 0.4s ${EASE} 0.2s` : `opacity 0.2s ${EASE}`,
-              /* Rotated 90° so the bubble cluster fans left instead of up */
-              transform: 'rotate(-90deg)',
-              transformOrigin: 'right bottom',
             }}>
-              <SparkBubbleCloud animate={showAlt} width={72} height={72} iconSize={0} startDelayMs={0} />
+              <SparkBubbleCloud animate={showAlt} width={96} height={48} iconSize={0} startDelayMs={0} fanLeft />
             </div>
           )}
           {/* Text ticker */}
@@ -6995,7 +7001,7 @@ import ReactDOM from 'react-dom';
                 else if (sections.forYou === 'L') h = 24;
                 else if (sections.forYou === 'F' || sections.forYou === 'P') h = 0;
                 else if (sections.forYou === 'N') h = 16;
-                else if (sections.forYou === 'Q' || sections.forYou === 'U' || sections.forYou === 'T') h = 44;
+                else if (sections.forYou === 'Q' || sections.forYou === 'U' || sections.forYou === 'T') h = 32;
                 else if (isGradientFY) h = 32;
                 return (
                   <>
@@ -7068,10 +7074,7 @@ import ReactDOM from 'react-dom';
             <>
               <SectionAnchor id="footer" />
               <SectionBlock id="footer" active={isActive('footer')}>
-                {/* Explicit 16px pre-section gap. Lets Invite & earn
-                   sit closer to the previous section than the default
-                   in-card rhythm (24). */}
-                <Spacer h={16} />
+                <Spacer h={24} />
                 <SectionWrap title="" headerStyle="None" isFirst>
                   <FooterSection variant={sections.footer} />
                 </SectionWrap>
