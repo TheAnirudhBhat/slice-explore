@@ -6742,7 +6742,7 @@ import ReactDOM from 'react-dom';
     const MR_A = () => (
       <PagePad>
         <ExploreMedium subtext="Insurance · 1 plan active" title="Premium due 12 Jul"
-            icon={<img src="/assets/insurance_icon.png" width={52} height={52} alt="" style={{ display: 'block' }} />} />
+            icon={<img src="/assets/insurance_icon.png" width={60} height={60} alt="" style={{ display: 'block' }} />} />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
           <ExploreMedium subtext="Autopay" title="3 active"
             icon={
