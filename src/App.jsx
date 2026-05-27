@@ -4274,7 +4274,7 @@ import ReactDOM from 'react-dom';
             borderRadius: 16, overflow: 'hidden',
           }}>
             {/* Grid icons — matches BL_B style */}
-            <div style={{ padding: '16px 16px 14px' }}>
+            <div style={{ padding: '24px 16px 14px' }}>
               <BillsShortcutGrid columnGap={20} />
             </div>
             {/* Divider */}
@@ -4332,7 +4332,7 @@ import ReactDOM from 'react-dom';
             background: '#FFFFFF', boxShadow: CARD_SHADOW, border: CARD_BORDER,
             borderRadius: 16, overflow: 'hidden',
           }}>
-            <div style={{ padding: '16px 16px 14px' }}>
+            <div style={{ padding: '24px 16px 14px' }}>
               <BillsShortcutGrid columnGap={20} />
             </div>
             <div style={{ height: 1, background: 'rgba(0,0,0,0.04)', marginLeft: 16, marginRight: 16 }} />
@@ -4394,7 +4394,7 @@ import ReactDOM from 'react-dom';
             background: '#FFFFFF', boxShadow: CARD_SHADOW, border: CARD_BORDER,
             borderRadius: 16, overflow: 'hidden',
           }}>
-            <div style={{ padding: '16px 16px 14px' }}>
+            <div style={{ padding: '24px 16px 14px' }}>
               <BillsShortcutGrid columnGap={20} />
             </div>
             {/* Sliding glow divider — tracks scroll position smoothly */}
@@ -5893,13 +5893,11 @@ import ReactDOM from 'react-dom';
           {/* State 1 — gradient */}
           <div style={{
             position: 'absolute', inset: 0,
-            background: isFire
-              ? 'linear-gradient(160deg, #1A0040 0%, #3B0D7A 40%, #6B1FB8 100%)'
-              : undefined,
-            backgroundImage: !isFire ? 'url(/assets/spark_bg_gradient.png)' : undefined,
-            backgroundSize: 'cover', backgroundPosition: 'center',
+            ...(isFire
+              ? { background: 'linear-gradient(160deg, #1A0040 0%, #3B0D7A 40%, #6B1FB8 100%)' }
+              : { backgroundImage: 'url(/assets/spark_bg_gradient.png)', backgroundSize: 'cover', backgroundPosition: 'center' }),
             opacity: showAlt ? 1 : 0,
-            transition: isFire ? `opacity ${T_MS} ${EASE}` : (showAlt ? `opacity 0.3s ${EASE}` : `opacity 0.4s ${EASE} 0.1s`),
+            transition: `opacity ${T_MS} ${EASE}`,
           }} />
           {/* Fire: avatar */}
           {isFire && (
@@ -5935,7 +5933,7 @@ import ReactDOM from 'react-dom';
           )}
           {/* Text ticker */}
           <div style={{
-            position: 'absolute', left: 16, top: 16, right: 16, zIndex: 1,
+            position: 'absolute', left: 20, top: 20, right: 20, zIndex: 1,
             height: CAP_H, overflow: 'hidden', ...maskStyle,
           }}>
             <div style={{
@@ -5948,7 +5946,7 @@ import ReactDOM from 'react-dom';
             </div>
           </div>
           <div style={{
-            position: 'absolute', left: 16, top: 36, right: 16, zIndex: 1,
+            position: 'absolute', left: 20, top: 40, right: 20, zIndex: 1,
             height: HEAD_H, overflow: 'hidden', ...maskStyle,
           }}>
             <div style={{
