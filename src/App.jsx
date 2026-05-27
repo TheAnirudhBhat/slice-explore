@@ -4397,21 +4397,26 @@ import ReactDOM from 'react-dom';
             <div style={{ padding: '16px 16px 14px' }}>
               <BillsShortcutGrid columnGap={20} />
             </div>
-            {/* Gradient divider — a soft glow slides to the active segment */}
-            <div style={{ padding: '0 16px' }}>
+            {/* Sliding glow divider — a highlight slides smoothly via transform */}
+            <div style={{ padding: '0 16px', position: 'relative', height: 1.5 }}>
+              {/* Base track */}
               <div style={{
-                height: 1.5, borderRadius: 1,
-                background: (() => {
-                  const pct = (billIdx / (items.length - 1)) * 100;
-                  return `linear-gradient(90deg,
-                    rgba(0,0,0,0.02) 0%,
-                    rgba(0,0,0,0.02) ${Math.max(0, pct - 20)}%,
-                    rgba(0,0,0,0.12) ${pct}%,
-                    rgba(0,0,0,0.02) ${Math.min(100, pct + 20)}%,
-                    rgba(0,0,0,0.02) 100%)`;
-                })(),
-                transition: 'background 300ms ease',
+                position: 'absolute', inset: 0,
+                borderRadius: 1, background: 'rgba(0,0,0,0.03)',
               }} />
+              {/* Sliding highlight — positioned via translateX, width = 1/N of track */}
+              <div style={{
+                position: 'absolute', top: 0, bottom: 0,
+                width: `${100 / items.length}%`,
+                transform: `translateX(${billIdx * 100}%)`,
+                transition: 'transform 300ms cubic-bezier(0.25, 0.1, 0.25, 1)',
+              }}>
+                <div style={{
+                  width: '100%', height: '100%',
+                  background: 'radial-gradient(ellipse 100% 100% at center, rgba(0,0,0,0.14) 0%, rgba(0,0,0,0.02) 80%, transparent 100%)',
+                  borderRadius: 1,
+                }} />
+              </div>
             </div>
             <div ref={scrollRef} className="scrollbar-hide" style={{
               display: 'flex', overflowX: 'auto',
