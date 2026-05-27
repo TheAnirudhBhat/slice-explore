@@ -383,7 +383,7 @@ import ReactDOM from 'react-dom';
         {tag && <span style={{
           fontSize: 10, fontFamily: 'Rubik', fontWeight: 500,
           lineHeight: '12px', letterSpacing: '0.2px',
-          color: '#00A63E', background: '#E0F4E8',
+          color: '#2B6ACF', background: '#E6EDF9',
           borderRadius: 100, padding: '2px 8px', marginRight: 2,
         }}>{tag}</span>}
         {cta && (
@@ -880,13 +880,13 @@ import ReactDOM from 'react-dom';
         { size: 24, right: 26, bottom: 26, delay: 150 },
         { size: 20, right: 14, bottom: 54, delay: 200 },
       ];
-      /* Converge at bottom-right, fan out toward top-left (biased left) */
+      /* Tight cluster bottom-right, slight fan out — NOT a line */
       const BUBBLES_LEFT = [
-        { size: 28, right: 0,  bottom: 0,  delay: 0 },
-        { size: 24, right: 24, bottom: 4,  delay: 50 },
-        { size: 22, right: 46, bottom: 2,  delay: 100 },
-        { size: 20, right: 34, bottom: 22, delay: 150 },
-        { size: 18, right: 64, bottom: 12, delay: 200 },
+        { size: 30, right: 0,  bottom: 0,  delay: 0 },
+        { size: 24, right: 26, bottom: 4,  delay: 50 },
+        { size: 22, right: 10, bottom: 22, delay: 100 },
+        { size: 26, right: 36, bottom: 20, delay: 150 },
+        { size: 20, right: 56, bottom: 4,  delay: 200 },
       ];
       const BUBBLES = fanLeft ? BUBBLES_LEFT : BUBBLES_UP;
       const SPARK_ROTATE_MS = 600;
@@ -4283,8 +4283,8 @@ import ReactDOM from 'react-dom';
             background: '#FFFFFF', boxShadow: CARD_SHADOW, border: CARD_BORDER,
             borderRadius: 16, overflow: 'hidden',
           }}>
-            {/* Grid icons — matches BL_B style */}
-            <div style={{ padding: '24px 16px 14px' }}>
+            {/* Grid icons — matches BL_W style */}
+            <div style={{ padding: '22px 16px 14px' }}>
               <BillsShortcutGrid columnGap={20} />
             </div>
             {/* Divider */}
@@ -4404,7 +4404,7 @@ import ReactDOM from 'react-dom';
             background: '#FFFFFF', boxShadow: CARD_SHADOW, border: CARD_BORDER,
             borderRadius: 16, overflow: 'hidden',
           }}>
-            <div style={{ padding: '24px 16px 14px' }}>
+            <div style={{ padding: '22px 16px 14px' }}>
               <BillsShortcutGrid columnGap={20} />
             </div>
             {/* Sliding glow divider — tracks scroll position smoothly */}
@@ -4428,7 +4428,7 @@ import ReactDOM from 'react-dom';
             <div ref={scrollRef} className="scrollbar-hide" style={{
               display: 'flex', overflowX: 'auto',
               scrollSnapType: 'x mandatory',
-              overscrollBehavior: 'none', marginTop: 12,
+              overscrollBehavior: 'none', marginTop: 8,
             }}>
               {items.map((it, i) => (
                 <div key={i} style={{
@@ -5932,7 +5932,7 @@ import ReactDOM from 'react-dom';
           {/* Spark: brand bubbles — fan left in Y variant */}
           {!isFire && (
             <div style={{
-              position: 'absolute', right: 16, bottom: 20,
+              position: 'absolute', right: 16, bottom: 16,
               pointerEvents: 'none',
               opacity: showAlt ? 1 : 0,
               transition: showAlt ? `opacity 0.4s ${EASE} 0.2s` : `opacity 0.2s ${EASE}`,
@@ -6890,7 +6890,7 @@ import ReactDOM from 'react-dom';
     const ExplorePage = ({ sections, headerStyle, activeSection, separateMore, autoScroll, onScrollPast }) => {
       const isInCard = headerStyle === 'None';
       const isActive = (k) => activeSection === k;
-      const isGradientFY = sections.forYou === 'D' || sections.forYou === 'E' || sections.forYou === 'F' || sections.forYou === 'J' || sections.forYou === 'L' || sections.forYou === 'M' || sections.forYou === 'N' || sections.forYou === 'O' || sections.forYou === 'P';
+      const isGradientFY = sections.forYou === 'D' || sections.forYou === 'E' || sections.forYou === 'F' || sections.forYou === 'J' || sections.forYou === 'L' || sections.forYou === 'M' || sections.forYou === 'N' || sections.forYou === 'O' || sections.forYou === 'P' || sections.forYou === 'T';
       /* I, K (card-stack engine + glass material) and H (single hero
          card) all finish flush against the next section, so downstream
          spacers need the same 28px gap before Bills. */
@@ -6930,7 +6930,7 @@ import ReactDOM from 'react-dom';
           )
         : React.Fragment;
       return (
-        <ScreenShell transparentAppBar={isGradientFY} darkBg={sections.forYou === 'L' || sections.forYou === 'F' || sections.forYou === 'N'}
+        <ScreenShell transparentAppBar={isGradientFY || sections.forYou === 'U' || sections.forYou === 'Q'} darkBg={sections.forYou === 'L' || sections.forYou === 'F' || sections.forYou === 'N'}
           /* App-bar fill + status-bar colour flip kick in when the
              kiosk's rounded TOP edge reaches the app-bar bottom
              (viewport Y=118). At scrollTop=0 the kiosk top sits at
@@ -6938,7 +6938,7 @@ import ReactDOM from 'react-dom';
              So the threshold is 300 − 118 = 182. (Earlier 64 was a
              flow/viewport-coord mix-up that fired the flip way too
              early.) */
-          scrollThreshold={sections.forYou === 'L' ? 182 : (sections.forYou === 'N' || sections.forYou === 'F') ? 120 : 0}
+          scrollThreshold={sections.forYou === 'L' ? 182 : (sections.forYou === 'N' || sections.forYou === 'F') ? 120 : (sections.forYou === 'T') ? 10 : (sections.forYou === 'U' || sections.forYou === 'Q') ? 60 : 0}
           onPastThreshold={onScrollPast}>
           {sections.forYou !== 'None' && (
             <>
@@ -7005,7 +7005,8 @@ import ReactDOM from 'react-dom';
                 else if (sections.forYou === 'L') h = 24;
                 else if (sections.forYou === 'F' || sections.forYou === 'P') h = 0;
                 else if (sections.forYou === 'N') h = 16;
-                else if (sections.forYou === 'Q' || sections.forYou === 'U' || sections.forYou === 'T') h = 32;
+                else if (sections.forYou === 'T') h = 24;
+                else if (sections.forYou === 'Q' || sections.forYou === 'U') h = 32;
                 else if (isGradientFY) h = 32;
                 return (
                   <>
@@ -7242,7 +7243,7 @@ import ReactDOM from 'react-dom';
     const SECTION_META = [
       {
         key: 'forYou', label: 'For You', variants: {
-          H: 'Single card', B: 'Horizontal strip',
+          B: 'Horizontal strip',
           F: 'Centered carousel', N: 'Centered carousel · short',
           P: 'D layout · F bg + fade', T: 'White hero centered',
           L: 'Image hero carousel', Q: 'Image hero · card',
