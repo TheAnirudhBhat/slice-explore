@@ -381,10 +381,10 @@ import ReactDOM from 'react-dom';
       }}>
         <span style={T.meta}>{title}</span>
         {tag && <span style={{
-          fontSize: 8, fontFamily: 'Rubik', fontWeight: 500,
-          lineHeight: '10px', letterSpacing: '0.3px',
+          fontSize: 10, fontFamily: 'Rubik', fontWeight: 500,
+          lineHeight: '12px', letterSpacing: '0.2px',
           color: '#00A63E', background: '#E0F4E8',
-          borderRadius: 4, padding: '2px 5px',
+          borderRadius: 100, padding: '2px 8px',
         }}>{tag}</span>}
         {cta && (
           /* Chevron-only affordance — quieter than a "View all" label
