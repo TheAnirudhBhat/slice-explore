@@ -6995,7 +6995,7 @@ import ReactDOM from 'react-dom';
                 else if (sections.forYou === 'L') h = 24;
                 else if (sections.forYou === 'F' || sections.forYou === 'P') h = 0;
                 else if (sections.forYou === 'N') h = 16;
-                else if (sections.forYou === 'Q' || sections.forYou === 'U' || sections.forYou === 'T') h = 28;
+                else if (sections.forYou === 'Q' || sections.forYou === 'U' || sections.forYou === 'T') h = 36;
                 else if (isGradientFY) h = 32;
                 return (
                   <>
@@ -7348,7 +7348,7 @@ import ReactDOM from 'react-dom';
       V1: {
         label: 'Exploration',
         headerStyle: 'List',
-        sections: { forYou: 'U', aiBanker: 'None', bills: 'S', rewards: 'X', monies: 'A', stats: 'N', more: 'A', footer: 'None' },
+        sections: { forYou: 'U', aiBanker: 'None', bills: 'W', rewards: 'X', monies: 'A', stats: 'N', more: 'A', footer: 'None' },
       },
     };
 
