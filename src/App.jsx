@@ -4397,19 +4397,15 @@ import ReactDOM from 'react-dom';
             <div style={{ padding: '16px 16px 14px' }}>
               <BillsShortcutGrid columnGap={20} />
             </div>
-            {/* Progress bar replaces the divider — more subtle */}
-            <div style={{ padding: '0 16px' }}>
-              <div style={{
-                height: 1.5, borderRadius: 1, background: 'rgba(0,0,0,0.03)',
-                overflow: 'hidden',
-              }}>
-                <div style={{
-                  height: '100%', borderRadius: 1,
-                  background: 'rgba(0,0,0,0.1)',
-                  width: `${((billIdx + 1) / items.length) * 100}%`,
-                  transition: 'width 250ms ease',
+            {/* Segmented divider — each segment lights up for the active bill */}
+            <div style={{ display: 'flex', gap: 2, padding: '0 16px' }}>
+              {items.map((_, i) => (
+                <div key={i} style={{
+                  flex: 1, height: 1.5, borderRadius: 1,
+                  background: i === billIdx ? 'rgba(0,0,0,0.12)' : 'rgba(0,0,0,0.03)',
+                  transition: 'background 250ms ease',
                 }} />
-              </div>
+              ))}
             </div>
             <div ref={scrollRef} className="scrollbar-hide" style={{
               display: 'flex', overflowX: 'auto',
