@@ -2129,10 +2129,10 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
       return { abs, signed };
     };
 
-    /* Fade-to-white runway used at the bottom of the FY_F hero — longer
-       eased stops so the deck artwork tapers into the white below the
-       paginator instead of cutting hard. */
-    const FY_F_FADE_OVERLAY = 'linear-gradient(to bottom, rgba(255,255,255,0) 50%, rgba(255,255,255,0.15) 64%, rgba(255,255,255,0.5) 78%, rgba(255,255,255,0.9) 89%, #FFFFFF 93%, #FFFFFF 100%)';
+    /* Bottom fade runway for FY_F/FY_N heroes is themed in explore.css
+       (.fy-hero-fade--f / --n) so it tapers the deck artwork into the PAGE BG —
+       white in light, #090B0C in dark. A hardcoded white fade painted a bright
+       slab over the near-black page in dark mode (same bug class as FY_P). */
 
     const FY_F = () => {
       const PAD_TOP_CSS = 'calc(var(--bar-overlap, 118px) + 4px)';
@@ -2160,9 +2160,8 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
                 pointerEvents: 'none', willChange: 'opacity',
               }} />
             ))}
-            <div aria-hidden style={{
+            <div aria-hidden className="fy-hero-fade--f" style={{
               position: 'absolute', inset: 0, zIndex: 1,
-              background: FY_F_FADE_OVERLAY,
               pointerEvents: 'none',
             }} />
             <div ref={ref} style={{
@@ -2241,9 +2240,8 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
                 pointerEvents: 'none', willChange: 'opacity',
               }} />
             ))}
-            <div aria-hidden style={{
+            <div aria-hidden className="fy-hero-fade--n" style={{
               position: 'absolute', inset: 0, zIndex: 1,
-              background: 'linear-gradient(to bottom, rgba(255,255,255,0) 65%, rgba(255,255,255,0.3) 80%, rgba(255,255,255,0.7) 90%, #FFFFFF 96%, #FFFFFF 100%)',
               pointerEvents: 'none',
             }} />
             <div ref={ref} style={{

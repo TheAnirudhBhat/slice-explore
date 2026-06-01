@@ -43,6 +43,24 @@
     .mn-reward-pill { color: #D30AD7; background: #FAE2FA; }
     [data-theme="dark"] .mn-reward-pill { color: #DE45E1; background: rgba(211, 10, 215, 0.20); }
 
+    /* FY_F / FY_N image-hero carousels fade their bottom edge into the PAGE BG so
+       the deck artwork tapers below the paginator instead of cutting hard. Themed:
+       white in light, near-black #090B0C in dark — a hardcoded white fade painted a
+       bright slab over the dark page in dark mode (same bug class as the FY_P mesh).
+       Stop positions differ (FY_N is the shorter hero). (user, 2026-06-02) */
+    .fy-hero-fade--f {
+      background: linear-gradient(to bottom, rgba(255,255,255,0) 50%, rgba(255,255,255,0.15) 64%, rgba(255,255,255,0.5) 78%, rgba(255,255,255,0.9) 89%, #FFFFFF 93%, #FFFFFF 100%);
+    }
+    .fy-hero-fade--n {
+      background: linear-gradient(to bottom, rgba(255,255,255,0) 65%, rgba(255,255,255,0.3) 80%, rgba(255,255,255,0.7) 90%, #FFFFFF 96%, #FFFFFF 100%);
+    }
+    [data-theme="dark"] .fy-hero-fade--f {
+      background: linear-gradient(to bottom, rgba(9,11,12,0) 50%, rgba(9,11,12,0.15) 64%, rgba(9,11,12,0.5) 78%, rgba(9,11,12,0.9) 89%, #090B0C 93%, #090B0C 100%);
+    }
+    [data-theme="dark"] .fy-hero-fade--n {
+      background: linear-gradient(to bottom, rgba(9,11,12,0) 65%, rgba(9,11,12,0.3) 80%, rgba(9,11,12,0.7) 90%, #090B0C 96%, #090B0C 100%);
+    }
+
     /* Horizontal carousels (rewards strip, bills carousel, For-You hero decks)
        carry .no-page-swipe. touch-action: pan-x = the element owns HORIZONTAL
        gestures (scroll the carousel) but hands VERTICAL up to the page scroller
