@@ -16,7 +16,7 @@
 //     the row animates to that target with a spring.
 
 import React, { useEffect, useRef } from 'react';
-import { motion, useMotionValue, animate, useMotionValueEvent } from 'framer-motion';
+import { motion, useMotionValue, animate, useMotionValueEvent, useDragControls } from 'framer-motion';
 
 const SPRING = { type: 'spring', stiffness: 320, damping: 32, mass: 0.85 };
 
@@ -37,6 +37,11 @@ export default function Pager({
   // Without this, comparing against `activeIndex` (committed) means going BACK
   // to the original pod after passing midpoint wouldn't re-fire onIndexChange.
   const lastEmittedRef = useRef(activeIndex);
+  // Manual drag start: framer's auto pointerdown listener would catch a drag
+  // that begins on a horizontal carousel (.no-page-swipe) and slide the whole
+  // pod — touch-action gates that for touch but NOT for mouse/pointer drag. With
+  // dragListener:false we start the drag ourselves, skipping carousels.
+  const dragControls = useDragControls();
 
   // External activeIndex change → snap INSTANTLY to target (R23 fix-it-2-cont-16:
   // user direction — "when scroll the bottom bar and leave the page should
@@ -78,9 +83,18 @@ export default function Pager({
   return (
     <motion.div
       drag="x"
+      dragListener={false}
+      dragControls={dragControls}
       dragConstraints={{ left: minX, right: maxX }}
       dragElastic={0.08}
       dragMomentum={false}
+      onPointerDown={(e) => {
+        // Don't start a pod swipe if the press began on a horizontal carousel —
+        // let the carousel scroll instead (fixes "the whole page moves first"
+        // when scrolling the rewards/bills strips). Empty page area still swipes.
+        if (e.target.closest && e.target.closest('.no-page-swipe')) return;
+        dragControls.start(e);
+      }}
       style={{
         x,
         display: 'flex',
