@@ -902,20 +902,9 @@
         height: calc(max(64px, calc(env(safe-area-inset-top, 0px) + 12px)) + 64px) !important;
       }
 
-      /* Mobile: the active nav button has a downward drop-shadow
-         (0 6px 20px). With the nav pinned at bottom:0 the shadow was clipped by
-         the screen's bottom edge. Add 20px (+ home-indicator safe area) of page-bg
-         breathing room below the gesture pill so the buttons sit higher and the
-         shadow renders fully. Page-coloured (white light / near-black dark), not a
-         white strip. (user, 2026-06-01) */
-      /* The fake home-indicator gesture band is REMOVED on mobile (BottomNav.css —
-         the OS draws its own). Its bottom clearance moves here onto the nav content
-         so the buttons still clear the OS home indicator and the active button's
-         drop-shadow isn't clipped at the screen edge. (user: "remove gesture band
-         from mobile view", 2026-06-02) */
-      .slice-bnav-content {
-        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px) !important;
-      }
+      /* Nav bottom clearance on mobile (gesture band removed; OS draws its own
+         home indicator) is owned by BottomNav.css's .slice-bnav-content rule —
+         single source of truth, so the spacing isn't tuned in two places. */
 
       .screen-scroll {
         /* 180 (was 120): +60px footer breathing room below the last section

@@ -357,11 +357,12 @@
 
 /* On real mobile / installed PWA the OS draws its own home indicator, so REMOVE the
    proto's fake gesture band entirely (user: "remove from mobile view", 2026-06-02).
-   The nav's bottom clearance moves onto .slice-bnav-content so the buttons still sit
-   above the OS indicator and the active button's drop-shadow isn't clipped. */
+   Bottom clearance = ONLY the OS safe-area inset (the .slice-bnav-slot already carries
+   16px below each circle for the active-button shadow). Adding +16 on top of that read
+   as too much empty space at the bottom (user, 2026-06-02). */
 @media (max-width: 600px), (display-mode: standalone) {
   .slice-bnav-gesture { display: none; }
-  .slice-bnav-content { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); }
+  .slice-bnav-content { padding-bottom: env(safe-area-inset-bottom, 0px); }
 }
 
 /* Tap feedback */
