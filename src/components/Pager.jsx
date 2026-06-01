@@ -89,11 +89,30 @@ export default function Pager({
       dragElastic={0.08}
       dragMomentum={false}
       onPointerDown={(e) => {
-        // Don't start a pod swipe if the press began on a horizontal carousel —
-        // let the carousel scroll instead (fixes "the whole page moves first"
-        // when scrolling the rewards/bills strips). Empty page area still swipes.
+        // Start a pod swipe ONLY on a deliberate HORIZONTAL gesture that did not
+        // begin on a horizontal carousel. Starting framer's drag on EVERY
+        // pointerdown armed an x-drag during vertical scrolls, so the pod
+        // "wiggled" and scrolling felt mushy. Wait ~6px, decide the axis, and
+        // start the drag only if it's horizontal (carousels scroll themselves).
         if (e.target.closest && e.target.closest('.no-page-swipe')) return;
-        dragControls.start(e);
+        const sx = e.clientX, sy = e.clientY;
+        let done = false;
+        const onMove = (ev) => {
+          if (done) return;
+          const dx = ev.clientX - sx, dy = ev.clientY - sy;
+          if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+          done = true;
+          cleanup();
+          if (Math.abs(dx) > Math.abs(dy)) dragControls.start(ev);
+        };
+        const cleanup = () => {
+          window.removeEventListener('pointermove', onMove);
+          window.removeEventListener('pointerup', cleanup);
+          window.removeEventListener('pointercancel', cleanup);
+        };
+        window.addEventListener('pointermove', onMove, { passive: true });
+        window.addEventListener('pointerup', cleanup);
+        window.addEventListener('pointercancel', cleanup);
       }}
       style={{
         x,

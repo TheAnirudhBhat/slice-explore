@@ -24,7 +24,18 @@
     /* FY_P mesh blobs are white-base pastels; on the dark base they render as
        bright, loud circles. Dim the whole mesh layer in dark mode so they read
        as a soft circle-fade glow on near-black, not garish blobs. (user, 2026-06-01) */
-    [data-theme="dark"] .fy-p-mesh { opacity: 0.3; }
+    /* FY_P dark mode: the light per-slide pastels read muddy/washed on near-black
+       at any opacity. Replace the mesh with a soft Valentino glow (V-500 halo +
+       V-400 core) emanating from the top onto #090B0C — premium, on-brand, with
+       the L/R edges + bottom staying pure dark so it blends into the page. The
+       inline background is per-slide pastel, so override needs !important. */
+    [data-theme="dark"] .fy-p-mesh {
+      opacity: 1;
+      background:
+        radial-gradient(ellipse 72% 55% at 50% -8%, rgba(211, 10, 215, 0.30) 0%, rgba(211, 10, 215, 0) 70%),
+        radial-gradient(ellipse 44% 40% at 50% 4%, rgba(222, 69, 225, 0.24) 0%, rgba(222, 69, 225, 0) 66%),
+        #090B0C !important;
+    }
 
     /* MN_A "1% reward rate" pill — themed. Light: V-500 on V-50 pink. Dark: a
        lighter V-400 glyph on a translucent V-500 wash (the flat #FAE2FA pink read

@@ -308,6 +308,9 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             paddingTop: 'var(--bar-overlap, 118px)',
             paddingBottom: 200,
             overflowY: 'auto',
+            // contain the vertical scroll so it doesn't chain/bounce into the pager
+            // or page behind (kills the "wiggle / over-scroll" the user reported).
+            overscrollBehavior: 'contain',
             // pan-y: browser owns vertical scroll here, but a HORIZONTAL swipe is
             // handed up to the page Pager's framer drag — without this the Explore
             // scroll container swallowed left/right swipes so you couldn't change
