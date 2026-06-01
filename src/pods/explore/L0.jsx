@@ -8138,7 +8138,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
       // (AppBase.jsx). A bleed pod cancels this exactly (negative margin) so the
       // hero still reaches y=0 after the reserve grew for safe-area breathing room.
       const statusReserve = isMobile
-        ? 'max(64px, calc(env(safe-area-inset-top, 0px) + 12px))'
+        ? 'max(88px, calc(env(safe-area-inset-top, 0px) + 28px))'
         : '54px';
 
       return (

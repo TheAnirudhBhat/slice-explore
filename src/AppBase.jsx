@@ -473,15 +473,16 @@ export default function App({ extraL1 = {}, exploreExtraCards = [], initialPod =
                       <div
                         style={{
                           // Desktop/web: flat 54px to match the MotionStatusBar
-                          // overlay. Mobile (incl. iOS standalone PWA): a 64px floor
-                          // PLUS env+12 breathing room — a flat 54 (or bare env, which
-                          // can under-resolve to 0) let the app bar sit UNDER the
-                          // Dynamic Island. The 64 floor clears the island even when
-                          // env=0; env+12 adds a gap below a real (≥59px) inset.
-                          // MUST stay in lockstep with the explore-pod bleed pull
-                          // (explore/L0.jsx) so bleed heroes still reach y=0.
+                          // overlay. Mobile (incl. iOS standalone PWA): an 88px floor
+                          // PLUS env+28. On the installed PWA env(safe-area-inset-top)
+                          // measured as ~0 (it does NOT resolve reliably there), so the
+                          // FIXED FLOOR carries the gap: 88 − ~59px Dynamic Island ≈ a
+                          // 29px gap below the status bar, matching the canonical airy
+                          // header spacing. env+28 only takes over if a device reports a
+                          // larger inset. MUST stay in lockstep with the explore-pod
+                          // bleed pull (explore/L0.jsx) so bleed heroes still reach y=0.
                           height: isMobile
-                            ? 'max(64px, calc(env(safe-area-inset-top, 0px) + 12px))'
+                            ? 'max(88px, calc(env(safe-area-inset-top, 0px) + 28px))'
                             : '54px',
                           flexShrink: 0,
                           background: reserveBg,
