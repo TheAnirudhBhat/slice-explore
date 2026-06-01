@@ -2298,8 +2298,8 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
         radial-gradient(ellipse 100% 70% at 8% 6%, ${s[0]} 0%, transparent 85%),
         radial-gradient(ellipse 100% 70% at 95% 10%, ${s[1]} 0%, transparent 85%),
         radial-gradient(ellipse 110% 60% at 50% 22%, ${s[2]} 0%, transparent 90%),
-        linear-gradient(to bottom, transparent 55%, rgba(255,255,255,0.5) 78%, #FFFFFF 92%),
-        #FFFFFF
+        linear-gradient(to bottom, transparent 55%, var(--fy-p-fade-mid) 78%, var(--fy-p-base) 92%),
+        var(--fy-p-base)
       `;
       const N = FY_SLIDES_NO_BILLS.length;
       const [ref, idx, progress] = useInfiniteCarousel(N);
@@ -2342,10 +2342,10 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
                       minHeight: MIN_H, boxSizing: 'border-box', zIndex: 1,
                     }}>
                       <div>
-                        {/* FIXED light mesh bg (slideBg) does not theme —
-                           keep title/sub FIXED dark so they stay legible in dark mode. */}
-                        <div style={{ ...T.h4, lineHeight: '20px', color: 'rgba(0,0,0,0.9)' }}>{s.title}</div>
-                        <div style={{ ...T.caption, color: 'rgba(0,0,0,0.7)', marginTop: 4 }}>{s.sub}</div>
+                        {/* Mesh bg + text theme via --fy-p-* and text tokens so the
+                           hero fades to the page bg (dark in dark mode), not white. */}
+                        <div style={{ ...T.h4, lineHeight: '20px', color: 'var(--text-primary)' }}>{s.title}</div>
+                        <div style={{ ...T.caption, color: 'var(--text-secondary)', marginTop: 4 }}>{s.sub}</div>
                       </div>
                       <button className="tap" style={{
                         alignSelf: 'flex-start', marginTop: 8,
@@ -7100,7 +7100,10 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             <div style={{
               position: 'relative', zIndex: 2,
               marginTop: -28,
-              background: 'var(--surface)',
+              /* page-bg (not --surface): --surface is translucent in dark mode, so
+                 the FY_L hero bled through the kiosk sheet. page-bg is opaque in
+                 both themes — identical white in light. (user, 2026-06-01) */
+              background: 'var(--page-bg)',
               borderTopLeftRadius: 28,
               borderTopRightRadius: 28,
               /* Tighter top inset — was 28, felt like a big dead zone

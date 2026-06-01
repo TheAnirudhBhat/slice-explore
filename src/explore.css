@@ -10,8 +10,17 @@
          or they read as "see-through". Light = white; dark = the flattened
          equivalent of the 5%-white card over #090B0C. */
       --surface-solid: #FFFFFF;
+      /* FY_P mesh hero base + mid fade stop. Themed so the carousel fades to the
+         page bg (white light / near-black dark) instead of a hardcoded white band
+         that read as a bright slab in dark mode (user, 2026-06-01). */
+      --fy-p-base: #FFFFFF;
+      --fy-p-fade-mid: rgba(255, 255, 255, 0.5);
     }
-    [data-theme="dark"] { --surface-solid: #151718; }
+    [data-theme="dark"] {
+      --surface-solid: #151718;
+      --fy-p-base: #090B0C;
+      --fy-p-fade-mid: rgba(9, 11, 12, 0.5);
+    }
     /* Real mobile (standalone webapp) — app bar sits right below status bar */
     @media (max-width: 430px) {
       :root { --appbar-top: 44px; }
@@ -33,6 +42,8 @@
       --page-bg: #FFFFFF;
       --surface: #FFFFFF;
       --surface-solid: #FFFFFF;
+      --fy-p-base: #FFFFFF;
+      --fy-p-fade-mid: rgba(255, 255, 255, 0.5);
       --brand-bg: #D30AD7;
       --text-primary: rgba(0, 0, 0, 0.9);
       --text-secondary: rgba(0, 0, 0, 0.7);
@@ -831,6 +842,16 @@
       .explore-pod-root[data-bleed] .app-bar-l0 {
         padding-top: 54px !important;
         height: calc(54px + 64px) !important;
+      }
+
+      /* Mobile: the active nav button has a downward drop-shadow
+         (0 6px 20px). With the nav pinned at bottom:0 the shadow was clipped by
+         the screen's bottom edge. Add 20px (+ home-indicator safe area) of page-bg
+         breathing room below the gesture pill so the buttons sit higher and the
+         shadow renders fully. Page-coloured (white light / near-black dark), not a
+         white strip. (user, 2026-06-01) */
+      .slice-bnav-gesture {
+        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px) !important;
       }
 
       .screen-scroll {
