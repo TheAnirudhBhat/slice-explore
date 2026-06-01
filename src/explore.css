@@ -867,8 +867,8 @@
            the 54px status reserve); iOS standalone PWA uses the real notch inset
            so the title clears the Dynamic Island instead of slipping under it.
            Plain 54 left the title under the notch in the installed webapp. */
-        padding-top: max(env(safe-area-inset-top, 0px), 54px) !important;
-        height: calc(max(env(safe-area-inset-top, 0px), 54px) + 64px) !important;
+        padding-top: max(calc(env(safe-area-inset-top, 0px) + 8px), 54px) !important;
+        height: calc(max(calc(env(safe-area-inset-top, 0px) + 8px), 54px) + 64px) !important;
       }
 
       /* Mobile: the active nav button has a downward drop-shadow

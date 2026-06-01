@@ -8173,7 +8173,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
                 />}
 
             {/* Cards fade into the page bg just above the inherited floating nav. */}
-            <BottomFade color="var(--page-bg)" height={240} bottom={0} />
+            <BottomFade color="var(--page-bg)" height={200} bottom={0} />
 
             {stageEl && createPortal(
               isMobile ? (
