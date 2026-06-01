@@ -820,13 +820,17 @@
         display: none !important;
       }
 
-      /* BLEED variants only: app bar respects the device safe-area so its title
-         clears the notch over the pulled-up hero. Non-bleed pods rely on the
-         skill's 54px reserve + --appbar-top:0 (set on the pod root) → a plain
-         64px DLS bar, matching Banking. */
+      /* BLEED variants only: the pod root is pulled up a hardcoded -54px so the
+         hero bleeds under the status reserve. The app bar (absolute top:0 inside
+         the pulled-up pod) must add exactly that 54px back as padding-top so the
+         "Explore" title lands at the reserve's bottom edge — NOT env(safe-area),
+         which is 0 in a normal mobile browser and dropped the title behind the
+         opaque 54px reserve (app bar vanished). 54px is exact for both browser
+         (reserve=54, pod top=0 → title@54) and PWA (reserve=safe-area, pod
+         top=safe-area-54 → title@safe-area). Non-bleed pods use --appbar-top:0. */
       .explore-pod-root[data-bleed] .app-bar-l0 {
-        padding-top: env(safe-area-inset-top, 0px) !important;
-        height: calc(env(safe-area-inset-top, 0px) + 64px) !important;
+        padding-top: 54px !important;
+        height: calc(54px + 64px) !important;
       }
 
       .screen-scroll {

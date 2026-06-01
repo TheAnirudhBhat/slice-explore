@@ -7507,7 +7507,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
       V1: {
         label: 'V1',
         headerStyle: 'List',
-        sections: { forYou: 'None', aiBanker: 'None', bills: 'W', rewards: 'Y', monies: 'E', stats: 'N', more: 'A', footer: 'None' },
+        sections: { forYou: 'None', aiBanker: 'None', bills: 'W', rewards: 'X', monies: 'E', stats: 'N', more: 'A', footer: 'None' },
       },
       V2: {
         label: 'V2',
