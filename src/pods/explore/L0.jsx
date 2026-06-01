@@ -7606,31 +7606,38 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
         : (matchesPreset('V1', headerStyle, sections) ? 'V1' : null);
       return (
         <div className="debug-panel">
-          {/* Panel header — single DLS H3, no subtext. */}
-          <div style={{ marginBottom: 20 }}>
+          {/* Panel header. */}
+          <div style={{ marginBottom: 24 }}>
             <div style={{ ...T.h3 }}>Page composition</div>
           </div>
 
-          {/* PRESET + HEADER STYLE — compact row of two segmented
-              controls side by side. Smaller meta labels, tighter
-              seg-pick chassis. Frees vertical room for the section
-              blocks below. */}
-          <div style={{
-            display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12,
-            marginBottom: 20,
-          }}>
-            <div>
-              <div style={{ ...T.meta, marginBottom: 6 }}>Preset</div>
-              <div className="seg-pick">
-                {['V0', 'V1'].map(k => (
-                  <button key={k}
-                    className={'seg-btn' + (activePreset === k ? ' active' : '')}
-                    onClick={() => onPresetApply(k)}>{PRESETS[k].label}</button>
-                ))}
-              </div>
+          {/* PRESET — full-width segmented control under a clear heading. */}
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ ...T.h4, marginBottom: 10 }}>Preset</div>
+            <div className="seg-pick">
+              {['V0', 'V1'].map(k => (
+                <button key={k}
+                  className={'seg-btn' + (activePreset === k ? ' active' : '')}
+                  onClick={() => onPresetApply(k)}>{PRESETS[k].label}</button>
+              ))}
             </div>
-            <div>
-              <div style={{ ...T.meta, marginBottom: 6 }}>Header style</div>
+          </div>
+
+          <PanelDivider mt={4} mb={24} />
+
+          {/* SECTION VARIANTS — collapsible group (open by default). Header style
+              + every section-variant picker live in here. Header toggles open. */}
+          <button className="collapse-head" onClick={() => setSectionsOpen(o => !o)} aria-expanded={sectionsOpen}>
+            <span style={{ ...T.h4 }}>Section variants</span>
+            <svg className={'collapse-chev' + (sectionsOpen ? ' open' : '')} width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          {sectionsOpen && (
+          <div style={{ marginTop: 18 }}>
+            {/* Header style — moved inside Section variants per user direction. */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ ...T.btnSm, color: 'var(--text-secondary)', marginBottom: 8 }}>Header style</div>
               <div className="seg-pick">
                 {HEADER_STYLES.map(s => (
                   <button key={s}
@@ -7639,20 +7646,6 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
                 ))}
               </div>
             </div>
-          </div>
-
-          <PanelDivider mt={4} mb={20} />
-
-          {/* SECTION VARIANTS — collapsible group (open by default). All
-              variant changes happen from inside here. Header toggles open. */}
-          <button className="collapse-head" onClick={() => setSectionsOpen(o => !o)} aria-expanded={sectionsOpen}>
-            <span style={{ ...T.meta }}>Section variants</span>
-            <svg className={'collapse-chev' + (sectionsOpen ? ' open' : '')} width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-          {sectionsOpen && (
-          <div style={{ marginTop: 4 }}>
             {SECTION_META.map((s, idx) => {
               const currentVariantKey = sections[s.key];
               /* Conditional variants:
@@ -7711,11 +7704,11 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
           </div>
           )}
 
-          <PanelDivider mt={28} mb={16} />
+          <PanelDivider mt={28} mb={24} />
 
           {/* OPTIONS — page-level toggles as apply/disable pills + the dark-mode
               toggle (replaces the old switch rows). */}
-          <div style={{ ...T.meta, marginBottom: 12 }}>Options</div>
+          <div style={{ ...T.h4, marginBottom: 14 }}>Options</div>
           <div className="layout-pills">
             <LayoutPill label="Separate More" active={separateMore} onClick={onSeparateMoreToggle} />
             <LayoutPill label="Insurance card" active={showInsurance} onClick={onShowInsuranceToggle} />
@@ -7743,6 +7736,8 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
               ))}
             </div>
           )}
+          {/* Bottom breathing room below the last control. */}
+          <div style={{ height: 24 }} />
         </div>
       );
     };
