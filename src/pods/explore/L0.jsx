@@ -82,7 +82,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
           position: 'absolute', top: 0, left: 0, right: 0, zIndex: 30,
           /* 50px on desktop (phone shell), 46px on real mobile via media query below */
           paddingTop: 'var(--appbar-top, 50px)', height: 'calc(var(--appbar-top, 50px) + 64px)',
-          paddingLeft: 24, paddingRight: 20,
+          paddingLeft: 24, paddingRight: 16,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           background: 'transparent',
           boxShadow: scrolled ? '0 6px 8px 0 rgba(0,0,0,0.05)' : '0 6px 8px 0 rgba(0,0,0,0)',
@@ -4341,13 +4341,10 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             width: '100%', background: 'transparent', border: 'none', padding: 0,
             display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', textAlign: 'left',
           }}>
-            <BillAvatar size={40}>
-              <img src="/assets/bill_due.svg" width={24} height={24} alt=""
-                style={{ display: 'block' }} />
-            </BillAvatar>
+            <BillAvatar size={40}><CreditCardIcon size={24} /></BillAvatar>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ ...T.btnSm, color: 'var(--text-primary)' }}>4 bills due</div>
-              <div style={{ ...T.caption, marginTop: 2 }}>₹8,159 total this week</div>
+              <div style={{ ...T.btnSm, color: 'var(--text-primary)' }}>Credit card xx87</div>
+              <div style={{ ...T.caption, marginTop: 2 }}>₹4,256 due in 3 days</div>
             </div>
             <Chevron color="var(--text-tertiary)" />
           </button>
@@ -6105,6 +6102,9 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             <div style={{
               position: 'absolute', right: 16, bottom: 16,
               pointerEvents: 'none',
+              // Scale the brand-bubble cluster up in RW_Y (anchored to the
+              // bottom-right corner so it grows up-left, staying in the card).
+              transform: 'scale(1.4)', transformOrigin: 'bottom right',
               opacity: showAlt ? 1 : 0,
               transition: showAlt ? `opacity 0.4s ${EASE} 0.2s` : `opacity 0.2s ${EASE}`,
             }}>
@@ -7512,7 +7512,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
       V1: {
         label: 'V1',
         headerStyle: 'List',
-        sections: { forYou: 'U', aiBanker: 'None', bills: 'W', rewards: 'Y', monies: 'E', stats: 'N', more: 'A', footer: 'None' },
+        sections: { forYou: 'None', aiBanker: 'None', bills: 'W', rewards: 'Y', monies: 'E', stats: 'N', more: 'A', footer: 'None' },
       },
       V2: {
         label: 'V2',
