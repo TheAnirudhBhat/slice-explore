@@ -25,6 +25,12 @@
        bright, loud circles. Dim the whole mesh layer in dark mode so they read
        as a soft circle-fade glow on near-black, not garish blobs. (user, 2026-06-01) */
     [data-theme="dark"] .fy-p-mesh { opacity: 0.5; }
+
+    /* MN_A "1% reward rate" pill — themed. Light: V-500 on V-50 pink. Dark: a
+       lighter V-400 glyph on a translucent V-500 wash (the flat #FAE2FA pink read
+       as a bright sticker on the dark card). (user, 2026-06-02) */
+    .mn-reward-pill { color: #D30AD7; background: #FAE2FA; }
+    [data-theme="dark"] .mn-reward-pill { color: #DE45E1; background: rgba(211, 10, 215, 0.20); }
     /* Real mobile (standalone webapp) — app bar sits right below status bar */
     @media (max-width: 430px) {
       :root { --appbar-top: 44px; }

@@ -338,7 +338,15 @@ export default function App({ extraL1 = {}, exploreExtraCards = [], initialPod =
   const activeIndex = PODS.indexOf(active);
   // In dark theme every pod surface is dark → force the "dark" status/nav variant
   // (light icons + white-alpha nav medallions) across all slots.
+  const [exploreDarkTop, setExploreDarkTop] = useState(false);
   const pagesMeta = theme === 'dark' ? PODS.map((p) => ({ pod: p, variant: 'dark' })) : PAGES_META;
+  // Status-bar-only variant: Explore reports when a DARK bleed hero (F/N/L) fills
+  // the top, so the time/icons go white over it. The NAV keeps pagesMeta (it sits
+  // at the BOTTOM over the white page body, not the hero), so this override is used
+  // ONLY by MotionStatusBar — flipping pagesMeta would wrongly re-style the nav too.
+  const statusPagesMeta = theme === 'dark'
+    ? pagesMeta
+    : PODS.map((p) => ({ pod: p, variant: (p === 'explore' && exploreDarkTop) ? 'dark' : STATUS_VARIANT[p] }));
   const fitScale = useFitScale(PHONE_OUTER_WIDTH, PHONE_OUTER_HEIGHT);
   // Full-bleed device mode (phone viewport / installed PWA): scale the 402×874
   // SCREEN to COVER the viewport (no bezel, no white stage) so the proto runs
@@ -478,7 +486,7 @@ export default function App({ extraL1 = {}, exploreExtraCards = [], initialPod =
                       <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
                         <PodPage
                           onScrollChange={(s) => handlePodScroll(pod, s)}
-                          {...(pod === 'explore' ? { extraCards: exploreExtraCards } : {})}
+                          {...(pod === 'explore' ? { extraCards: exploreExtraCards, onDarkTopChange: setExploreDarkTop } : {})}
                         />
                       </div>
                     </div>
@@ -493,7 +501,7 @@ export default function App({ extraL1 = {}, exploreExtraCards = [], initialPod =
             {!isMobile && (
               <MotionStatusBar
                 pagerX={pagerX}
-                pages={pagesMeta}
+                pages={statusPagesMeta}
                 pageWidth={PHONE_WIDTH}
                 forceVariant={theme === 'dark' ? 'dark' : l1Open ? 'light' : null}
               />

@@ -4440,7 +4440,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             background: 'var(--surface)', boxShadow: CARD_SHADOW, border: CARD_BORDER,
             borderRadius: 16, overflow: 'hidden',
           }}>
-            <div style={{ padding: '22px 24px 14px' }}>
+            <div style={{ padding: '24px 24px 14px' }}>
               <BillsShortcutGrid columnGap={20} />
             </div>
             {/* Sliding glow divider — tracks scroll position smoothly */}
@@ -5519,9 +5519,8 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
               <MoniesGlyph size={14} /> 66,522
             </div>
           </div>
-          <span style={{
-            ...T.caption, fontWeight: 500, color: '#D30AD7',
-            background: '#FAE2FA', borderRadius: 100,
+          <span className="mn-reward-pill" style={{
+            ...T.caption, fontWeight: 500, borderRadius: 100,
             padding: '3px 10px',
           }}>1% reward rate</span>
         </button>
@@ -7043,7 +7042,8 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
     const OriginalExplore = () => (
       <ScreenShell>
         <PagePad>
-          <div style={{ height: 16 }} />
+          {/* 8px app-bar→first-card gap to match Banking L0 (was 16). */}
+          <div style={{ height: 8 }} />
           <BillsCompositeCard />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 16 }}>
             <ExploreMedium subtext="Play & win" title="5 fires"
@@ -7934,7 +7934,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
       );
     };
 
-    function ExploreL0({ onScrollChange }) {
+    function ExploreL0({ onScrollChange, onDarkTopChange }) {
       const [showSplash, setShowSplash] = useState(true);
       const [useOriginal, setUseOriginal] = useState(false);
       /* Page swiper — Savings (0) | Explore (1, default) | Home (2).
@@ -7968,6 +7968,14 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
       /* Set to true when the FY_L hero has scrolled past the app bar.
          Drives the app bar opacity + status bar icon colour flip. */
       const [heroScrolledPast, setHeroScrolledPast] = useState(false);
+      /* Tell the shell when a DARK bleed hero (F/N/L) fills the top so the status
+         bar icons go white over it (and revert once scrolled past / on light
+         heroes like P/T). In dark theme the shell forces white anyway. */
+      React.useEffect(() => {
+        if (!onDarkTopChange) return;
+        const darkHero = ['F', 'N', 'L'].includes(sections.forYou);
+        onDarkTopChange(darkHero && !heroScrolledPast);
+      }, [sections.forYou, heroScrolledPast, onDarkTopChange]);
       /* Show archived variants in the editor drawer. Archived variants
          (e.g. FY_J, FY_C) are kept in the codebase but pulled out of the
          curated palette by default. Flip this on to surface them again. */
