@@ -73,10 +73,17 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
        `setScrolled` is preserved as a stable callback so existing
        call-sites still work; under the hood it just sets state. */
     const AppBarL0 = React.forwardRef(({ transparent, darkBg }, ref) => {
-      const [scrolled, setScrolled] = React.useState(false);
-      React.useImperativeHandle(ref, () => ({ setScrolled }), []);
-      const opaque = scrolled || !transparent;
-      const titleColor = (darkBg && !opaque) ? '#FFFFFF' : 'var(--text-primary)';
+      // Bar bg fades in CONTINUOUSLY with scroll (progress 0..1) for a smooth
+      // transition instead of a binary opacity flip + 200ms ease (which read as
+      // "transparent on first scroll, then a delayed jump"). setScrolled now takes
+      // the scroll progress number (bool still accepted for back-compat). Non-
+      // transparent variants stay fully opaque.
+      const [progress, setProgress] = React.useState(0);
+      React.useImperativeHandle(ref, () => ({
+        setScrolled: (p) => setProgress(typeof p === 'number' ? Math.max(0, Math.min(1, p)) : (p ? 1 : 0)),
+      }), []);
+      const bgOpacity = transparent ? progress : 1;
+      const titleColor = (darkBg && bgOpacity < 0.5) ? '#FFFFFF' : 'var(--text-primary)';
       return (
         <div className="app-bar-l0" style={{
           position: 'absolute', top: 0, left: 0, right: 0, zIndex: 30,
@@ -85,16 +92,14 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
           paddingLeft: 24, paddingRight: 16,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           background: 'transparent',
-          boxShadow: scrolled ? '0 6px 8px 0 rgba(0,0,0,0.05)' : '0 6px 8px 0 rgba(0,0,0,0)',
-          transition: 'box-shadow 200ms ease',
+          boxShadow: `0 6px 8px 0 rgba(0,0,0,${(0.05 * bgOpacity).toFixed(3)})`,
         }}>
           <div style={{
             position: 'absolute', inset: 0,
             background: 'var(--page-bg)',
-            opacity: opaque ? 1 : 0,
+            opacity: bgOpacity,
             pointerEvents: 'none', zIndex: 0,
             willChange: 'opacity',
-            transition: 'opacity 200ms ease',
           }} />
           <h1 style={{
             ...T.h2, fontSize: 26, lineHeight: '32px',
@@ -282,11 +287,16 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
     const ScreenShell = ({ children, transparentAppBar, darkBg, scrollThreshold = 0, onPastThreshold }) => {
       const barRef = React.useRef(null);
       const lastScrolled = React.useRef(false);
+      const FADE = 56; // px over which the app bar bg fades in — smooth, scroll-linked
       const onScroll = (e) => {
-        const past = e.currentTarget.scrollTop > scrollThreshold;
+        const top = e.currentTarget.scrollTop;
+        // Continuous progress: 0 at the threshold, 1 after FADE more px. The bar bg
+        // + shadow track this every frame, so it fades in smoothly from the first
+        // scrolled pixel instead of staying transparent then popping after a delay.
+        barRef.current && barRef.current.setScrolled(Math.max(0, Math.min(1, (top - scrollThreshold) / FADE)));
+        const past = top > scrollThreshold;
         if (past !== lastScrolled.current) {
           lastScrolled.current = past;
-          barRef.current && barRef.current.setScrolled(past);
           onPastThreshold && onPastThreshold(past);
         }
       };
@@ -2295,9 +2305,9 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
       const SLIDE_PCT = 100;
       const TEXT_BOTTOM = 42;
       const slideBg = (s) => `
-        radial-gradient(circle 150px at 50% 14%, ${s[0]} 0%, transparent 78%),
-        radial-gradient(circle 104px at 50% 12%, ${s[1]} 0%, transparent 80%),
-        radial-gradient(circle 64px at 50% 10%, ${s[2]} 0%, transparent 82%),
+        radial-gradient(ellipse 44% 28% at 50% 12%, ${s[0]} 0%, transparent 74%),
+        radial-gradient(ellipse 30% 22% at 50% 10%, ${s[1]} 0%, transparent 78%),
+        radial-gradient(ellipse 18% 15% at 50% 8%, ${s[2]} 0%, transparent 82%),
         linear-gradient(to bottom, transparent 55%, var(--fy-p-fade-mid) 78%, var(--fy-p-base) 92%),
         var(--fy-p-base)
       `;
@@ -6083,8 +6093,8 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
               }} />
               <img src="/assets/leaderboard_aman.png" alt="" style={{
                 position: 'absolute', right: 14, bottom: 14,
-                width: 56, height: 56, objectFit: 'contain',
-                borderRadius: 28, pointerEvents: 'none',
+                width: 62, height: 62, objectFit: 'contain',
+                borderRadius: 31, pointerEvents: 'none',
                 opacity: showAlt ? 1 : 0,
                 transform: `${fireRotation} scale(${showAlt ? 1 : 0.6})`,
                 transformOrigin: 'center center',
