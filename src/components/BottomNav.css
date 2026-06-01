@@ -362,6 +362,14 @@
    as too much empty space at the bottom (user, 2026-06-02). */
 @media (max-width: 600px), (display-mode: standalone) {
   .slice-bnav-gesture { display: none; }
+  /* Tight bottom gap on mobile (user: keep halving → ~8px). The leftover space was
+     the button row centering inside the 96px viewport (~20px under the active
+     button), so shorten the viewport and symmetrise the slot padding: the 64px
+     active button now sits ~8px above the screen bottom. Plus the OS safe-area
+     inset where it resolves (≈0 on this PWA). NOTE: at 8px the active button's
+     drop-shadow clips slightly at the screen edge — intended trade-off for tightness. */
+  .slice-bnav-viewport { height: 80px; }
+  .slice-bnav-slot { padding-bottom: 8px; }
   .slice-bnav-content { padding-bottom: env(safe-area-inset-bottom, 0px); }
 }
 

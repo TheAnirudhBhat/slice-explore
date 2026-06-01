@@ -403,6 +403,7 @@ export default function BankingL0({ onScrollChange }) {
           fontFamily: 'Rubik, sans-serif',
           overflowY: 'auto',
           overflowX: 'hidden',
+          overscrollBehaviorY: 'none', // no vertical rubber-band (user, 2026-06-02)
           // A scroll container must declare pan-y itself or it claims horizontal
           // touch gestures and the Pager swipe never fires (ancestor pan-y is NOT
           // enough). pan-y = vertical scroll stays, horizontal swipe → Pager. (cont-38)
