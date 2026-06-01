@@ -2311,7 +2311,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
       return (
         <>
           <div style={{ position: 'relative', marginTop: 'calc(-1 * var(--bar-overlap, 118px))', overflow: 'hidden' }}>
-            <div style={{
+            <div className="fy-p-mesh" style={{
               position: 'absolute', inset: 0, background: slideBg(scheme),
               pointerEvents: 'none', zIndex: 0,
             }} />

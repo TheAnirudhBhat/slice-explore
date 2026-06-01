@@ -21,6 +21,10 @@
       --fy-p-base: #090B0C;
       --fy-p-fade-mid: rgba(9, 11, 12, 0.5);
     }
+    /* FY_P mesh blobs are white-base pastels; on the dark base they render as
+       bright, loud circles. Dim the whole mesh layer in dark mode so they read
+       as a soft circle-fade glow on near-black, not garish blobs. (user, 2026-06-01) */
+    [data-theme="dark"] .fy-p-mesh { opacity: 0.5; }
     /* Real mobile (standalone webapp) — app bar sits right below status bar */
     @media (max-width: 430px) {
       :root { --appbar-top: 44px; }
@@ -855,7 +859,10 @@
       }
 
       .screen-scroll {
-        padding-bottom: calc(120px + var(--sheet-pad, 0px) + env(safe-area-inset-bottom, 0px)) !important;
+        /* 180 (was 120): +60px footer breathing room below the last section
+           (e.g. the More/insurance card) on mobile so it doesn't sit tight to
+           the bottom nav. (user, 2026-06-01) */
+        padding-bottom: calc(180px + var(--sheet-pad, 0px) + env(safe-area-inset-bottom, 0px)) !important;
       }
 
       /* Drawer covers the bottom ~50% of the viewport. When it's open we add
