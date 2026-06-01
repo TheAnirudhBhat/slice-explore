@@ -24,7 +24,7 @@
     /* FY_P mesh blobs are white-base pastels; on the dark base they render as
        bright, loud circles. Dim the whole mesh layer in dark mode so they read
        as a soft circle-fade glow on near-black, not garish blobs. (user, 2026-06-01) */
-    [data-theme="dark"] .fy-p-mesh { opacity: 0.5; }
+    [data-theme="dark"] .fy-p-mesh { opacity: 0.3; }
 
     /* MN_A "1% reward rate" pill — themed. Light: V-500 on V-50 pink. Dark: a
        lighter V-400 glyph on a translucent V-500 wash (the flat #FAE2FA pink read
