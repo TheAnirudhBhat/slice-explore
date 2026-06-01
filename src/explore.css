@@ -56,9 +56,15 @@
       --blue-500: #2B6ACF;
     }
 
-    /* (Bottom-nav background override reverted — it caused jittery page scroll
-       on phone. The inherited skill nav stays transparent + relies on the
-       per-pod BottomFade, which is the original behaviour.) */
+    /* ── Project-side bottom-nav SAFE-AREA fill (NOT a skill edit) ──
+       Only the home-indicator GESTURE band is filled (NOT the whole nav — that
+       earlier full-nav fill caused scroll jank + a white slab on Valentino).
+       A solid colour on this small fixed band can't jank, and stops page content
+       showing through the very bottom. Page-coloured on standard pods; V-500 on
+       the immersive (Valentino) nav so it matches the brand page, never white.
+       Applies to ALL pods via the shared nav class. */
+    .slice-bnav-gesture { background: var(--page-bg); padding-bottom: 14px; }
+    .slice-bnav[data-variant='immersive'] .slice-bnav-gesture { background: var(--brand-bg); }
 
     /* Physics-based mascot + star. Mascot has a heavy, grounded sway
        (slow ease into peaks, snappy return). Star follows real toss
