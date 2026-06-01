@@ -1,0 +1,373 @@
+/* Bottom nav — slice DLS 2.0 (R23 — Apple-Dock model)
+ *
+ * Architecture:
+ *   • 5 items in NATURAL ORDER (Banking, Explore, Pay, Credit, Activity) — never reorder.
+ *   • Each item lives in a fixed 72px slot. Row width = 360px (5 × 72).
+ *   • The whole row translates horizontally (via framer-motion `x`) so the
+ *     active item lands at the viewport's center (x=180).
+ *   • Items beyond the viewport clip via .slice-bnav-viewport { overflow: hidden }.
+ *   • Active item: grows 40 → 64 + lifts y by -14px (spring) — the "pop into center".
+ *   • Variant theming: data-variant=immersive switches CSS vars + bg layer opacity.
+ */
+
+.slice-bnav {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  isolation: isolate;
+
+  /* Nav stays TRANSPARENT on purpose: the PAGE's own bg moves WITH the pager
+     during a horizontal swipe, so the Valentino↔white change reads end-to-end
+     with NO colour stuck at the bottom. A fixed nav-bg (gradient/solid) is fixed
+     while the page slides under it → it "retains" the old colour mid-drag. Don't
+     re-add a nav background; fill comes from the page bg + per-pod BottomFade. */
+
+  /* Standard variant defaults — on white pages, inactive icons are slate-dark
+     so they read against the white bg. The nav bg itself stays TRANSPARENT
+     (no chrome bleed across page swipes). */
+  --inactive-bg: rgba(0, 0, 0, 0.06);
+  --inactive-fg: rgba(0, 0, 0, 0.45);
+  --label-color: rgba(0, 0, 0, 0.6);
+  --label-color-active: #000;
+  --gesture-bar-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* Immersive variant (Valentino home active) — per R23 fix-it-2-cont-3 user
+   direction: "the icon avatar on the Valentino screen should be white with
+   30% opacity, and the colour of the icon same as the background colour,
+   this should be same for the ₹3K as well — same colour as the background
+   on the Valentino background". So inactive circles are translucent white
+   medallions with V-500 (#D30AD7) glyphs that read as "punched out" of the
+   white-alpha medallion against the V-500 page. Variant flip is tied to
+   COMMITTED active in BottomNav.jsx so this only kicks in after the swipe
+   commits — during the white→Valentino drag, circles stay slate-tinted and
+   legible. */
+.slice-bnav[data-variant='immersive'] {
+  /* No nav background — see the base rule. A fixed brand-bg fill would "retain"
+     V-500 at the bottom while the page drags to white (the reported sticking). */
+  /* Valentino (light): inactive medallion = #FFFFFF @ 20%, glyph = V-500 (#D30AD7) —
+     the page-bg colour "punched out" of the white-alpha medallion. */
+  --inactive-bg: rgba(255, 255, 255, 0.20);
+  --inactive-fg: #d30ad7;
+  --label-color: rgba(255, 255, 255, 0.7);
+  --label-color-active: #ffffff;
+  --gesture-bar-bg: rgba(255, 255, 255, 0.55);
+}
+
+/* R23 fix-it-2-cont-13: balance text color is owned by the PER-SLOT variant
+   rules below (lines ~167-187). Removed the earlier nav-level rules here
+   that hardcoded V-500 on the entire immersive nav — they overrode the
+   per-slot rule because of equal specificity + later source order, causing
+   the ₹3K Banking pill to stay V-500 even when the slot moved onto a white
+   half during drag. Per-slot rules now win cleanly. */
+
+/* ───────────────── BG LAYERS ─────────────────
+ * R23: nav is TRANSPARENT. The page's own bg edge-to-edge cascades through.
+ * No more variant-tied bg layers — the icons + circles work on ANY page bg
+ * because they're tinted translucent-black (works on white AND V-500).
+ * This kills the "Valentino sticking" behavior across page swipes.
+ */
+
+.slice-bnav-bg {
+  display: none; /* kept for backward compat; bg layers no longer used */
+}
+
+/* ───────────────── CONTENT ───────────────── */
+
+.slice-bnav-content {
+  position: relative;
+  z-index: 1;
+  padding-top: 28px;
+  user-select: none;
+}
+
+/* The viewport is the phone-width window; the row inside translates within it */
+.slice-bnav-viewport {
+  position: relative;
+  width: 100%;
+  max-width: 402px; /* MUST match App.jsx PHONE_WIDTH + BottomNav.jsx PHONE_WIDTH (402,
+                       iPhone-17 bezel). Was a stale 393 (iPhone-16) while the JS slot
+                       math used 402 → the row was positioned for 402 but the viewport
+                       clipped at 393, cutting the edge nav item ~9px before the screen
+                       edge ("last icons cutting off"). Keep all three in sync. (cont-38) */
+  margin: 0 auto;
+  height: 96px;
+  /* CRITICAL: clip horizontally (items sliding off the sides) but ALLOW vertical
+     overflow so the lifted active circle isn't clipped at the top.
+     Note: `overflow-x: hidden` alone implicitly sets `overflow-y: auto` in some
+     browsers (clipping vertically). Must set both explicitly. */
+  overflow-x: clip;
+  overflow-y: visible;
+  /* Soft edge fade: items sliding off-screen FADE out instead of hard-clipping as a
+     chopped half-medallion at the viewport edge (user: "last icons cutting off" — the
+     side flips L/R with whichever pod is active, since the row translates to centre it).
+     Centred states are unaffected (their margins exceed the 28px fade). Horizontal-only
+     gradient so the active circle is never masked vertically. (cont-38) */
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
+}
+
+.slice-bnav-row {
+  display: flex;
+  align-items: center;        /* center vertically — all circles share a midline */
+  height: 100%;
+  position: relative;
+  will-change: transform;
+  /* `gap` is set inline from JS (R23 fix-it-2-cont-7 GAP constant). */
+}
+
+/* ───────────────── SLOT ───────────────── */
+
+.slice-bnav-slot {
+  flex: 0 0 auto;
+  height: 100%;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center; /* center-aligned vertically so all circles share a midline */
+  gap: 4px;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  padding-bottom: 16px; /* breathing room above gesture bar */
+  padding-top: 8px;
+  outline: none !important;
+  border: none;
+  box-shadow: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.slice-bnav-slot:focus,
+.slice-bnav-slot:focus-visible,
+.slice-bnav-slot:active,
+.slice-bnav-slot::-moz-focus-inner {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.slice-bnav-circle-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform;
+}
+
+/* ───────────────── CIRCLE (40 ↔ 64) ───────────────── */
+
+.slice-bnav-circle {
+  position: relative;
+  /* width/height set inline from JS based on each slot's natural item width
+     (44 inactive, 64 active, 72 pay-committed). Flex+gap layout in the parent
+     row ensures uniform edge-to-edge spacing between any two adjacent items. */
+  background: var(--inactive-bg);
+  color: var(--inactive-fg);
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  transition:
+    width 320ms cubic-bezier(0.34, 1.4, 0.64, 1),
+    height 320ms cubic-bezier(0.34, 1.4, 0.64, 1),
+    box-shadow 200ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* Per-slot variant — set by each slot via data-slot-variant attribute based
+   on which page is under its center x. Overrides the global --inactive-bg /
+   --inactive-fg so each circle's styling matches the page bg under THAT
+   specific slot, not the nav as a whole. */
+.slice-bnav-slot[data-slot-variant='immersive'] .slice-bnav-circle {
+  /* Valentino (light): medallion #FFFFFF @ 20%, glyph = V-500 (page-bg colour,
+     punched out of the white medallion). NOT white, NOT black. */
+  background: rgba(255, 255, 255, 0.20);
+  color: #d30ad7;
+}
+.slice-bnav-slot[data-slot-variant='immersive'] .slice-bnav-balance {
+  color: #d30ad7;
+}
+/* Deselected on white: 10%-black circle bg + WHITE glyph. White glyph reads
+   as "punched out" of the slightly-darkened medallion against the white
+   page. Matches canonical slice DLS Banking dock. */
+.slice-bnav-slot[data-slot-variant='standard'] .slice-bnav-circle {
+  background: rgba(0, 0, 0, 0.10);
+  color: #ffffff;
+}
+.slice-bnav-slot[data-slot-variant='standard'] .slice-bnav-balance {
+  color: #ffffff;
+}
+
+/* DARK THEME (data-theme=dark on the stage) — overrides the immersive per-slot
+   rule above. In dark mode EVERY page is #090B0C, so the slots all resolve to
+   data-slot-variant='immersive'; but the dark-mode nav chrome (Figma node
+   6578:60441) is a subtle white-alpha medallion with a WHITE glyph — NOT the
+   light-Valentino "white-20% + BLACK glyph" treatment. Without this, dark-mode
+   glyphs went black-on-dark = invisible. Active slot keeps its white-circle rule
+   below (it uses !important), matching the dark spec's white active medallion. */
+[data-theme='dark'] .slice-bnav-slot .slice-bnav-circle {
+  /* Dark DESELECTED slot — canonical (Figma 6591:60485): medallion = white @ 20%
+     (Component/Bottom nav/Primary nav bg #ffffff33), glyph = WHITE. The light-mode
+     "page-bg punched out" logic does NOT carry over — a #090B0C glyph on the
+     dark-grey medallion would be invisible. Inactive dark glyphs are white. */
+  background: rgba(255, 255, 255, 0.20);
+  color: #ffffff;
+}
+[data-theme='dark'] .slice-bnav-slot .slice-bnav-balance {
+  color: #ffffff;
+}
+
+/* Active (selected) slot — a light medallion with a dark glyph punched out:
+   • LIGHT: #ffffff chip + dark-40% glyph  (canonical, "main icon 000000 40%")
+   • DARK:  #ffffff99 chip (Component/Bottom nav/Selected) + #090B0C glyph
+   Canonical Figma 6591:60485. The active nav ICON is #090B0C in dark mode, NOT
+   white (user-directed, repeatedly). Pay-active uses the white ring (PayCenter). */
+.slice-bnav-slot[data-state='active'] .slice-bnav-circle {
+  width: 64px;
+  height: 64px;
+  background: #ffffff !important;
+  color: rgba(0, 0, 0, 0.40) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.16);
+}
+[data-theme='dark'] .slice-bnav-slot[data-state='active'] .slice-bnav-circle {
+  background: rgba(255, 255, 255, 0.60) !important;
+  color: #090b0c !important;
+}
+
+/* NOTE: removed prior `[data-pod='pay'][data-state='active'] .slice-bnav-circle`
+ * rule that forced opacity:0 + gray bg. That rule was for hiding the standard
+ * circle when the 72px Pay ring overlay rendered — but the JSX now conditionally
+ * renders EITHER the ring OR the circle (never both). The CSS rule was firing
+ * during drag (when Pay is visuallyActive but not committed) and incorrectly
+ * showing a gray circle instead of the canonical white-active treatment. */
+
+/* Glyph crossfade inside the circle */
+.slice-bnav-glyph {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 220ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.slice-bnav-glyph--inactive { opacity: 1; }
+.slice-bnav-glyph--active   { opacity: 0; }
+
+.slice-bnav-slot[data-state='active'] .slice-bnav-glyph--inactive { opacity: 0; }
+.slice-bnav-slot[data-state='active'] .slice-bnav-glyph--active   { opacity: 1; }
+
+/* Activity rotation */
+.slice-bnav-slot[data-pod='activity'] .slice-bnav-glyph {
+  transform: rotate(90deg);
+}
+
+/* Banking ₹3K text — typography only. Color is owned by the per-slot variant
+   rules above (which use data-slot-variant on the slot to pick the right
+   color based on which page is under the slot's center). */
+.slice-bnav-balance {
+  font-family: 'Rubik', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1;
+  letter-spacing: 0.2px;
+  /* color: inherited from per-slot variant rule */
+}
+
+/* ───────────────── PAY ACTIVE SPECIAL (72px ring) ───────────────── */
+
+.slice-bnav-pay-special {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slice-bnav-pay-ring {
+  position: absolute;
+  inset: 0;
+}
+
+.slice-bnav-pay-inner {
+  width: 56px;
+  height: 56px;
+  background: #ffffff;
+  border-radius: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Scan glyph (currentColor) — V-500 in light, #090B0C in dark (user direction). */
+  color: #d30ad7;
+}
+[data-theme='dark'] .slice-bnav-pay-inner {
+  color: #090b0c;
+}
+
+.slice-bnav-pay-inner img {
+  display: block;
+  width: 48px;
+  height: 48px;
+  /* If the asset has whitespace padding, this gives the glyph more visual presence */
+}
+
+/* ───────────────── LABELS ───────────────── */
+
+.slice-bnav-label {
+  font-family: 'Rubik', sans-serif;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 500;
+  color: var(--label-color);
+  letter-spacing: 0.1px;
+  transition:
+    color 280ms cubic-bezier(0.25, 0.1, 0.25, 1),
+    font-weight 240ms;
+}
+
+.slice-bnav-slot[data-state='active'] .slice-bnav-label {
+  font-weight: 600;
+  color: var(--label-color-active);
+}
+
+/* ───────────────── GESTURE BAR ───────────────── */
+
+.slice-bnav-gesture {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0 6px;
+  position: relative;
+  z-index: 1;
+}
+
+.slice-bnav-gesture-bar {
+  width: 128px;
+  height: 4px;
+  border-radius: 40px;
+  background: var(--gesture-bar-bg);
+  transition: background 360ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* On real mobile / installed PWA the OS draws the real home indicator, so HIDE the
+   proto's fake gesture pill — but with `visibility` (not `display:none`) so the
+   `.slice-bnav-gesture` band KEEPS its height: the nav still clears the bottom and
+   the OS indicator sits in that same space. (cont-38, user-directed.) */
+@media (max-width: 600px), (display-mode: standalone) {
+  .slice-bnav-gesture-bar { visibility: hidden; }
+}
+
+/* Tap feedback */
+.slice-bnav-slot:active .slice-bnav-circle,
+.slice-bnav-slot:active .slice-bnav-pay-special {
+  filter: brightness(0.94);
+}
+
+/* Pay-inactive has NO extra ring — looks identical to other inactive slots.
+ * The 72px white ring only appears when Pay is the active/committed state. */

@@ -56,12 +56,15 @@
       --blue-500: #2B6ACF;
     }
 
-    /* ── Project-side bottom-nav fill (NOT a skill edit) ──
-       The inherited skill nav is transparent on purpose (page bg + per-pod
-       BottomFade fill it). In explore-base the nav footprint / gesture safe-area
-       read as see-through over scrolling content, so fill it with the page bg
-       here. Scoped to this project's bundle; the skill nav stays untouched. */
-    .slice-bnav-content { background: var(--page-bg); }
+    /* ── Project-side bottom-nav fade (NOT a skill edit) ──
+       The nav bg is a FADE to the page bg that completes ABOVE the circular
+       buttons: transparent at the very top (content shows through, soft), going
+       fully solid by ~28px (the content's padding-top) so the buttons + gesture
+       safe-area sit on solid page-bg — no see-through band, but no hard slab
+       either. Scoped to this project's bundle; the skill nav stays untouched. */
+    .slice-bnav-content {
+      background: linear-gradient(to bottom, transparent 0, var(--page-bg) 28px);
+    }
 
     /* Physics-based mascot + star. Mascot has a heavy, grounded sway
        (slow ease into peaks, snappy return). Star follows real toss
