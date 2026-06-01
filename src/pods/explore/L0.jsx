@@ -92,7 +92,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
           paddingLeft: 24, paddingRight: 16,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           background: 'transparent',
-          boxShadow: `0 6px 8px 0 rgba(0,0,0,${(0.05 * bgOpacity).toFixed(3)})`,
+          boxShadow: `0 6px 8px 0 rgba(0,0,0,${(0.05 * progress).toFixed(3)})`,
         }}>
           <div style={{
             position: 'absolute', inset: 0,
@@ -1454,7 +1454,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             <div ref={ref} style={{
               position: 'relative', zIndex: 1,
               display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
-              overscrollBehavior: 'none',
+              overscrollBehaviorX: 'contain',
             }} className="scrollbar-hide no-page-swipe">
               {renderedSlides.map((s, i) => (
                 <div key={i} style={{
@@ -1552,7 +1552,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             <div ref={ref} style={{
               position: 'relative', zIndex: 1,
               display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
-              overscrollBehavior: 'none',
+              overscrollBehaviorX: 'contain',
             }} className="scrollbar-hide no-page-swipe">
               {renderedSlides.map((s, i) => {
                 const meta = fyAvatarMeta(s.heroImg);
@@ -1709,7 +1709,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             <div ref={ref} style={{
               position: 'relative', zIndex: 1,
               display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
-              overscrollBehavior: 'none',
+              overscrollBehaviorX: 'contain',
             }} className="scrollbar-hide no-page-swipe">
               {renderedSlides.map((s, i) => (
                 <div key={i} style={{
@@ -1845,7 +1845,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
           <div ref={ref} style={{
             position: 'relative', zIndex: 1,
             display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
-            overscrollBehavior: 'none',
+            overscrollBehaviorX: 'contain',
           }} className="scrollbar-hide no-page-swipe">
             {renderedSlides.map((s, i) => {
               const meta = fyAvatarMeta(s.heroImg);
@@ -1938,7 +1938,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
           <div ref={ref} style={{
             position: 'relative', zIndex: 1,
             display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
-            overscrollBehavior: 'none',
+            overscrollBehaviorX: 'contain',
           }} className="scrollbar-hide no-page-swipe">
             {renderedSlides.map((s, i) => {
               const meta = fyAvatarMeta(s.heroImg);
@@ -2063,7 +2063,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             <div ref={ref} style={{
               position: 'relative', zIndex: 1,
               display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
-              overscrollBehavior: 'none',
+              overscrollBehaviorX: 'contain',
             }} className="scrollbar-hide no-page-swipe">
               {renderedSlides.map((s, i) => (
                 <div key={i} style={{
@@ -2165,7 +2165,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             <div ref={ref} style={{
               position: 'relative', zIndex: 2,
               display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
-              overscrollBehavior: 'none',
+              overscrollBehaviorX: 'contain',
             }} className="scrollbar-hide no-page-swipe">
               {renderedSlides.map((s, i) => {
                 /* FY_L motion recipe: text fades ×2.6 and parallax-X drifts 60px/unit. */
@@ -2246,7 +2246,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             <div ref={ref} style={{
               position: 'relative', zIndex: 2,
               display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
-              overscrollBehavior: 'none',
+              overscrollBehaviorX: 'contain',
             }} className="scrollbar-hide no-page-swipe">
               {renderedSlides.map((s, i) => {
                 const { abs: dist, signed: wrappedOffset } = wrappedCarouselDistance(i - 1, progress, N);
@@ -2329,7 +2329,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             <div ref={ref} style={{
               position: 'relative', zIndex: 1,
               display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
-              overscrollBehavior: 'none',
+              overscrollBehaviorX: 'contain',
             }} className="scrollbar-hide no-page-swipe">
               {renderedSlides.map((s, i) => {
                 const meta = fyAvatarMeta(s.heroImg);
@@ -2459,7 +2459,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             position: 'relative',
             display: 'flex', overflowX: 'auto',
             scrollSnapType: 'x mandatory',
-            overscrollBehavior: 'none',
+            overscrollBehaviorX: 'contain',
           }} className="scrollbar-hide no-page-swipe">
             {renderedSlides.map((s, i) => {
               /* Text fades aggressively (×2.6) so it's invisible well
@@ -3237,7 +3237,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             /* Confine touch tracking to the horizontal axis so vertical page
                scroll + card taps still register on mobile. Without this the
                scroll-snap engine grabs every touch and blocks the tap. */
-            touchAction: 'pan-x',
+            touchAction: 'pan-x pan-y',
             WebkitOverflowScrolling: 'touch',
             /* Left-aligned to the page horizontal padding (24px) so the
                first card sits flush with section content above and below.
@@ -3273,7 +3273,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
                       backgroundImage: `url(/assets/${s.banner})`,
                       backgroundSize: 'cover', backgroundPosition: 'center',
                       scrollSnapAlign: 'start',
-                      touchAction: 'pan-x', cursor: 'pointer',
+                      touchAction: 'pan-x pan-y', cursor: 'pointer',
                     }} aria-label="5 new sparks · cashback up to ₹2,700" />
                   );
                 }
@@ -3303,7 +3303,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
                     border: 'none',
                     boxShadow: CARD_SHADOW,
                     scrollSnapAlign: 'start',
-                    touchAction: 'pan-x',
+                    touchAction: 'pan-x pan-y',
                     display: 'flex', flexDirection: 'column', justifyContent: 'space-between', textAlign: 'left',
                     position: 'relative', overflow: 'hidden',
                   }}>
@@ -3570,7 +3570,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
                 position: 'relative', zIndex: 2,
                 display: 'flex', overflowX: 'auto',
                 scrollSnapType: 'x mandatory',
-                overscrollBehavior: 'none',
+                overscrollBehaviorX: 'contain',
               }} className="scrollbar-hide no-page-swipe">
                 {renderedSlides.map((s, i) => {
                   const { abs: dist, signed: wrappedOffset } = wrappedCarouselDistance(i - 1, progress, slides.length);
@@ -3701,7 +3701,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             <div ref={ref} style={{
               position: 'relative', zIndex: 2,
               display: 'flex', overflowX: 'auto', scrollSnapType: 'x mandatory',
-              overscrollBehavior: 'none',
+              overscrollBehaviorX: 'contain',
             }} className="scrollbar-hide no-page-swipe">
               {renderedSlides.map((s, i) => {
                 const { abs: dist, signed: wrappedOffset } = wrappedCarouselDistance(i - 1, progress, N);
@@ -4387,7 +4387,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             <div ref={scrollRef} className="scrollbar-hide" style={{
               display: 'flex', overflowX: 'auto',
               scrollSnapType: 'x mandatory',
-              overscrollBehavior: 'none', marginTop: 4,
+              overscrollBehaviorX: 'contain', marginTop: 4,
             }}>
               {items.map((it, i) => (
                 <div key={i} style={{
@@ -4465,7 +4465,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             <div ref={scrollRef} className="scrollbar-hide no-page-swipe" style={{
               display: 'flex', overflowX: 'auto',
               scrollSnapType: 'x mandatory',
-              overscrollBehavior: 'none', marginTop: 8,
+              overscrollBehaviorX: 'contain', marginTop: 8,
             }}>
               {items.map((it, i) => (
                 <div key={i} style={{
@@ -5191,7 +5191,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
         <div className="scrollbar-hide no-page-swipe" style={{
           display: 'flex', overflowX: 'auto',
           scrollSnapType: 'x mandatory',
-          overscrollBehavior: 'none',
+          overscrollBehaviorX: 'contain',
           paddingLeft: 24, paddingRight: 24,
           /* Snap respects the 24px page inset on both sides, so the
              first card stops 24px in from the screen edge instead of
@@ -5483,7 +5483,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
           /* Confine touch tracking to the horizontal axis so a vertical drag
              starting on these cards scrolls the page instead of being swallowed
              by the snap engine (mirrors the bill strip). */
-          touchAction: 'pan-x',
+          touchAction: 'pan-x pan-y',
           scrollSnapType: 'x mandatory',
           overscrollBehaviorX: 'contain',
           paddingLeft: 24, paddingRight: 24,
@@ -8173,7 +8173,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
                 />}
 
             {/* Cards fade into the page bg just above the inherited floating nav. */}
-            <BottomFade color="var(--page-bg)" height={200} bottom={0} />
+            <BottomFade color="var(--page-bg)" height={240} bottom={0} />
 
             {stageEl && createPortal(
               isMobile ? (

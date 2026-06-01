@@ -38,7 +38,7 @@
        (.screen-scroll, pan-y). Without this the carousels swallowed vertical
        drags, so the page wouldn't scroll when a finger started on one. Inline
        touch-action (e.g. the FY_I drag deck's `none`) still wins. (user, 2026-06-02) */
-    .no-page-swipe { touch-action: pan-x; }
+    .no-page-swipe { touch-action: pan-x pan-y; }
     /* Real mobile (standalone webapp) — app bar sits right below status bar */
     @media (max-width: 430px) {
       :root { --appbar-top: 44px; }
