@@ -2595,6 +2595,18 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
          when the deck scrolls back into the safe zone. */
       const deckRef = React.useRef(null);
       const [deckVisible, setDeckVisible] = React.useState(true);
+      // Stop a card-stack drag from ALSO dragging the page pager. The pager's
+      // framer drag listens via a native pointerdown on an ancestor, which React
+      // synthetic stopPropagation can't cancel — so attach a native bubble-phase
+      // listener on the deck itself that stops the event before it reaches the
+      // pager. Page-swipe still works from empty page areas; only the deck opts out.
+      React.useEffect(() => {
+        const el = deckRef.current;
+        if (!el) return;
+        const stop = (e) => e.stopPropagation();
+        el.addEventListener('pointerdown', stop);
+        return () => el.removeEventListener('pointerdown', stop);
+      }, []);
       React.useEffect(() => {
         const el = deckRef.current;
         if (!el) return;
@@ -4325,11 +4337,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
           background: 'var(--surface)', boxShadow: CARD_SHADOW, border: CARD_BORDER,
           borderRadius: 16, padding: 24,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={T.h4}>Recharge & bills</span>
-            <TagSubtle intent="info">₹0 fee</TagSubtle>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginTop: 20 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
             {BILL_ICONS.map((b, i) => (
               <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <BillAvatar>{b.glyph}</BillAvatar>
@@ -7120,7 +7128,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
           )
         : React.Fragment;
       return (
-        <ScreenShell transparentAppBar={isGradientFY} darkBg={sections.forYou === 'L' || sections.forYou === 'F' || sections.forYou === 'N'}
+        <ScreenShell transparentAppBar={isGradientFY} darkBg={sections.forYou === 'L' || sections.forYou === 'F' || sections.forYou === 'N' || sections.forYou === 'P'}
           scrollThreshold={sections.forYou === 'L' ? 182 : (sections.forYou === 'N' || sections.forYou === 'F') ? 120 : (sections.forYou === 'T') ? 10 : (sections.forYou === 'U' || sections.forYou === 'Q') ? 12 : 0}
           onPastThreshold={onScrollPast}>
           {sections.forYou !== 'None' && (
@@ -7518,6 +7526,11 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
         headerStyle: 'List',
         sections: { forYou: 'U', aiBanker: 'None', bills: 'W', rewards: 'Y', monies: 'E', stats: 'N', more: 'A', footer: 'None' },
       },
+      V2: {
+        label: 'V2',
+        headerStyle: 'List',
+        sections: { forYou: 'L', aiBanker: 'None', bills: 'S', rewards: 'X', monies: 'E', stats: 'M', more: 'A', footer: 'None' },
+      },
     };
 
     /* Preset match check (V0 is tracked via the useOriginal flag). */
@@ -7611,7 +7624,8 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
       const [sectionsOpen, setSectionsOpen] = React.useState(true);
       const activePreset = useOriginal
         ? 'V0'
-        : (matchesPreset('V1', headerStyle, sections) ? 'V1' : null);
+        : (matchesPreset('V1', headerStyle, sections) ? 'V1'
+          : matchesPreset('V2', headerStyle, sections) ? 'V2' : null);
       return (
         <div className="debug-panel">
           {/* Panel header. */}
@@ -7623,7 +7637,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
               Current/Exploration buttons are self-explanatory). */}
           <div style={{ marginBottom: 24 }}>
             <div className="seg-pick">
-              {['V0', 'V1'].map(k => (
+              {['V0', 'V1', 'V2'].map(k => (
                 <button key={k}
                   className={'seg-btn' + (activePreset === k ? ' active' : '')}
                   onClick={() => onPresetApply(k)}>{PRESETS[k].label}</button>

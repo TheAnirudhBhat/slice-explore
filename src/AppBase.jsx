@@ -465,7 +465,11 @@ export default function App({ extraL1 = {}, exploreExtraCards = [], initialPod =
                          don't visibly bleed past it. */}
                       <div
                         style={{
-                          height: 54,
+                          // max(54, safe-area): on an iOS standalone webapp the
+                          // Dynamic Island / notch is taller than 54px, so a fixed
+                          // 54 let the title slip under it. Grow to the device
+                          // safe-area when it's larger; stays 54 on desktop/web.
+                          height: 'max(54px, env(safe-area-inset-top, 0px))',
                           flexShrink: 0,
                           background: reserveBg,
                           // Instant (no transition): must opacify with the AppBar so
