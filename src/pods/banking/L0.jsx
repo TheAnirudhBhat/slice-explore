@@ -50,25 +50,22 @@ function ArrowUpIcon({ size = 16, color = POSITIVE }) {
   );
 }
 
-// Canonical monies brand mark — fetched from Figma node 886:24912 (the same
-// glyph that prefixes the monies amount on Banking L0 in DLS 2.0). Saved as
-// monies_mark.png in public/assets. NEVER approximate with inline SVG — Figma
-// is the source of truth, fetch the asset every time.
-function MoniesMark({ height = 36 }) {
+// Canonical monies brand mark — vector path from Figma (Group.svg). Themeable
+// via `color` so it can render black on light surfaces and white on dark/V-500
+// surfaces. Uses currentColor by default. viewBox 21×37 (the glyph's intrinsic
+// aspect), width auto so height drives the scale.
+function MoniesMark({ height = 36, color = 'currentColor' }) {
   return (
-    <img
-      src="/assets/monies_mark.png"
-      alt=""
+    <svg
+      height={height}
+      viewBox="0 0 21 37"
+      fill="none"
       aria-hidden="true"
-      style={{
-        height,
-        width: 'auto',
-        objectFit: 'contain',
-        display: 'block',
-        pointerEvents: 'none',
-        userSelect: 'none',
-      }}
-    />
+      style={{ width: 'auto', display: 'block', pointerEvents: 'none', userSelect: 'none' }}
+    >
+      <path d="M7.28834 28.7385H10.4706C13.1738 28.7385 15.7743 27.6695 17.7931 25.7384C19.7606 23.8245 20.8385 21.2727 20.8385 18.5657C20.8385 15.8587 19.7606 13.2896 17.7931 11.393C15.8427 9.49638 13.2251 8.44461 10.4192 8.44461C5.56035 8.44461 1.40292 11.6172 0.307958 16.1518L0.239523 16.5139C0.0855437 17.2553 0.239523 18.014 0.667242 18.6692C1.07785 19.2726 1.71088 19.6864 2.44656 19.8416C2.61764 19.8761 2.80584 19.8934 2.97693 19.8934C4.03767 19.8934 5.02998 19.2726 5.50903 18.2898L5.90253 17.445C6.99749 15.238 8.53728 14.1 10.4706 14.1C11.7195 14.1 12.9 14.5655 13.7555 15.4104C14.628 16.2725 15.1071 17.3933 15.1071 18.6002C15.1071 19.8071 14.628 20.9279 13.7726 21.7727C12.8658 22.6348 11.7024 23.1176 10.5048 23.1176H2.80584C1.26605 23.1176 0 24.3763 0 25.9453C0 28.6696 1.07785 31.2214 3.04536 33.118C4.96155 34.9974 7.66473 36.0664 10.4192 36.0664H11.0352C12.575 36.0664 13.841 34.8078 13.841 33.2387C13.841 31.6697 12.5921 30.411 11.0352 30.411H10.4535C9.20452 30.411 8.02402 29.9455 7.16858 29.1006C7.08303 29.0144 7.11725 28.911 7.13436 28.8765C7.13436 28.842 7.2028 28.7558 7.30545 28.7558L7.28834 28.7385Z" fill={color} />
+      <path d="M3.9089 5.68989H16.9155C18.5408 5.68989 19.8582 4.41397 19.8582 2.84494C19.8582 1.27591 18.5408 0 16.9155 0H3.9089C2.28356 0 0.966187 1.27591 0.966187 2.84494C0.966187 4.41397 2.28356 5.68989 3.9089 5.68989Z" fill={color} />
+    </svg>
   );
 }
 
@@ -319,7 +316,7 @@ function MoniesCard({ balanceHidden }) {
       </span>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <MoniesMark height={40} />
+          <MoniesMark height={40} color={TEXT_PRIMARY} />
           <span
             style={{
               fontFamily: 'Rubik, sans-serif',
