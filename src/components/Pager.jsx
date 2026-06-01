@@ -96,24 +96,21 @@ export default function Pager({
         isDraggingRef.current = true;
         lastEmittedRef.current = activeIndex; // reset before drag starts
       }}
-      onDragEnd={() => {
+      onDragEnd={(event, info) => {
         isDraggingRef.current = false;
         const currentX = x.get();
-        // Snap to nearest page
-        let bestIdx = 0;
-        let bestDist = Infinity;
-        const containerCenter = pageWidth / 2;
-        for (let i = 0; i < pageCount; i++) {
-          const pageCenter = currentX + (i + 0.5) * pageWidth;
-          const dist = Math.abs(pageCenter - containerCenter);
-          if (dist < bestDist) {
-            bestDist = dist;
-            bestIdx = i;
-          }
-        }
+        // MOMENTUM: project the release position forward by the throw velocity
+        // (like a real scroll fling), then snap to the nearest page — so a quick
+        // flick carries to the next page even with little travel, and a slow drag
+        // settles where it is. Never skip more than one page per gesture.
+        const projectedX = currentX + info.velocity.x * 0.18;
+        let bestIdx = Math.round(-projectedX / pageWidth);
+        bestIdx = Math.max(activeIndex - 1, Math.min(activeIndex + 1, bestIdx));
+        bestIdx = Math.max(0, Math.min(pageCount - 1, bestIdx));
         if (onCommit) onCommit(bestIdx);
-        // Always animate to the snapped position
-        animate(x, -bestIdx * pageWidth, SPRING);
+        // Velocity-aware spring so the settle continues the throw's momentum
+        // instead of a dead stop.
+        animate(x, -bestIdx * pageWidth, { ...SPRING, velocity: info.velocity.x });
       }}
     >
       {React.Children.map(children, (child, i) => (

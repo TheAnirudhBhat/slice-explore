@@ -33,16 +33,13 @@ const useIsDesktop = () => {
 };
 
 function Root() {
-  // TEMP: agentation enabled on mobile too (user wants to highlight mobile
-  // issues). To restore desktop-only, gate the <Agentation/> below on isDesktop.
   const isDesktop = useIsDesktop();
-  void isDesktop;
   return (
     <>
       <App />
-      {/* Agentation toolbar. Click → activate → click any element to
-          annotate. Structured markdown is produced for paste-into-Claude. */}
-      {true && (
+      {/* Agentation toolbar — DESKTOP ONLY. Its fixed bottom-right position
+          overlaps the phone-shell UI and the proto's bottom nav on mobile. */}
+      {isDesktop && (
         <Agentation
           onAnnotationAdd={(a) => {
             // eslint-disable-next-line no-console

@@ -814,9 +814,11 @@
         display: none !important;
       }
 
-      /* App bar respects the device safe-area on mobile so its title clears the
-         OS status bar (removing it made the header bleed into the notch). */
-      .app-bar-l0 {
+      /* BLEED variants only: app bar respects the device safe-area so its title
+         clears the notch over the pulled-up hero. Non-bleed pods rely on the
+         skill's 54px reserve + --appbar-top:0 (set on the pod root) → a plain
+         64px DLS bar, matching Banking. */
+      .explore-pod-root[data-bleed] .app-bar-l0 {
         padding-top: env(safe-area-inset-top, 0px) !important;
         height: calc(env(safe-area-inset-top, 0px) + 64px) !important;
       }

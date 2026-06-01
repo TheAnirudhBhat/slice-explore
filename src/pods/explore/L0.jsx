@@ -297,7 +297,12 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             position: 'absolute', inset: 0,
             paddingTop: 'var(--bar-overlap, 118px)',
             paddingBottom: 200,
-            overflowY: 'auto'
+            overflowY: 'auto',
+            // pan-y: browser owns vertical scroll here, but a HORIZONTAL swipe is
+            // handed up to the page Pager's framer drag — without this the Explore
+            // scroll container swallowed left/right swipes so you couldn't change
+            // pods from Explore (other pods' scrollers already allow this).
+            touchAction: 'pan-y',
           }}>
             {children}
           </div>
@@ -7504,12 +7509,12 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
        Exploration = section-system experimentation surface. */
     const PRESETS = {
       V0: {
-        label: 'Current',
+        label: 'V0',
         headerStyle: 'List',
         sections: { forYou: 'B', aiBanker: 'E', bills: 'B', rewards: 'F', monies: 'None', stats: 'A', more: 'A', footer: 'None' },
       },
       V1: {
-        label: 'Exploration',
+        label: 'V1',
         headerStyle: 'List',
         sections: { forYou: 'U', aiBanker: 'None', bills: 'W', rewards: 'Y', monies: 'E', stats: 'N', more: 'A', footer: 'None' },
       },
@@ -7638,13 +7643,20 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
           </button>
           {sectionsOpen && (
           <div style={{ marginTop: 18 }}>
-            {/* Header style — moved inside Section variants per user direction. */}
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ ...T.btnSm, color: 'var(--text-secondary)', marginBottom: 8 }}>Header style</div>
-              <div className="seg-pick">
+            {/* Header style — rendered as a section ROW so it matches the
+                per-section pickers below (label left, option pills right). */}
+            <div className="section-row" style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              gap: 12, paddingTop: 12, paddingBottom: 12,
+            }}>
+              <div className="section-row-label" style={{
+                ...T.btnSm, flex: 1, minWidth: 0,
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              }}>Header style</div>
+              <div className="var-pills" style={{ flexShrink: 0 }}>
                 {HEADER_STYLES.map(s => (
                   <button key={s}
-                    className={'seg-btn' + (headerStyle === s ? ' active' : '')}
+                    className={'var-key' + (headerStyle === s ? ' active' : '')}
                     onClick={() => onHeaderChange(s)}>{HEADER_LABELS[s]}</button>
                 ))}
               </div>
@@ -8103,6 +8115,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
         <SpacingCtx.Provider value={{ ...spacing, highlight }}>
           <div
             className={'explore-pod-root' + (moreScrollPad ? ' editor-open' : '')}
+            data-bleed={heroBleed || undefined}
             style={{
               position: 'relative', width: '100%',
               // EXPLORATION-ONLY: cancel the shared skill shell's 54px status-bar
@@ -8112,6 +8125,14 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
               // up 54px; height adds it back so it still reaches the bottom. Bleed
               // isn't a slice pattern yet, so this lives ONLY here, never in the skill.
               marginTop: heroBleed ? -54 : 0, height: heroBleed ? 'calc(100% + 54px)' : '100%', overflow: 'hidden',
+              // NON-BLEED: the skill already reserves 54px above EVERY pod for the
+              // status bar, so AppBarL0 must NOT add its own --appbar-top on top —
+              // that double-counted the reserve (title ~54px too low AND a 54px
+              // empty band below the bar). Zero --appbar-top so the bar collapses
+              // to a plain 64px DLS app bar, and set --bar-overlap to 64 so the
+              // scroll content starts right below it — exact same placement as
+              // Banking. Bleed variants leave both inherited so the hero bleeds up.
+              ...(heroBleed ? {} : { '--appbar-top': '0px', '--bar-overlap': '64px' }),
             }}
           >
             {useOriginal
