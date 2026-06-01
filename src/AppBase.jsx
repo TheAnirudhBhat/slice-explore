@@ -472,11 +472,17 @@ export default function App({ extraL1 = {}, exploreExtraCards = [], initialPod =
                          don't visibly bleed past it. */}
                       <div
                         style={{
-                          // max(54, safe-area): on an iOS standalone webapp the
-                          // Dynamic Island / notch is taller than 54px, so a fixed
-                          // 54 let the title slip under it. Grow to the device
-                          // safe-area when it's larger; stays 54 on desktop/web.
-                          height: 'max(54px, env(safe-area-inset-top, 0px))',
+                          // Desktop/web: flat 54px to match the MotionStatusBar
+                          // overlay. Mobile (incl. iOS standalone PWA): a 64px floor
+                          // PLUS env+12 breathing room — a flat 54 (or bare env, which
+                          // can under-resolve to 0) let the app bar sit UNDER the
+                          // Dynamic Island. The 64 floor clears the island even when
+                          // env=0; env+12 adds a gap below a real (≥59px) inset.
+                          // MUST stay in lockstep with the explore-pod bleed pull
+                          // (explore/L0.jsx) so bleed heroes still reach y=0.
+                          height: isMobile
+                            ? 'max(64px, calc(env(safe-area-inset-top, 0px) + 12px))'
+                            : '54px',
                           flexShrink: 0,
                           background: reserveBg,
                           // Instant (no transition): must opacify with the AppBar so

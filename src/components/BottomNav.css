@@ -355,12 +355,13 @@
   transition: background 360ms cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-/* On real mobile / installed PWA the OS draws the real home indicator, so HIDE the
-   proto's fake gesture pill — but with `visibility` (not `display:none`) so the
-   `.slice-bnav-gesture` band KEEPS its height: the nav still clears the bottom and
-   the OS indicator sits in that same space. (cont-38, user-directed.) */
+/* On real mobile / installed PWA the OS draws its own home indicator, so REMOVE the
+   proto's fake gesture band entirely (user: "remove from mobile view", 2026-06-02).
+   The nav's bottom clearance moves onto .slice-bnav-content so the buttons still sit
+   above the OS indicator and the active button's drop-shadow isn't clipped. */
 @media (max-width: 600px), (display-mode: standalone) {
-  .slice-bnav-gesture-bar { visibility: hidden; }
+  .slice-bnav-gesture { display: none; }
+  .slice-bnav-content { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); }
 }
 
 /* Tap feedback */

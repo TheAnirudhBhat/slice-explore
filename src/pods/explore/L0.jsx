@@ -8136,6 +8136,12 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
          default U and V0 — the pod sits normally so the app bar lands BELOW the
          OS status bar (like Banking) instead of bleeding above it on mobile. */
       const heroBleed = ['F', 'N', 'L', 'P', 'T'].includes(sections.forYou);
+      // Status-reserve clearance — MUST equal the skill shell's reserve height
+      // (AppBase.jsx). A bleed pod cancels this exactly (negative margin) so the
+      // hero still reaches y=0 after the reserve grew for safe-area breathing room.
+      const statusReserve = isMobile
+        ? 'max(64px, calc(env(safe-area-inset-top, 0px) + 12px))'
+        : '54px';
 
       return (
         <SpacingCtx.Provider value={{ ...spacing, highlight }}>
@@ -8144,13 +8150,14 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             data-bleed={heroBleed || undefined}
             style={{
               position: 'relative', width: '100%',
-              // EXPLORATION-ONLY: cancel the shared skill shell's 54px status-bar
-              // reserve so the explore pod fills from the very top of the phone
-              // screen — this is what lets For-You heroes (F/N/P/T/L) bleed up
-              // under the status bar like the standalone. marginTop pulls the pod
-              // up 54px; height adds it back so it still reaches the bottom. Bleed
-              // isn't a slice pattern yet, so this lives ONLY here, never in the skill.
-              marginTop: heroBleed ? -54 : 0, height: heroBleed ? 'calc(100% + 54px)' : '100%', overflow: 'hidden',
+              // EXPLORATION-ONLY: cancel the shared skill shell's status-bar reserve
+              // (statusReserve — 54 on desktop, max(64, env+12) on mobile) so the
+              // explore pod fills from the very top of the phone screen — this is what
+              // lets For-You heroes (F/N/P/T/L) bleed up under the status bar like the
+              // standalone. marginTop pulls the pod up by the reserve; height adds it
+              // back so it still reaches the bottom. Bleed isn't a slice pattern yet,
+              // so this lives ONLY here, never in the skill.
+              marginTop: heroBleed ? `calc(-1 * (${statusReserve}))` : 0, height: heroBleed ? `calc(100% + (${statusReserve}))` : '100%', overflow: 'hidden',
               // NON-BLEED: the skill already reserves 54px above EVERY pod for the
               // status bar, so AppBarL0 must NOT add its own --appbar-top on top —
               // that double-counted the reserve (title ~54px too low AND a 54px

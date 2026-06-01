@@ -874,12 +874,14 @@
          (reserve=54, pod top=0 → title@54) and PWA (reserve=safe-area, pod
          top=safe-area-54 → title@safe-area). Non-bleed pods use --appbar-top:0. */
       .explore-pod-root[data-bleed] .app-bar-l0 {
-        /* max(safe-area, 54): browser has no safe-area inset (→54px, which clears
-           the 54px status reserve); iOS standalone PWA uses the real notch inset
-           so the title clears the Dynamic Island instead of slipping under it.
-           Plain 54 left the title under the notch in the installed webapp. */
-        padding-top: max(calc(env(safe-area-inset-top, 0px) + 8px), 54px) !important;
-        height: calc(max(calc(env(safe-area-inset-top, 0px) + 8px), 54px) + 64px) !important;
+        /* The "Explore" title floats over the bleeding hero and must clear the OS
+           status bar with breathing room. 64px floor clears a Dynamic Island even
+           when env under-resolves to 0; env+12 adds a gap below a real inset. MUST
+           match the skill-shell reserve + the explore-pod bleed pull (statusReserve)
+           so title placement is identical across all pods. (was max(env+8,54) —
+           54 floor let the title sit under the island when env=0 in the PWA.) */
+        padding-top: max(64px, calc(env(safe-area-inset-top, 0px) + 12px)) !important;
+        height: calc(max(64px, calc(env(safe-area-inset-top, 0px) + 12px)) + 64px) !important;
       }
 
       /* Mobile: the active nav button has a downward drop-shadow
@@ -888,7 +890,12 @@
          breathing room below the gesture pill so the buttons sit higher and the
          shadow renders fully. Page-coloured (white light / near-black dark), not a
          white strip. (user, 2026-06-01) */
-      .slice-bnav-gesture {
+      /* The fake home-indicator gesture band is REMOVED on mobile (BottomNav.css —
+         the OS draws its own). Its bottom clearance moves here onto the nav content
+         so the buttons still clear the OS home indicator and the active button's
+         drop-shadow isn't clipped at the screen edge. (user: "remove gesture band
+         from mobile view", 2026-06-02) */
+      .slice-bnav-content {
         padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px) !important;
       }
 
