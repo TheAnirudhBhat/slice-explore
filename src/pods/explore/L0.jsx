@@ -2367,11 +2367,6 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             </div>
             <CarouselDots count={N} activeIdx={idx} bottom={12} />
           </div>
-          {/* Divider below paginator */}
-          <div style={{
-            height: 1, background: 'var(--outline-subtle)',
-            marginLeft: 24, marginRight: 24, marginTop: 12,
-          }} />
         </>
       );
     };
@@ -7116,7 +7111,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
           )
         : React.Fragment;
       return (
-        <ScreenShell transparentAppBar={isGradientFY} darkBg={sections.forYou === 'L' || sections.forYou === 'F' || sections.forYou === 'N' || sections.forYou === 'P'}
+        <ScreenShell transparentAppBar={isGradientFY} darkBg={sections.forYou === 'L' || sections.forYou === 'F' || sections.forYou === 'N'}
           scrollThreshold={sections.forYou === 'L' ? 182 : (sections.forYou === 'N' || sections.forYou === 'F') ? 120 : (sections.forYou === 'T') ? 10 : (sections.forYou === 'U' || sections.forYou === 'Q') ? 12 : 0}
           onPastThreshold={onScrollPast}>
           {sections.forYou !== 'None' && (
