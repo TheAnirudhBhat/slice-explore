@@ -4340,12 +4340,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             width: '100%', background: 'transparent', border: 'none', padding: 0,
             display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', textAlign: 'left',
           }}>
-            <div style={{
-              width: 40, height: 40, borderRadius: 100, flexShrink: 0,
-              background: 'var(--amber-50)', color: 'var(--amber-700)',
-              display: 'grid', placeItems: 'center',
-              fontFamily: 'Rubik', fontSize: 16, fontWeight: 600,
-            }}>4</div>
+            <BillRowAvatar heroImg="bill_credit.png" />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ ...T.btnSm, color: 'var(--text-primary)' }}>4 bills due</div>
               <div style={{ ...T.caption, marginTop: 2 }}>₹8,159 total this week</div>
@@ -4439,11 +4434,11 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             background: 'var(--surface)', boxShadow: CARD_SHADOW, border: CARD_BORDER,
             borderRadius: 16, overflow: 'hidden',
           }}>
-            <div style={{ padding: '22px 16px 14px' }}>
+            <div style={{ padding: '22px 24px 14px' }}>
               <BillsShortcutGrid columnGap={20} />
             </div>
             {/* Sliding glow divider — tracks scroll position smoothly */}
-            <div style={{ margin: '4px 16px 0', position: 'relative', height: 1.5 }}>
+            <div style={{ margin: '4px 24px 0', position: 'relative', height: 1.5 }}>
               <div style={{
                 position: 'absolute', inset: 0,
                 borderRadius: 1, background: 'var(--slate-30)',
@@ -4468,7 +4463,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
               {items.map((it, i) => (
                 <div key={i} style={{
                   flex: '0 0 100%', scrollSnapAlign: 'start', scrollSnapStop: 'always',
-                  padding: '12px 16px',
+                  padding: '12px 24px',
                   display: 'flex', alignItems: 'center', gap: 12,
                   boxSizing: 'border-box',
                 }}>
@@ -6949,8 +6944,8 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             gap: 12, textAlign: 'left',
           }}>
             <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-              <div style={T.caption}>Insurance · 1 plan active</div>
-              <div style={{ ...T.h3, marginTop: 4 }}>Premium due 12 Jul</div>
+              <div style={T.caption}>Insurance</div>
+              <div style={{ ...T.h3, marginTop: 4 }}>1 plan active</div>
             </div>
             <img src="/assets/insurance_icon.png" width={56} height={56} alt=""
               style={{ display: 'block', flexShrink: 0 }} />

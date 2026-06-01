@@ -56,6 +56,13 @@
       --blue-500: #2B6ACF;
     }
 
+    /* ── Project-side bottom-nav fill (NOT a skill edit) ──
+       The inherited skill nav is transparent on purpose (page bg + per-pod
+       BottomFade fill it). In explore-base the nav footprint / gesture safe-area
+       read as see-through over scrolling content, so fill it with the page bg
+       here. Scoped to this project's bundle; the skill nav stays untouched. */
+    .slice-bnav-content { background: var(--page-bg); }
+
     /* Physics-based mascot + star. Mascot has a heavy, grounded sway
        (slow ease into peaks, snappy return). Star follows real toss
        physics: fast launch, slow at apex, accelerates on descent.
@@ -760,7 +767,11 @@
         min-height: 100dvh;
         align-items: stretch;
         justify-content: stretch;
-        --bar-overlap: calc(env(safe-area-inset-top, 0px) + 64px);
+        /* Skill shell already paints a 54px status reserve above the pod (which
+           ExploreL0 cancels via marginTop:-54); adding safe-area here on top of
+           the app bar double-counted it and left a magnified empty band under
+           the mobile cover-scale. Overlap = app bar content height only. */
+        --bar-overlap: 64px;
       }
 
       .phone-frame {
@@ -806,10 +817,13 @@
         display: none !important;
       }
 
-      /* Collapse the fake-status-bar buffer on mobile; respect device safe areas. */
+      /* Collapse the fake-status-bar buffer on mobile. The skill shell's 54px
+         reserve (cancelled by ExploreL0's marginTop:-54) already covers the
+         status bar, so the bar itself needs no safe-area pad — removing it drops
+         the extra top space so Explore sits flush like the rest of the app. */
       .app-bar-l0 {
-        padding-top: env(safe-area-inset-top, 0px) !important;
-        height: calc(env(safe-area-inset-top, 0px) + 64px) !important;
+        padding-top: 0 !important;
+        height: 64px !important;
       }
 
       .screen-scroll {
