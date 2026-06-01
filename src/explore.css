@@ -31,6 +31,14 @@
        as a bright sticker on the dark card). (user, 2026-06-02) */
     .mn-reward-pill { color: #D30AD7; background: #FAE2FA; }
     [data-theme="dark"] .mn-reward-pill { color: #DE45E1; background: rgba(211, 10, 215, 0.20); }
+
+    /* Horizontal carousels (rewards strip, bills carousel, For-You hero decks)
+       carry .no-page-swipe. touch-action: pan-x = the element owns HORIZONTAL
+       gestures (scroll the carousel) but hands VERTICAL up to the page scroller
+       (.screen-scroll, pan-y). Without this the carousels swallowed vertical
+       drags, so the page wouldn't scroll when a finger started on one. Inline
+       touch-action (e.g. the FY_I drag deck's `none`) still wins. (user, 2026-06-02) */
+    .no-page-swipe { touch-action: pan-x; }
     /* Real mobile (standalone webapp) — app bar sits right below status bar */
     @media (max-width: 430px) {
       :root { --appbar-top: 44px; }
@@ -850,8 +858,12 @@
          (reserve=54, pod top=0 → title@54) and PWA (reserve=safe-area, pod
          top=safe-area-54 → title@safe-area). Non-bleed pods use --appbar-top:0. */
       .explore-pod-root[data-bleed] .app-bar-l0 {
-        padding-top: 54px !important;
-        height: calc(54px + 64px) !important;
+        /* max(safe-area, 54): browser has no safe-area inset (→54px, which clears
+           the 54px status reserve); iOS standalone PWA uses the real notch inset
+           so the title clears the Dynamic Island instead of slipping under it.
+           Plain 54 left the title under the notch in the installed webapp. */
+        padding-top: max(env(safe-area-inset-top, 0px), 54px) !important;
+        height: calc(max(env(safe-area-inset-top, 0px), 54px) + 64px) !important;
       }
 
       /* Mobile: the active nav button has a downward drop-shadow
@@ -861,7 +873,7 @@
          shadow renders fully. Page-coloured (white light / near-black dark), not a
          white strip. (user, 2026-06-01) */
       .slice-bnav-gesture {
-        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px) !important;
+        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px) !important;
       }
 
       .screen-scroll {

@@ -4461,7 +4461,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
                 }} />
               </div>
             </div>
-            <div ref={scrollRef} className="scrollbar-hide" style={{
+            <div ref={scrollRef} className="scrollbar-hide no-page-swipe" style={{
               display: 'flex', overflowX: 'auto',
               scrollSnapType: 'x mandatory',
               overscrollBehavior: 'none', marginTop: 8,
