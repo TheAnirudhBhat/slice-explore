@@ -2305,9 +2305,10 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
       const SLIDE_PCT = 100;
       const TEXT_BOTTOM = 42;
       const slideBg = (s) => `
-        radial-gradient(ellipse 44% 28% at 50% 12%, ${s[0]} 0%, transparent 74%),
-        radial-gradient(ellipse 30% 22% at 50% 10%, ${s[1]} 0%, transparent 78%),
-        radial-gradient(ellipse 18% 15% at 50% 8%, ${s[2]} 0%, transparent 82%),
+        radial-gradient(ellipse 48% 40% at 30% 10%, ${s[0]} 0%, transparent 72%),
+        radial-gradient(ellipse 48% 40% at 70% 13%, ${s[1]} 0%, transparent 72%),
+        radial-gradient(ellipse 56% 32% at 50% 2%, ${s[2]} 0%, transparent 74%),
+        linear-gradient(to right, var(--fy-p-base) 0%, transparent 18%, transparent 82%, var(--fy-p-base) 100%),
         linear-gradient(to bottom, transparent 55%, var(--fy-p-fade-mid) 78%, var(--fy-p-base) 92%),
         var(--fy-p-base)
       `;

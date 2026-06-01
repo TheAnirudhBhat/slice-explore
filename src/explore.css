@@ -92,8 +92,13 @@
        showing through the very bottom. Page-coloured on standard pods; V-500 on
        the immersive (Valentino) nav so it matches the brand page, never white.
        Applies to ALL pods via the shared nav class. */
-    .slice-bnav-gesture { background: var(--page-bg); padding-bottom: 14px; }
-    .slice-bnav[data-variant='immersive'] .slice-bnav-gesture { background: var(--brand-bg); }
+    /* TRANSPARENT gesture band (supersedes the earlier page-bg fill, NB-L):
+       the page bg slides WITH the pager, so a transparent band lets the
+       Valentino/Pay edge slide into the bottom safe area during a page swipe —
+       edge-to-edge like the skill proto. Scrolling content is held off the bottom
+       by the scroll padding-bottom + per-pod BottomFade, so the band shows page
+       bg (not content) at rest. (user, 2026-06-02) */
+    .slice-bnav-gesture { background: transparent; padding-bottom: 14px; }
 
     /* Physics-based mascot + star. Mascot has a heavy, grounded sway
        (slow ease into peaks, snappy return). Star follows real toss
