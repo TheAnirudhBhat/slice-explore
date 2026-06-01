@@ -1,7 +1,14 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Agentation } from 'agentation';
-import './index.css';
+// Self-hosted Rubik (bundled) — NEVER the Google Fonts CDN (blocked on slice's
+// corporate network; Medium-500 silently falls back to system). Matches skill proto.
+import '@fontsource/rubik/400.css';
+import '@fontsource/rubik/500.css';
+import '@fontsource/rubik/600.css';
+import '@fontsource/rubik/700.css';
+import './index.css';   // linked skill base CSS (DLS tokens + theme + @tailwind) — propagates live
+import './explore.css'; // explore-pod-local styles (debug panel, carousels, keyframes)
 import App from './App.jsx';
 
 /* Hide the Agentation toolbar on mobile — its fixed bottom-right
@@ -26,14 +33,16 @@ const useIsDesktop = () => {
 };
 
 function Root() {
+  // TEMP: agentation enabled on mobile too (user wants to highlight mobile
+  // issues). To restore desktop-only, gate the <Agentation/> below on isDesktop.
   const isDesktop = useIsDesktop();
+  void isDesktop;
   return (
     <>
       <App />
-      {/* Agentation toolbar — desktop only. Click → activate → click
-          any element to annotate. Structured markdown is produced for
-          paste-into-Claude handoff. */}
-      {isDesktop && (
+      {/* Agentation toolbar. Click → activate → click any element to
+          annotate. Structured markdown is produced for paste-into-Claude. */}
+      {true && (
         <Agentation
           onAnnotationAdd={(a) => {
             // eslint-disable-next-line no-console

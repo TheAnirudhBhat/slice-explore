@@ -1,0 +1,1 @@
+/Users/anirudhbhat/.claude/skills/slice-design/proto/src/App.jsx
