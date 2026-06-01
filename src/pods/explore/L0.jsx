@@ -7128,7 +7128,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
           )
         : React.Fragment;
       return (
-        <ScreenShell transparentAppBar={isGradientFY} darkBg={sections.forYou === 'L' || sections.forYou === 'F' || sections.forYou === 'N' || sections.forYou === 'P'}
+        <ScreenShell transparentAppBar={isGradientFY} darkBg={sections.forYou === 'L' || sections.forYou === 'F' || sections.forYou === 'N' || sections.forYou === 'P' || sections.forYou === 'T'}
           scrollThreshold={sections.forYou === 'L' ? 182 : (sections.forYou === 'N' || sections.forYou === 'F') ? 120 : (sections.forYou === 'T') ? 10 : (sections.forYou === 'U' || sections.forYou === 'Q') ? 12 : 0}
           onPastThreshold={onScrollPast}>
           {sections.forYou !== 'None' && (
@@ -7531,6 +7531,11 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
         headerStyle: 'List',
         sections: { forYou: 'L', aiBanker: 'None', bills: 'S', rewards: 'X', monies: 'E', stats: 'M', more: 'A', footer: 'None' },
       },
+      V3: {
+        label: 'V3',
+        headerStyle: 'List',
+        sections: { forYou: 'T', aiBanker: 'None', bills: 'T', rewards: 'R', monies: 'E', stats: 'N', more: 'A', footer: 'A' },
+      },
     };
 
     /* Preset match check (V0 is tracked via the useOriginal flag). */
@@ -7625,7 +7630,8 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
       const activePreset = useOriginal
         ? 'V0'
         : (matchesPreset('V1', headerStyle, sections) ? 'V1'
-          : matchesPreset('V2', headerStyle, sections) ? 'V2' : null);
+          : matchesPreset('V2', headerStyle, sections) ? 'V2'
+          : matchesPreset('V3', headerStyle, sections) ? 'V3' : null);
       return (
         <div className="debug-panel">
           {/* Panel header. */}
@@ -7637,7 +7643,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
               Current/Exploration buttons are self-explanatory). */}
           <div style={{ marginBottom: 24 }}>
             <div className="seg-pick">
-              {['V0', 'V1', 'V2'].map(k => (
+              {['V0', 'V1', 'V2', 'V3'].map(k => (
                 <button key={k}
                   className={'seg-btn' + (activePreset === k ? ' active' : '')}
                   onClick={() => onPresetApply(k)}>{PRESETS[k].label}</button>
