@@ -56,15 +56,9 @@
       --blue-500: #2B6ACF;
     }
 
-    /* ── Project-side bottom-nav fade (NOT a skill edit) ──
-       The nav bg is a FADE to the page bg that completes ABOVE the circular
-       buttons: transparent at the very top (content shows through, soft), going
-       fully solid by ~28px (the content's padding-top) so the buttons + gesture
-       safe-area sit on solid page-bg — no see-through band, but no hard slab
-       either. Scoped to this project's bundle; the skill nav stays untouched. */
-    .slice-bnav-content {
-      background: linear-gradient(to bottom, transparent 0, var(--page-bg) 28px);
-    }
+    /* (Bottom-nav background override reverted — it caused jittery page scroll
+       on phone. The inherited skill nav stays transparent + relies on the
+       per-pod BottomFade, which is the original behaviour.) */
 
     /* Physics-based mascot + star. Mascot has a heavy, grounded sway
        (slow ease into peaks, snappy return). Star follows real toss
@@ -770,11 +764,11 @@
         min-height: 100dvh;
         align-items: stretch;
         justify-content: stretch;
-        /* Skill shell already paints a 54px status reserve above the pod (which
-           ExploreL0 cancels via marginTop:-54); adding safe-area here on top of
-           the app bar double-counted it and left a magnified empty band under
-           the mobile cover-scale. Overlap = app bar content height only. */
-        --bar-overlap: 64px;
+        /* App-bar overlap = OS safe-area (notch) + 64px bar height, so the scroll
+           content starts just below the app bar and the header clears the status
+           bar. Hero-bleed variants opt out via the pod's conditional marginTop,
+           so this no longer leaves a stray empty band on non-bleed variants. */
+        --bar-overlap: calc(env(safe-area-inset-top, 0px) + 64px);
       }
 
       .phone-frame {
@@ -820,13 +814,11 @@
         display: none !important;
       }
 
-      /* Collapse the fake-status-bar buffer on mobile. The skill shell's 54px
-         reserve (cancelled by ExploreL0's marginTop:-54) already covers the
-         status bar, so the bar itself needs no safe-area pad — removing it drops
-         the extra top space so Explore sits flush like the rest of the app. */
+      /* App bar respects the device safe-area on mobile so its title clears the
+         OS status bar (removing it made the header bleed into the notch). */
       .app-bar-l0 {
-        padding-top: 0 !important;
-        height: 64px !important;
+        padding-top: env(safe-area-inset-top, 0px) !important;
+        height: calc(env(safe-area-inset-top, 0px) + 64px) !important;
       }
 
       .screen-scroll {

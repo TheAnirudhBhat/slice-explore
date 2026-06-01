@@ -4340,7 +4340,10 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             width: '100%', background: 'transparent', border: 'none', padding: 0,
             display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer', textAlign: 'left',
           }}>
-            <BillRowAvatar heroImg="bill_credit.png" />
+            <BillAvatar size={40}>
+              <img src="/assets/bill_due.svg" width={24} height={24} alt=""
+                style={{ display: 'block' }} />
+            </BillAvatar>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ ...T.btnSm, color: 'var(--text-primary)' }}>4 bills due</div>
               <div style={{ ...T.caption, marginTop: 2 }}>₹8,159 total this week</div>
@@ -7611,9 +7614,9 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             <div style={{ ...T.h3 }}>Page composition</div>
           </div>
 
-          {/* PRESET — full-width segmented control under a clear heading. */}
+          {/* PRESET — full-width segmented control (heading dropped; the
+              Current/Exploration buttons are self-explanatory). */}
           <div style={{ marginBottom: 24 }}>
-            <div style={{ ...T.h4, marginBottom: 10 }}>Preset</div>
             <div className="seg-pick">
               {['V0', 'V1'].map(k => (
                 <button key={k}
@@ -8090,6 +8093,12 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
           onThemeToggle={toggleTheme} />
       );
 
+      /* Hero top-bleed (pod pulled up under the status bar) is ONLY for the
+         image/gradient hero variants. For every other variant — incl. the
+         default U and V0 — the pod sits normally so the app bar lands BELOW the
+         OS status bar (like Banking) instead of bleeding above it on mobile. */
+      const heroBleed = ['F', 'N', 'L', 'P', 'T'].includes(sections.forYou);
+
       return (
         <SpacingCtx.Provider value={{ ...spacing, highlight }}>
           <div
@@ -8102,7 +8111,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
               // under the status bar like the standalone. marginTop pulls the pod
               // up 54px; height adds it back so it still reaches the bottom. Bleed
               // isn't a slice pattern yet, so this lives ONLY here, never in the skill.
-              marginTop: -54, height: 'calc(100% + 54px)', overflow: 'hidden',
+              marginTop: heroBleed ? -54 : 0, height: heroBleed ? 'calc(100% + 54px)' : '100%', overflow: 'hidden',
             }}
           >
             {useOriginal
