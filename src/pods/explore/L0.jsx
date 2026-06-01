@@ -7128,7 +7128,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
           )
         : React.Fragment;
       return (
-        <ScreenShell transparentAppBar={isGradientFY} darkBg={sections.forYou === 'L' || sections.forYou === 'F' || sections.forYou === 'N' || sections.forYou === 'P' || sections.forYou === 'T'}
+        <ScreenShell transparentAppBar={isGradientFY} darkBg={sections.forYou === 'L' || sections.forYou === 'F' || sections.forYou === 'N' || sections.forYou === 'P'}
           scrollThreshold={sections.forYou === 'L' ? 182 : (sections.forYou === 'N' || sections.forYou === 'F') ? 120 : (sections.forYou === 'T') ? 10 : (sections.forYou === 'U' || sections.forYou === 'Q') ? 12 : 0}
           onPastThreshold={onScrollPast}>
           {sections.forYou !== 'None' && (

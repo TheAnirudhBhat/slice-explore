@@ -442,13 +442,12 @@ export default function App({ extraL1 = {}, exploreExtraCards = [], initialPod =
                   const PodPage = PAGES_BY_POD[pod];
                   const podScrolled = !!scrolledByPod[pod];
                   // Pay (V-500 immersive) keeps a transparent reserve so the
-                  // V-500 page bg shows through — no white-on-scroll there.
-                  const reserveBg =
-                    pod === 'pay'
-                      ? 'transparent'
-                      : podScrolled
-                      ? 'var(--page-bg)'
-                      : 'transparent';
+                  // V-500 page bg shows through. Non-Pay pods now fill the reserve
+                  // with the page bg ALWAYS (not just on scroll) — at rest the
+                  // transparent reserve left a thin see-through strip above the
+                  // app bar on the scrolling pods (Explore/Activity).
+                  const reserveBg = pod === 'pay' ? 'transparent' : 'var(--page-bg)';
+                  void podScrolled;
                   return (
                     <div
                       key={pod}
