@@ -2595,18 +2595,6 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
          when the deck scrolls back into the safe zone. */
       const deckRef = React.useRef(null);
       const [deckVisible, setDeckVisible] = React.useState(true);
-      // Stop a card-stack drag from ALSO dragging the page pager. The pager's
-      // framer drag listens via a native pointerdown on an ancestor, which React
-      // synthetic stopPropagation can't cancel — so attach a native bubble-phase
-      // listener on the deck itself that stops the event before it reaches the
-      // pager. Page-swipe still works from empty page areas; only the deck opts out.
-      React.useEffect(() => {
-        const el = deckRef.current;
-        if (!el) return;
-        const stop = (e) => e.stopPropagation();
-        el.addEventListener('pointerdown', stop);
-        return () => el.removeEventListener('pointerdown', stop);
-      }, []);
       React.useEffect(() => {
         const el = deckRef.current;
         if (!el) return;
