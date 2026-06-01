@@ -2295,9 +2295,9 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
       const SLIDE_PCT = 100;
       const TEXT_BOTTOM = 42;
       const slideBg = (s) => `
-        radial-gradient(ellipse 100% 70% at 8% 6%, ${s[0]} 0%, transparent 85%),
-        radial-gradient(ellipse 100% 70% at 95% 10%, ${s[1]} 0%, transparent 85%),
-        radial-gradient(ellipse 110% 60% at 50% 22%, ${s[2]} 0%, transparent 90%),
+        radial-gradient(circle 150px at 50% 14%, ${s[0]} 0%, transparent 78%),
+        radial-gradient(circle 104px at 50% 12%, ${s[1]} 0%, transparent 80%),
+        radial-gradient(circle 64px at 50% 10%, ${s[2]} 0%, transparent 82%),
         linear-gradient(to bottom, transparent 55%, var(--fy-p-fade-mid) 78%, var(--fy-p-base) 92%),
         var(--fy-p-base)
       `;
@@ -7510,7 +7510,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
       V1: {
         label: 'V1',
         headerStyle: 'List',
-        sections: { forYou: 'None', aiBanker: 'None', bills: 'W', rewards: 'X', monies: 'E', stats: 'N', more: 'A', footer: 'None' },
+        sections: { forYou: 'P', aiBanker: 'None', bills: 'W', rewards: 'X', monies: 'E', stats: 'N', more: 'A', footer: 'None' },
       },
       V2: {
         label: 'V2',
