@@ -12,22 +12,28 @@ import './explore.css'; // explore-pod-local styles (debug panel, carousels, key
 import App from './App.jsx';
 
 function Root() {
+  // The Expo WebView wrapper (explore-expo) loads Explore with `?expo=1` — skip
+  // Agentation there. It's a feedback tool for the browser/PWA; on the native
+  // on-device app it just sits over the nav and isn't wanted. (user, 2026-06-02)
+  const isExpo = typeof window !== 'undefined'
+    && new URLSearchParams(window.location.search).has('expo');
   return (
     <>
       <App />
-      {/* Agentation toolbar — desktop AND mobile (user wants annotation on mobile
-          too). Fixed bottom-right; on mobile it sits over the phone-shell bottom
-          nav, accepted per user direction. */}
-      <Agentation
-        onAnnotationAdd={(a) => {
-          // eslint-disable-next-line no-console
-          console.log('[agentation] annotation added', a);
-        }}
-        onSubmit={(output, annotations) => {
-          // eslint-disable-next-line no-console
-          console.log('[agentation] submitted', { output, annotations });
-        }}
-      />
+      {/* Agentation toolbar — desktop AND mobile browser/PWA (not the Expo app).
+          Fixed bottom-right; on mobile it sits over the phone-shell bottom nav. */}
+      {!isExpo && (
+        <Agentation
+          onAnnotationAdd={(a) => {
+            // eslint-disable-next-line no-console
+            console.log('[agentation] annotation added', a);
+          }}
+          onSubmit={(output, annotations) => {
+            // eslint-disable-next-line no-console
+            console.log('[agentation] submitted', { output, annotations });
+          }}
+        />
+      )}
     </>
   );
 }
