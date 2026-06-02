@@ -60,11 +60,14 @@
     [data-theme="dark"] .fy-hero-fade--n {
       background: linear-gradient(to bottom, rgba(9,11,12,0) 65%, rgba(9,11,12,0.3) 80%, rgba(9,11,12,0.7) 90%, #090B0C 96%, #090B0C 100%);
     }
+    /* Use rgba(...,0) NOT the `transparent` keyword: `transparent` = transparent
+       BLACK on WebKit, so the gradient interpolates through grey → a muddy/hard
+       band ("straight line" glitch). Matching colour at 0 alpha = a clean fade. */
     .fy-hero-fade--t {
-      background: linear-gradient(to bottom, transparent 60%, rgba(255,255,255,0.4) 80%, #FFFFFF 95%);
+      background: linear-gradient(to bottom, rgba(255,255,255,0) 60%, rgba(255,255,255,0.4) 80%, #FFFFFF 95%);
     }
     [data-theme="dark"] .fy-hero-fade--t {
-      background: linear-gradient(to bottom, transparent 60%, rgba(9,11,12,0.4) 80%, #090B0C 95%);
+      background: linear-gradient(to bottom, rgba(9,11,12,0) 60%, rgba(9,11,12,0.4) 80%, #090B0C 95%);
     }
 
     /* Horizontal carousels (rewards strip, bills carousel, For-You hero decks)
