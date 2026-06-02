@@ -362,19 +362,15 @@
    as too much empty space at the bottom (user, 2026-06-02). */
 @media (max-width: 600px), (display-mode: standalone) {
   .slice-bnav-gesture { display: none; }
-  /* Tight bottom gap on mobile (user: keep halving → ~8px). The leftover space was
-     the button row centering inside the 96px viewport (~20px under the active
-     button), so shorten the viewport and symmetrise the slot padding: the 64px
-     active button now sits ~8px above the screen bottom. Plus the OS safe-area
-     inset where it resolves (≈0 on this PWA). NOTE: at 8px the active button's
-     drop-shadow clips slightly at the screen edge — intended trade-off for tightness. */
-  .slice-bnav-viewport { height: 80px; }
+  /* Tight bottom gap (user: ~8px) WITHOUT clipping the active button's drop-shadow.
+     The viewport gets 48px of bottom padding so the 0 6px 20px shadow has room to
+     render, and -48px margin collapses that back so it adds NO visible space — the
+     buttons stay put, only the shadow gets headroom (overflow-y is visible). This is
+     the slice-expo on-device technique; matches the skill proto. Content keeps a flat
+     24px gap below the nav. (user: "position fine, shadow cutting off", 2026-06-02) */
+  .slice-bnav-viewport { height: 80px; padding-bottom: 48px; margin-bottom: -48px; }
   .slice-bnav-slot { padding-bottom: 8px; }
-  /* ≥20px below the nav so the active button's 0 6px 20px drop-shadow clears the
-     screen edge instead of being clipped (the slice-expo on-device fix; env=0 in
-     the PWA/WebView doesn't reserve enough on its own). Grows to the OS home
-     indicator where env resolves. (user: "shadow is cutting off", 2026-06-02) */
-  .slice-bnav-content { padding-bottom: max(20px, env(safe-area-inset-bottom, 0px)); }
+  .slice-bnav-content { padding-bottom: 24px; }
 }
 
 /* Tap feedback */
