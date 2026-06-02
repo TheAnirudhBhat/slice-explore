@@ -898,8 +898,8 @@
            match the skill-shell reserve + the explore-pod bleed pull (statusReserve)
            so title placement is identical across all pods. (was max(env+8,54) —
            54 floor let the title sit under the island when env=0 in the PWA.) */
-        padding-top: max(76px, calc(env(safe-area-inset-top, 0px) + 16px)) !important;
-        height: calc(max(76px, calc(env(safe-area-inset-top, 0px) + 16px)) + 64px) !important;
+        padding-top: max(44px, env(safe-area-inset-top, 0px)) !important;
+        height: calc(max(44px, env(safe-area-inset-top, 0px)) + 64px) !important;
       }
 
       /* Nav bottom clearance on mobile (gesture band removed; OS draws its own
