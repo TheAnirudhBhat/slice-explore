@@ -482,7 +482,7 @@ export default function App({ extraL1 = {}, exploreExtraCards = [], initialPod =
                           // larger inset. MUST stay in lockstep with the explore-pod
                           // bleed pull (explore/L0.jsx) so bleed heroes still reach y=0.
                           height: isMobile
-                            ? 'max(88px, calc(env(safe-area-inset-top, 0px) + 28px))'
+                            ? 'max(76px, calc(env(safe-area-inset-top, 0px) + 16px))'
                             : '54px',
                           flexShrink: 0,
                           background: reserveBg,
