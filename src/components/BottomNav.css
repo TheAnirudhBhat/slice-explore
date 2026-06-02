@@ -361,12 +361,21 @@
    16px below each circle for the active-button shadow). Adding +16 on top of that read
    as too much empty space at the bottom (user, 2026-06-02). */
 @media (max-width: 600px), (display-mode: standalone) {
-  /* OS draws its own home indicator — hide the fake gesture pill. Keep the DEFAULT
-     viewport (96px, base rule) so the buttons sit centered as designed (no hacky
-     overflow tricks). Bottom room = max(24px, env-bottom): clears the active button's
-     0 6px 20px drop-shadow AND the OS home indicator where env resolves. */
+  /* OS draws its own home indicator — hide the fake gesture pill. Matches the skill
+     proto's on-device nav exactly: content-box so height:80 is the ROW height (NOT
+     eaten by padding), padding-bottom:48 extends the box down to give the active
+     button's 0 6px 20px drop-shadow overflow room, margin-bottom:-48 collapses that
+     back so the nav still occupies only 80px (position unchanged). Robust vs WebKit's
+     overflow/mask behaviour. (box-sizing was the missing piece that squished the row.) */
   .slice-bnav-gesture { display: none; }
-  .slice-bnav-content { padding-bottom: max(24px, env(safe-area-inset-bottom, 0px)); }
+  .slice-bnav-viewport {
+    box-sizing: content-box;
+    height: 80px;
+    padding-bottom: 48px;
+    margin-bottom: -48px;
+  }
+  .slice-bnav-slot { padding-bottom: 8px; }
+  .slice-bnav-content { padding-bottom: 24px; }
 }
 
 /* Tap feedback */
