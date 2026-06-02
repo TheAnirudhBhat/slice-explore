@@ -4,6 +4,7 @@ import BottomFade from '../../components/BottomFade.jsx';
 import { createPortal } from 'react-dom';
 import { CreditCardIcon, ElectricityIcon, MobileIcon, MoreIcon } from '../../icons/BillIcons.jsx';
 import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provided around the pod tree)
+import { useL1 } from '../../components/L1Stack.jsx'; // shared L1 overlay stack — avatar → Profile
 
 
     /* ============= TYPOGRAPHY ============= */
@@ -73,6 +74,7 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
        `setScrolled` is preserved as a stable callback so existing
        call-sites still work; under the hood it just sets state. */
     const AppBarL0 = React.forwardRef(({ transparent, darkBg }, ref) => {
+      const { push } = useL1(); // tap the avatar → open Profile L1 (same as every other pod)
       // Bar bg fades in CONTINUOUSLY with scroll (progress 0..1) for a smooth
       // transition instead of a binary opacity flip + 200ms ease (which read as
       // "transparent on first scroll, then a delayed jump"). setScrolled now takes
@@ -107,10 +109,20 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
             color: titleColor,
             transition: 'color 50ms linear',
           }}>Explore</h1>
-          <div style={{ width: 56, height: 56, display: 'grid', placeItems: 'center', position: 'relative', zIndex: 1 }}>
+          <button
+            type="button"
+            aria-label="profile"
+            onClick={() => push('profile')}
+            style={{
+              width: 56, height: 56, display: 'grid', placeItems: 'center',
+              position: 'relative', zIndex: 1,
+              background: 'transparent', border: 'none', padding: 0,
+              cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+            }}
+          >
             <img src="/assets/avatar_only.png" width={46} height={46} alt=""
-              style={{ display: 'block' }} />
-          </div>
+              style={{ display: 'block', pointerEvents: 'none' }} />
+          </button>
         </div>
       );
     });
