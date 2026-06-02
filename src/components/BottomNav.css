@@ -361,16 +361,12 @@
    16px below each circle for the active-button shadow). Adding +16 on top of that read
    as too much empty space at the bottom (user, 2026-06-02). */
 @media (max-width: 600px), (display-mode: standalone) {
+  /* OS draws its own home indicator — hide the fake gesture pill. Keep the DEFAULT
+     viewport (96px, base rule) so the buttons sit centered as designed (no hacky
+     overflow tricks). Bottom room = max(24px, env-bottom): clears the active button's
+     0 6px 20px drop-shadow AND the OS home indicator where env resolves. */
   .slice-bnav-gesture { display: none; }
-  /* Tight bottom gap (user: ~8px) WITHOUT clipping the active button's drop-shadow.
-     The viewport gets 48px of bottom padding so the 0 6px 20px shadow has room to
-     render, and -48px margin collapses that back so it adds NO visible space — the
-     buttons stay put, only the shadow gets headroom (overflow-y is visible). This is
-     the slice-expo on-device technique; matches the skill proto. Content keeps a flat
-     24px gap below the nav. (user: "position fine, shadow cutting off", 2026-06-02) */
-  .slice-bnav-viewport { height: 80px; padding-bottom: 48px; margin-bottom: -48px; }
-  .slice-bnav-slot { padding-bottom: 8px; }
-  .slice-bnav-content { padding-bottom: 24px; }
+  .slice-bnav-content { padding-bottom: max(24px, env(safe-area-inset-bottom, 0px)); }
 }
 
 /* Tap feedback */
