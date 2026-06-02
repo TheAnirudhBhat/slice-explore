@@ -15,8 +15,13 @@ function Root() {
   // The Expo WebView wrapper (explore-expo) loads Explore with `?expo=1` — skip
   // Agentation there. It's a feedback tool for the browser/PWA; on the native
   // on-device app it just sits over the nav and isn't wanted. (user, 2026-06-02)
+  // Detect the Expo / React Native WebView robustly: react-native-webview injects
+  // `window.ReactNativeWebView` into every page it loads (present in the Expo app,
+  // absent in a normal browser/PWA). That's the reliable signal — the `?expo` param
+  // is just a manual override for testing in a browser. Either one hides Agentation.
   const isExpo = typeof window !== 'undefined'
-    && new URLSearchParams(window.location.search).has('expo');
+    && (window.ReactNativeWebView != null
+        || new URLSearchParams(window.location.search).has('expo'));
   return (
     <>
       <App />
