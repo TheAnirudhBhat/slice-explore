@@ -3705,10 +3705,10 @@ import { useL1 } from '../../components/L1Stack.jsx'; // shared L1 overlay stack
                 pointerEvents: 'none', willChange: 'opacity',
               }} />
             ))}
-            {/* Bottom fade to white */}
-            <div aria-hidden style={{
+            {/* Bottom fade to the PAGE BG (themed in explore.css — white in light,
+               #090B0C in dark; a hardcoded white fade was a bright slab in dark mode). */}
+            <div aria-hidden className="fy-hero-fade--t" style={{
               position: 'absolute', inset: 0, zIndex: 1,
-              background: 'linear-gradient(to bottom, transparent 60%, rgba(255,255,255,0.4) 80%, #FFFFFF 95%)',
               pointerEvents: 'none',
             }} />
             <div ref={ref} style={{
