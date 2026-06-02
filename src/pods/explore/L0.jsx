@@ -8135,7 +8135,12 @@ import { useTheme } from '../../theme-context.js'; // skill ThemeContext (provid
          image/gradient hero variants. For every other variant — incl. the
          default U and V0 — the pod sits normally so the app bar lands BELOW the
          OS status bar (like Banking) instead of bleeding above it on mobile. */
-      const heroBleed = ['F', 'N', 'L', 'P', 'T'].includes(sections.forYou);
+      // P removed from the bleed set (user, 2026-06-02): its light mesh was
+      // bleeding up UNDER the status bar ("goes into the top part of the screen").
+      // As a non-bleed variant it sits at the content top edge (below the status
+      // reserve) — the mesh still shows under the transparent "Explore" app bar
+      // (transparentAppBar=isGradientFY keeps P transparent), just not in the notch.
+      const heroBleed = ['F', 'N', 'L', 'T'].includes(sections.forYou);
       // Status-reserve clearance — MUST equal the skill shell's reserve height
       // (AppBase.jsx). A bleed pod cancels this exactly (negative margin) so the
       // hero still reaches y=0 after the reserve grew for safe-area breathing room.
