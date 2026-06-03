@@ -892,21 +892,20 @@
         display: none !important;
       }
 
-      /* BLEED variants only: the pod root is pulled up a hardcoded -54px so the
-         hero bleeds under the status reserve. The app bar (absolute top:0 inside
-         the pulled-up pod) must add exactly that 54px back as padding-top so the
-         "Explore" title lands at the reserve's bottom edge — NOT env(safe-area),
-         which is 0 in a normal mobile browser and dropped the title behind the
-         opaque 54px reserve (app bar vanished). 54px is exact for both browser
-         (reserve=54, pod top=0 → title@54) and PWA (reserve=safe-area, pod
-         top=safe-area-54 → title@safe-area). Non-bleed pods use --appbar-top:0. */
-      .explore-pod-root[data-bleed] .app-bar-l0 {
-        /* The "Explore" title floats over the bleeding hero and must clear the OS
-           status bar with breathing room. 64px floor clears a Dynamic Island even
-           when env under-resolves to 0; env+12 adds a gap below a real inset. MUST
-           match the skill-shell reserve + the explore-pod bleed pull (statusReserve)
-           so title placement is identical across all pods. (was max(env+8,54) —
-           54 floor let the title sit under the island when env=0 in the PWA.) */
+      /* ALL explore variants (bleed AND non-bleed): the pod root is pulled up by
+         the shell reserve (statusReserve) so the app bar (absolute top:0 inside the
+         pulled-up pod) sits at y=0 and clears the OS status bar via ITS OWN
+         padding-top here. Doing the clearance in this STYLESHEET rule (not the
+         shell's inline-style reserve) is the fix for the Expo/RN WebView, where
+         env() under-resolves in inline styles but resolves here — so non-bleed
+         Q/U no longer slide up into the status bar. (user 2026-06-03)
+         Bleed heroes: transparent bar, art bleeds up behind it.
+         Non-bleed: opaque bar, content starts at --bar-overlap (= reserve + 64). */
+      .explore-pod-root .app-bar-l0 {
+        /* The "Explore" title must clear the OS status bar with breathing room.
+           44px floor clears a Dynamic Island even when env under-resolves to 0; a
+           real inset (env) takes over when larger. MUST match the skill-shell
+           reserve + the explore-pod pull (statusReserve) so placement is identical. */
         padding-top: max(44px, env(safe-area-inset-top, 0px)) !important;
         height: calc(max(44px, env(safe-area-inset-top, 0px)) + 64px) !important;
       }

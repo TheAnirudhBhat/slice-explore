@@ -2359,7 +2359,14 @@ import { useL1 } from '../../components/L1Stack.jsx'; // shared L1 overlay stack
                       width: 60, display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
                       pointerEvents: 'none',
                     }}>
-                      <FyDlsAvatar heroImg={s.heroImg} size={60} glyphSize={30} tone="subtle" />
+                      {/* Icon-only — no avatar disc. The glyph carries the slide's
+                         accent colour directly; bumped 30 → 40 to fill the space the
+                         removed disc left behind. (user, 2026-06-03) */}
+                      <svg width={40} height={40} viewBox="0 0 24 24" fill="none" aria-hidden>
+                        {(meta.paths || []).map((p, gi) => (
+                          <path key={gi} d={p} fill={meta.accent} />
+                        ))}
+                      </svg>
                     </div>
                     <div style={{
                       position: 'relative', width: '100%',
@@ -8167,22 +8174,27 @@ import { useL1 } from '../../components/L1Stack.jsx'; // shared L1 overlay stack
             data-bleed={heroBleed || undefined}
             style={{
               position: 'relative', width: '100%',
-              // EXPLORATION-ONLY: cancel the shared skill shell's status-bar reserve
-              // (statusReserve — 54 on desktop, max(64, env+12) on mobile) so the
-              // explore pod fills from the very top of the phone screen — this is what
-              // lets For-You heroes (F/N/P/T/L) bleed up under the status bar like the
-              // standalone. marginTop pulls the pod up by the reserve; height adds it
-              // back so it still reaches the bottom. Bleed isn't a slice pattern yet,
-              // so this lives ONLY here, never in the skill.
-              marginTop: heroBleed ? `calc(-1 * (${statusReserve}))` : 0, height: heroBleed ? `calc(100% + (${statusReserve}))` : '100%', overflow: 'hidden',
-              // NON-BLEED: the skill already reserves 54px above EVERY pod for the
-              // status bar, so AppBarL0 must NOT add its own --appbar-top on top —
-              // that double-counted the reserve (title ~54px too low AND a 54px
-              // empty band below the bar). Zero --appbar-top so the bar collapses
-              // to a plain 64px DLS app bar, and set --bar-overlap to 64 so the
-              // scroll content starts right below it — exact same placement as
-              // Banking. Bleed variants leave both inherited so the hero bleeds up.
-              ...(heroBleed ? {} : { '--appbar-top': '0px', '--bar-overlap': '64px' }),
+              // EXPLORATION-ONLY: ALL explore variants cancel the shared skill
+              // shell's status-bar reserve (statusReserve) and let AppBarL0 clear
+              // the OS status bar via its OWN top padding (the .app-bar-l0 rule in
+              // explore.css, which resolves env() in a STYLESHEET). This is the
+              // single mechanism that's proven correct on the bleed heroes (P/F/N/
+              // L/T) — non-bleed (Q/U/etc.) now rides the exact same path instead of
+              // relying on the shell reserve to push it down.
+              //
+              // WHY: the shell reserve sets its safe-area height via an INLINE-STYLE
+              // env() (AppBase.jsx), which under-resolves inside the Expo/RN WebView
+              // — so non-bleed pods that leaned on it slid up into the status bar
+              // ("Q/U go into the status bar; app bar moves up", user 2026-06-03).
+              // The bar's stylesheet env() DOES resolve there, so self-clearing is
+              // robust regardless. marginTop pulls the pod up by the reserve; height
+              // adds it back so it still reaches the bottom.
+              marginTop: `calc(-1 * (${statusReserve}))`, height: `calc(100% + (${statusReserve}))`, overflow: 'hidden',
+              // Non-bleed (opaque-bar) variants: content starts right below the
+              // self-clearing bar, so --bar-overlap = reserve + 64 (the bar's own
+              // height). Bleed heroes leave --bar-overlap inherited (118 fallback) so
+              // the hero art bleeds up under the transparent bar.
+              ...(heroBleed ? {} : { '--bar-overlap': `calc((${statusReserve}) + 64px)` }),
             }}
           >
             {useOriginal
