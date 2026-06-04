@@ -2363,9 +2363,9 @@ import { useL1 } from '../../components/L1Stack.jsx'; // shared L1 overlay stack
                       pointerEvents: 'none',
                     }}>
                       {/* Icon-only — no avatar disc. The glyph carries the slide's
-                         accent colour directly; bumped 30 → 40 to fill the space the
-                         removed disc left behind. (user, 2026-06-03) */}
-                      <svg width={40} height={40} viewBox="0 0 24 24" fill="none" aria-hidden>
+                         accent colour directly; sized 48 (30 → 40 → 48) to fill the
+                         space the removed disc left behind. (user, 2026-06-03) */}
+                      <svg width={48} height={48} viewBox="0 0 24 24" fill="none" aria-hidden>
                         {(meta.paths || []).map((p, gi) => (
                           <path key={gi} d={p} fill={meta.accent} />
                         ))}
