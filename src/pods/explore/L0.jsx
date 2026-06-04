@@ -442,6 +442,28 @@ import { useL1 } from '../../components/L1Stack.jsx'; // shared L1 overlay stack
 
 
 
+    /* SectionHeaderTitle — third OUTSIDE-the-card header (besides Bold/List).
+       Editorial H3 (20/24/500) section title: bigger + more present than
+       Bold's H4 (16/20), and a world apart from List's 10px uppercase meta.
+       Same Valentino text CTA as Bold. (user: "a heading style apart from
+       bold and list that stays outside the card", 2026-06-03) */
+    const SectionHeaderTitle = ({ title, cta }) => (
+      <div style={{
+        paddingLeft: 28, paddingRight: 24,
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <span style={{
+          fontFamily: 'Rubik', fontSize: 20, fontWeight: 500,
+          lineHeight: '24px', letterSpacing: '0.4px',
+          color: 'var(--text-primary)',
+        }}>{title}</span>
+        {cta && <button className="tap" style={{
+          background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
+          ...T.btnSm, color: '#D30AD7',
+        }}>{cta}</button>}
+      </div>
+    );
+
     /* Section gap = 32 between sections (Spacer 16 + header padding-top 16). No DividerBig.
        Header bottom padding = 16 → 16 between header and section content.
        'None' (In-card): title is handled by the section component itself (injected via inCardTitle prop),
@@ -456,6 +478,16 @@ import { useL1 } from '../../components/L1Stack.jsx'; // shared L1 overlay stack
           <>
             {!isFirst && <Spacer h={gapHeaderAbove} label="section" />}
             <SectionHeaderList title={title} cta={cta} tag={tag} />
+            <Spacer h={gapHeaderBelow} label="header→content" />
+            {children}
+          </>
+        );
+      }
+      if (headerStyle === 'Title') {
+        return (
+          <>
+            {!isFirst && <Spacer h={gapHeaderAbove} label="section" />}
+            <SectionHeaderTitle title={title} cta={cta} />
             <Spacer h={gapHeaderBelow} label="header→content" />
             {children}
           </>
@@ -2359,17 +2391,13 @@ import { useL1 } from '../../components/L1Stack.jsx'; // shared L1 overlay stack
                       // center: vertically aligns the glyph to the left text cluster
                       // (title+sub+CTA), which spans the same top..bottom inset. Was
                       // flex-start (top-aligned). (user, 2026-06-03)
-                      width: 60, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      width: 64, display: 'flex', alignItems: 'center', justifyContent: 'center',
                       pointerEvents: 'none',
                     }}>
-                      {/* Icon-only — no avatar disc. The glyph carries the slide's
-                         accent colour directly; sized 48 (30 → 40 → 48) to fill the
-                         space the removed disc left behind. (user, 2026-06-03) */}
-                      <svg width={48} height={48} viewBox="0 0 24 24" fill="none" aria-hidden>
-                        {(meta.paths || []).map((p, gi) => (
-                          <path key={gi} d={p} fill={meta.accent} />
-                        ))}
-                      </svg>
+                      {/* The original 3D illustration (per-slide heroImg) for all
+                         cards — replaces the flat glyph. (user, 2026-06-03) */}
+                      <img src={`/assets/${s.heroImg}`} alt="" width={64} height={64}
+                        style={{ display: 'block', objectFit: 'contain' }} />
                     </div>
                     <div style={{
                       position: 'relative', width: '100%',
@@ -5769,16 +5797,21 @@ import { useL1 } from '../../components/L1Stack.jsx'; // shared L1 overlay stack
       return <C />;
     };
 
+    /* RW_X / RW_Y now drive their monies card off `sections.monies` via the
+       existing MoniesInline dispatcher (above), instead of hardcoding MN_A/MN_E
+       — so the debug panel's new "Monies card" picker is live. `sections.monies`
+       used to be a dead setting. (user: "separate this in the debug panel + try
+       more variations", 2026-06-03) */
     const MoniesSection = () => <MN_A />;
 
-    const RW_X = () => (
+    const RW_X = ({ moniesVariant = 'A' }) => (
       <div>
         <RW_X_ScrollStrip />
         <Spacer h={20} />
-        <MN_A />
+        <MoniesInline variant={moniesVariant} />
       </div>
     );
-    const RW_X2 = () => RW_X();
+    const RW_X2 = ({ moniesVariant }) => RW_X({ moniesVariant });
     const RW_X3 = () => (
       <div>
         <RW_X_ScrollStrip />
@@ -5881,6 +5914,11 @@ import { useL1 } from '../../components/L1Stack.jsx'; // shared L1 overlay stack
         {headerStyle === 'Bold' && (
           <div style={{ marginBottom: 16 }}>
             <SectionHeaderBold title="Rewards & benefits" />
+          </div>
+        )}
+        {headerStyle === 'Title' && (
+          <div style={{ marginBottom: 16 }}>
+            <SectionHeaderTitle title="Rewards & benefits" />
           </div>
         )}
         <RW_U />
@@ -5986,6 +6024,11 @@ import { useL1 } from '../../components/L1Stack.jsx'; // shared L1 overlay stack
           {headerStyle === 'Bold' && (
             <div style={{ marginBottom: 16 }}>
               <SectionHeaderBold title="Rewards & benefits" />
+            </div>
+          )}
+          {headerStyle === 'Title' && (
+            <div style={{ marginBottom: 16 }}>
+              <SectionHeaderTitle title="Rewards & benefits" />
             </div>
           )}
           <PagePad>
@@ -6217,7 +6260,7 @@ import { useL1 } from '../../components/L1Stack.jsx'; // shared L1 overlay stack
             </div>
           </PagePad>
           <Spacer h={20} />
-          <MN_E />
+          <MoniesInline variant={moniesVariant} />
         </div>
       );
     };
@@ -6868,8 +6911,9 @@ import { useL1 } from '../../components/L1Stack.jsx'; // shared L1 overlay stack
                   color: '#00A63E', marginTop: 8,
                 }}>↓ 16% vs Apr</div>
               </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
               <svg width={VB_W} height={VB_H} viewBox={`0 0 ${VB_W} ${VB_H}`}
-                fill="none" style={{ flexShrink: 0 }}>
+                fill="none">
                 <defs>
                   <linearGradient id="st_n_fill" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#D30AD7" stopOpacity="0.18" />
@@ -6898,6 +6942,14 @@ import { useL1 } from '../../components/L1Stack.jsx'; // shared L1 overlay stack
                 <circle cx={cur.x} cy={cur.y} r="4" fill="#D30AD7" />
                 <circle cx={cur.x} cy={cur.y} r="2" fill="#FFFFFF" />
               </svg>
+              {/* Month ticks define the sparkline as a 3-month spend trend
+                 (Mar→Apr→May), May (current) emphasised. (user, 2026-06-03) */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', width: VB_W }}>
+                <span style={{ ...T.meta, color: 'var(--text-secondary)' }}>MAR</span>
+                <span style={{ ...T.meta, color: 'var(--text-secondary)' }}>APR</span>
+                <span style={{ ...T.meta, color: 'var(--text-primary)' }}>MAY</span>
+              </div>
+              </div>
             </div>
             {/* Hairline above the insight row — inset within the
                 card padding (no negative side margins) so it reads
@@ -6930,8 +6982,72 @@ import { useL1 } from '../../components/L1Stack.jsx'; // shared L1 overlay stack
       );
     };
 
+    /* ST_O — "This month vs last month" cumulative spend, BY TIME.
+       x = day of month, y = running total spent. Last month is the full muted
+       reference curve; this month (Valentino) is drawn only up to TODAY, so the
+       gap below last month's pace reads as "spending less, so far". Answers the
+       brief that ST_N's sparkline left implicit — what the numbers mean over
+       time. (user: "another version comparing current to last month by time",
+       2026-06-03) */
+    const ST_O = () => {
+      const VBW = 280, VBH = 92, PAD = 6;
+      const DAYS = 30, TODAY = 18;
+      const LAST_TOTAL = 21900, THIS_AT_TODAY = 18400;
+      const cum = (d) => LAST_TOTAL * Math.pow(Math.min(d, DAYS) / DAYS, 0.92);
+      const xFor = (d) => PAD + (VBW - PAD * 2) * ((d - 1) / (DAYS - 1));
+      const yFor = (v) => (VBH - PAD) - (VBH - PAD * 2) * (v / LAST_TOTAL);
+      const smooth = (vals) => `M${vals[0].x} ${vals[0].y} ` + vals.slice(1).map((p, i) => {
+        const cx = (vals[i].x + p.x) / 2;
+        return `C${cx} ${vals[i].y} ${cx} ${p.y} ${p.x} ${p.y}`;
+      }).join(' ');
+      const lastPts = Array.from({ length: DAYS }, (_, i) => ({ x: xFor(i + 1), y: yFor(cum(i + 1)) }));
+      const scale = THIS_AT_TODAY / cum(TODAY);
+      const thisPts = Array.from({ length: TODAY }, (_, i) => ({ x: xFor(i + 1), y: yFor(cum(i + 1) * scale) }));
+      const cur = thisPts[thisPts.length - 1];
+      const Legend = ({ color, label }) => (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ width: 8, height: 8, borderRadius: 100, background: color, flexShrink: 0 }} />
+          <span style={{ ...T.caption, color: 'var(--text-secondary)' }}>{label}</span>
+        </span>
+      );
+      return (
+        <PagePad>
+          <div style={{
+            background: 'var(--surface)', boxShadow: CARD_SHADOW, border: CARD_BORDER,
+            borderRadius: 16, padding: 20,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={T.caption}>Spends · this vs last month</div>
+                <div style={{ ...T.h3, color: 'var(--text-primary)', marginTop: 4 }}>₹18,400</div>
+                <div style={{ ...T.caption, fontWeight: 500, color: '#00A63E', marginTop: 6 }}>↓ 16% vs last month so far</div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end', flexShrink: 0 }}>
+                <Legend color="#D30AD7" label="This month" />
+                <Legend color="var(--text-tertiary)" label="Last month" />
+              </div>
+            </div>
+            <div style={{ marginTop: 16 }}>
+              <svg width="100%" height={VBH} viewBox={`0 0 ${VBW} ${VBH}`} fill="none" preserveAspectRatio="none">
+                <path d={smooth(lastPts)} stroke="var(--text-tertiary)" strokeWidth="2"
+                  fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                <path d={smooth(thisPts)} stroke="#D30AD7" strokeWidth="2.5"
+                  fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx={cur.x} cy={cur.y} r="4" fill="#D30AD7" />
+                <circle cx={cur.x} cy={cur.y} r="2" fill="#FFFFFF" />
+              </svg>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+                <span style={{ ...T.meta, color: 'var(--text-secondary)' }}>DAY 1</span>
+                <span style={{ ...T.meta, color: 'var(--text-secondary)' }}>DAY 30</span>
+              </div>
+            </div>
+          </div>
+        </PagePad>
+      );
+    };
+
     const StatsSection = ({ variant, isInCard }) => {
-      const C = { B: ST_B, C: ST_C, D: ST_D, E: ST_E, F: ST_F, G: ST_G, K: ST_K, L: ST_L, M: ST_M, N: ST_N }[variant];
+      const C = { B: ST_B, C: ST_C, D: ST_D, E: ST_E, F: ST_F, G: ST_G, K: ST_K, L: ST_L, M: ST_M, N: ST_N, O: ST_O }[variant];
       /* Whole stats card is a tap target. AnalyticsPage was removed —
          no navigation, just visual tap state via the .tap CSS class
          (scale 0.97 + opacity 0.9 on :active). */
@@ -7216,7 +7332,7 @@ import { useL1 } from '../../components/L1Stack.jsx'; // shared L1 overlay stack
                     <Spacer h={h} />
                     <SectionWrap title="Bills & Recharges" cta={billsCta} tag={billsTag} headerStyle={billsHeaderStyle} isFirst>
                       <BillsSection variant={sections.bills} isInCard={isInCard} />
-                      {headerStyle === 'Bold' && <Spacer h={8} />}
+                      {(headerStyle === 'Bold' || headerStyle === 'Title') && <Spacer h={8} />}
                       {headerStyle === 'List' && !hideBillsHeader && <Spacer h={4} />}
                     </SectionWrap>
                   </>
@@ -7225,7 +7341,7 @@ import { useL1 } from '../../components/L1Stack.jsx'; // shared L1 overlay stack
               return (
                 <SectionWrap title="Bills & Recharges" cta={billsCta} tag={billsTag} headerStyle={billsHeaderStyle}>
                   <BillsSection variant={sections.bills} isInCard={isInCard} />
-                  {headerStyle === 'Bold' && <Spacer h={8} />}
+                  {(headerStyle === 'Bold' || headerStyle === 'Title') && <Spacer h={8} />}
                   {headerStyle === 'List' && !hideBillsHeader && <Spacer h={4} />}
                 </SectionWrap>
               );
@@ -7501,8 +7617,18 @@ import { useL1 } from '../../components/L1Stack.jsx'; // shared L1 overlay stack
         },
       },
       {
+        /* Monies card embedded in the rewards section (rendered by RW_X / RW_Y).
+           Only takes effect when Rewards = X or Y. (user, 2026-06-03) */
+        key: 'monies', label: 'Monies card', variants: {
+          A: 'Label + 1% tag', B: 'Subtitle · amt right', C: 'Subtitle · chevron',
+          D: 'Valentino strip', E: 'Deposit card', F: 'Deposit + milestone',
+          G: 'Deposit · CSS', H: 'Brand → blue',
+        },
+      },
+      {
         key: 'stats', label: 'Statistics', variants: {
           L: 'Inline graph + categories', M: 'Inline graph · matched header', N: 'Inline graph · insights', D: 'Sparkline card',
+          O: 'This vs last month',
         },
         archived: {
           K: 'Bar + top categories',
@@ -7529,9 +7655,10 @@ import { useL1 } from '../../components/L1Stack.jsx'; // shared L1 overlay stack
       },
     ];
 
-    /* Three header styles. "None" renders no section header above content — labels live inside cards instead. */
-    const HEADER_STYLES = ['Bold', 'List', 'None'];
-    const HEADER_LABELS = { 'Bold': 'Bold', 'List': 'List', 'None': 'In-card' };
+    /* Header styles. "None" renders no section header above content — labels live inside cards instead.
+       Bold = H4 (16), Title = H3 (20, editorial), List = 10px uppercase meta — all three sit OUTSIDE the card. */
+    const HEADER_STYLES = ['Bold', 'Title', 'List', 'None'];
+    const HEADER_LABELS = { 'Bold': 'Bold', 'Title': 'Title', 'List': 'List', 'None': 'In-card' };
 
     /* Current = live layout (renders OriginalExplore directly).
        Exploration = section-system experimentation surface. */
@@ -7544,7 +7671,7 @@ import { useL1 } from '../../components/L1Stack.jsx'; // shared L1 overlay stack
       V1: {
         label: 'V1',
         headerStyle: 'List',
-        sections: { forYou: 'P', aiBanker: 'None', bills: 'W', rewards: 'X', monies: 'E', stats: 'N', more: 'A', footer: 'None' },
+        sections: { forYou: 'P', aiBanker: 'None', bills: 'W', rewards: 'X', monies: 'A', stats: 'N', more: 'A', footer: 'None' },
       },
       V2: {
         label: 'V2',
