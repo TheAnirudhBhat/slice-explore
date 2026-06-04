@@ -2356,7 +2356,10 @@ import { useL1 } from '../../components/L1Stack.jsx'; // shared L1 overlay stack
                   }}>
                     <div style={{
                       position: 'absolute', right: 24, top: TEXT_TOP_CSS, bottom: TEXT_BOTTOM,
-                      width: 60, display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+                      // center: vertically aligns the glyph to the left text cluster
+                      // (title+sub+CTA), which spans the same top..bottom inset. Was
+                      // flex-start (top-aligned). (user, 2026-06-03)
+                      width: 60, display: 'flex', alignItems: 'center', justifyContent: 'center',
                       pointerEvents: 'none',
                     }}>
                       {/* Icon-only — no avatar disc. The glyph carries the slide's
